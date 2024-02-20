@@ -23,8 +23,6 @@ use shuttle_secrets::SecretStore;
 use tokio::net::TcpListener;
 use tracing::info;
 
-const PORT: u32 = 5000;
-
 async fn index() -> &'static str { "Hello, world!" }
 
 async fn error_handler() -> impl IntoResponse {
