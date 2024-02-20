@@ -1,4 +1,3 @@
-#![feature(trivial_bounds)] // uuid in diesel required
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(dead_code)]

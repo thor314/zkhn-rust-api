@@ -10,10 +10,10 @@ diesel::table! {
         is_parent -> Bool,
         root_comment_id -> Uuid,
         parent_comment_id -> Nullable<Uuid>,
-        children_count -> Nullable<Int4>,
-        points -> Nullable<Int4>,
+        children_count -> Int4,
+        points -> Int4,
         created -> Timestamptz,
-        dead -> Nullable<Bool>,
+        dead -> Bool,
     }
 }
 
@@ -26,4 +26,7 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(comments, posts,);
+diesel::allow_tables_to_appear_in_same_query!(
+    comments,
+    posts,
+);
