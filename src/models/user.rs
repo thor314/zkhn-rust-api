@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
+use crate::error::PasswordError;
+
 use super::{
   user_favorite::UserFavorite,
   user_hidden::UserHidden,
@@ -100,12 +102,4 @@ impl User {
       date: Utc::now(),
     }
   }
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum PasswordError {
-  #[error("bcrypt error: {0}")]
-  BcryptError(#[from] bcrypt::BcryptError),
-  #[error("passwords do not match")]
-  PasswordMismatch,
 }
