@@ -1,3 +1,4 @@
+#![feature(trivial_bounds)] // uuid in diesel required
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
@@ -7,6 +8,7 @@
 
 mod error;
 mod models;
+mod schema;
 #[cfg(test)] mod tests;
 mod utils;
 
