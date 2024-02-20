@@ -44,6 +44,7 @@ impl ModerationLog {
   pub fn new(
     moderator_username: String,
     action_type: ModeratorActionType,
+    // todo: replace these with enum matches
     username: Option<String>,
     item_id: Option<Uuid>,
     item_title: Option<String>,
