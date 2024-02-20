@@ -12,7 +12,7 @@ use super::comment::Comment;
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Item {
   pub id:            Uuid,
-  pub by:            String, 
+  pub by:            String,
   pub title:         String,
   /// news, show ask, etc.
   #[serde(rename = "type")]
@@ -55,9 +55,9 @@ impl Item {
       url,
       domain,
       text,
-      points : 1,
+      points: 1,
       score: 0,
-      comment_count : 0,
+      comment_count: 0,
       category,
       created: Utc::now(),
       dead: false,
