@@ -2,7 +2,11 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
-use super::{user_favorite::UserFavorite, user_hidden::UserHidden};
+use super::{
+  user_favorite::UserFavorite,
+  user_hidden::UserHidden,
+  user_vote::{UserVote, VoteType},
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
@@ -71,20 +75,29 @@ impl User {
   }
 
   pub fn favorite(&self, item_type: String, item_id: Uuid) -> UserFavorite {
-    UserFavorite {
-      username: self.username.clone(),
-      item_type,
-      item_id,
-      date: Utc::now(),
-    }
+    UserFavorite { username: self.username.clone(), item_type, item_id, date: Utc::now() }
   }
 
   pub fn hide(&self, item_id: Uuid, item_creation_date: DateTime<Utc>) -> UserHidden {
-    UserHidden {
+    UserHidden { username: self.username.clone(), item_id, date: Utc::now(), item_creation_date }
+  }
+
+  pub fn vote(
+    &self,
+    vote_type: VoteType,
+    content_id: Uuid,
+    parent_item_id: Option<Uuid>,
+    upvote: bool,
+  ) -> UserVote {
+    let downvote = !upvote;
+    UserVote {
       username: self.username.clone(),
-      item_id,
+      vote_type,
+      content_id,
+      parent_item_id,
+      upvote,
+      downvote,
       date: Utc::now(),
-      item_creation_date,
     }
   }
 }
