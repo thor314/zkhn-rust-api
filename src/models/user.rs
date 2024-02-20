@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
+use super::user_favorite::UserFavorite;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
   pub id: Uuid,
@@ -66,6 +68,15 @@ impl User {
 
   pub async fn compare_password(&self, pw: &str) -> Result<bool, PasswordError> {
     bcrypt::verify(pw, &self.password).map_err(PasswordError::from)
+  }
+
+  pub fn favorite(&self, item_type: String, item_id: Uuid) -> UserFavorite {
+    UserFavorite {
+      username: self.username.clone(),
+      item_type,
+      item_id,
+      date: Utc::now(),
+    }
   }
 }
 
