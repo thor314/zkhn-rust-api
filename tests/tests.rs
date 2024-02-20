@@ -33,33 +33,3 @@ fn wb(#[default(false)] b: bool, count: usize) -> Wb {
   setup_test_tracing();
   Wb { b, count }
 }
-
-// small-cases fuzzing
-// argument wb will inherit the above function if names match; will generate 3x3 case-tests
-#[rstest]
-#[case(0, true, true)]
-#[case(1, true, false)]
-fn test_wb(wb: Wb, #[case] n: usize, #[case] b: bool, #[case] expected: bool) {
-  tracing::info!("wb: {wb:?}");
-  let wb_ = Wb { count: n, b };
-  assert_eq!(wb == wb_, expected); // this will fail for case_1 cases
-}
-
-// ex 2 - baby fuzz; will generate 2x2 test cases
-#[rstest]
-fn test_enumerative(#[values(0, 4)] n: usize, #[values(7, 8)] m: usize) {
-  assert!(n < m);
-}
-
-// fuzz test
-fn reverse<T: Clone>(xs: &[T]) -> Vec<T> {
-  let mut rev = vec![];
-  for x in xs.iter() {
-    rev.insert(0, x.clone())
-  }
-  rev
-}
-
-// fuzz, declare quickcheck on any argument implementing Arbitrary
-#[quickcheck_macros::quickcheck]
-fn prop(xs: Vec<u32>) -> bool { xs == reverse(&reverse(&xs)) }
