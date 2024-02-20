@@ -16,7 +16,9 @@ use axum::{
   routing::{get, post},
   Router,
 };
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use error::MyError;
+use shuttle_secrets::SecretStore;
 use tokio::net::TcpListener;
 use tracing::info;
 
@@ -30,12 +32,10 @@ async fn error_handler() -> impl IntoResponse {
 
 #[shuttle_runtime::main]
 async fn main(
-  #[shuttle_shared_db::Postgres] pool: sqlx::PgPool,
   #[shuttle_secrets::Secrets] secret_store: shuttle_secrets::SecretStore,
 ) -> shuttle_axum::ShuttleAxum {
   utils::setup(&secret_store).unwrap();
-
-  sqlx::migrate!().run(&pool).await.expect("Failed to run migrations");
+  // let mut conn = establish_connection(&secret_store).await;
 
   let router = Router::new()
     .route("/", get(index))
@@ -44,4 +44,12 @@ async fn main(
     .route("/-1/health", get(|| async { StatusCode::OK }));
 
   Ok(router.into())
+}
+
+pub async fn establish_connection(secrets: &SecretStore) -> AsyncPgConnection {
+  let db_url = secrets.get("DATABASE_URL").expect("DATABASE_URL must be set");
+
+  AsyncPgConnection::establish(&db_url)
+    .await
+    .unwrap_or_else(|_| panic!("Error connecting to {}", db_url))
 }

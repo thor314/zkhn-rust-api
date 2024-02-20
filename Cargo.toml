@@ -28,11 +28,15 @@ chrono         ={ version="0.4.34", features=["serde"] }
 # sqlx = "0.7.3"
 # axum-extra = { version = "0.9.2", features = ["cookie", "typed-header"] }
 # tower-http = { version = "0.5.1", features = ["fs"] }
-shuttle-shared-db={ version="0.39.0", features=["postgres", "sqlx"] }
-sqlx             ={ version="0.7.3", features=["postgres", "chrono", "uuid"] }
-ulid             ={ version="1.1.2", features=["serde", "postgres"] }
+# shuttle-shared-db={ version="0.39.0", features=["postgres", "sqlx"] }
+# sqlx             ={ version="0.7.3", features=["postgres", "chrono", "uuid"] }
+# ulid             ={ version="1.1.2", features=["serde", "postgres"] }
 url              ="2.5.0"
 bcrypt           ="0.15.0"
+
+shuttle-diesel-async = { git = "https://github.com/aumetra/shuttle-diesel-async", branch = "aumetra/shuttle-v0.39", features = ["deadpool"] }
+diesel-async = { version = "0.4.1", features = ["postgres", "deadpool"] }
+diesel = { version = "2.1.4", features = ["postgres", "uuid", "chrono"] }
 
 [dev-dependencies]
 rstest           ="0.18"                                 # testing convenience proc-macros
