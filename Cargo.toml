@@ -24,10 +24,13 @@ shuttle-runtime = { version = "0.39", default-features = false }
 serde = { version = "1.0.196", features = ["derive"] }
 shuttle-secrets = "0.39.0"
 serde_json = "1.0.113"
+chrono = { version = "0.4.34", features = ["serde"] }
+# sqlx = "0.7.3"
 # axum-extra = { version = "0.9.2", features = ["cookie", "typed-header"] }
 # tower-http = { version = "0.5.1", features = ["fs"] }
-# shuttle-shared-db = { version = "0.39.0", features = ["postgres", "sqlx"] } 
-# sqlx = { version = "0.7.3", features = ["postgres"] }
+shuttle-shared-db = { version = "0.39.0", features = ["postgres", "sqlx"] } 
+sqlx = { version = "0.7.3", features = ["postgres", "chrono", "uuid"] }
+ulid = { version = "1.1.2", features = ["serde", "postgres"] }
 
 
 [dev-dependencies]
