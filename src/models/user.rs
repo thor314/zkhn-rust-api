@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
-use super::user_favorite::UserFavorite;
+use super::{user_favorite::UserFavorite, user_hidden::UserHidden};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
@@ -76,6 +76,15 @@ impl User {
       item_type,
       item_id,
       date: Utc::now(),
+    }
+  }
+
+  pub fn hide(&self, item_id: Uuid, item_creation_date: DateTime<Utc>) -> UserHidden {
+    UserHidden {
+      username: self.username.clone(),
+      item_id,
+      date: Utc::now(),
+      item_creation_date,
     }
   }
 }
