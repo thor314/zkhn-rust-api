@@ -1,17 +1,17 @@
 // @generated automatically by Diesel CLI.
 
 pub mod sql_types {
-    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "item_category_enum"))]
-    pub struct ItemCategoryEnum;
+  #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+  #[diesel(postgres_type(name = "item_category_enum"))]
+  pub struct ItemCategoryEnum;
 
-    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "item_type"))]
-    pub struct ItemType;
+  #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+  #[diesel(postgres_type(name = "item_type"))]
+  pub struct ItemType;
 
-    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "moderator_action_enum"))]
-    pub struct ModeratorActionEnum;
+  #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+  #[diesel(postgres_type(name = "moderator_action_enum"))]
+  pub struct ModeratorActionEnum;
 }
 
 diesel::table! {
@@ -82,11 +82,32 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    users (id) {
+        id -> Uuid,
+        username -> Text,
+        password -> Text,
+        auth_token -> Nullable<Text>,
+        auth_token_expiration -> Nullable<Int8>,
+        reset_password_token -> Nullable<Text>,
+        reset_password_token_expiration -> Nullable<Int8>,
+        email -> Text,
+        created -> Timestamptz,
+        karma -> Int4,
+        about -> Nullable<Text>,
+        show_dead -> Bool,
+        is_moderator -> Bool,
+        shadow_banned -> Bool,
+        banned -> Bool,
+    }
+}
+
 diesel::joinable!(user_favorites -> items (item_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    comments,
-    items,
-    moderation_logs,
-    user_favorites,
+  comments,
+  items,
+  moderation_logs,
+  user_favorites,
+  users,
 );

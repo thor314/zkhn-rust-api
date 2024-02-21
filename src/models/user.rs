@@ -1,17 +1,24 @@
-use chrono::{DateTime, Utc};
+use axum::{extract::State, response::IntoResponse};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use diesel::{prelude::*, sql_types::*, QueryDsl, Queryable, Selectable, SelectableHelper};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use sqlx::types::Uuid;
+use uuid::Uuid as Uid;
 
-use super::{
+use crate::models::{
   user_favorite::UserFavorite,
-  user_hidden::UserHidden,
-  user_vote::{UserVote, VoteType},
+  //   user_hidden::UserHidden,
+  //   user_vote::{UserVote, VoteType},
 };
-use crate::error::PasswordError;
+use crate::{error::PasswordError, schema::users};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
+// match to a schema for selectable
+#[diesel(table_name = users)]
+// use postgres, improve compiler error messages.
+#[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
-  pub id: Uuid,
+  pub id: Uid,
   pub username: String,
   /// Hashed password.
   // todo: look for a password hash wrapper
@@ -29,7 +36,7 @@ pub struct User {
   // todo: email wrapper
   pub email: String,
   /// Account creation timestamp.
-  pub created: DateTime<Utc>,
+  pub created: NaiveDateTime,
   /// User karma score.
   pub karma: i32,
   /// User biography.
@@ -47,7 +54,7 @@ pub struct User {
 impl User {
   pub fn new(username: String, password: String, email: String, about: Option<String>) -> Self {
     User {
-      id: Uuid::new_v4(),
+      id: Uid::new_v4(),
       username,
       password,
       auth_token: None,
@@ -55,7 +62,7 @@ impl User {
       reset_password_token: None,
       reset_password_token_expiration: None,
       email,
-      created: Utc::now(),
+      created: crate::utils::now(),
       karma: 1,
       about,
       show_dead: false,
@@ -75,30 +82,30 @@ impl User {
     bcrypt::verify(pw, &self.password).map_err(PasswordError::from)
   }
 
-  pub fn favorite(&self, item_type: String, item_id: Uuid) -> UserFavorite {
-    UserFavorite { username: self.username.clone(), item_type, item_id, date: Utc::now() }
+  pub fn favorite(&self, item_type: String, item_id: Uid) -> UserFavorite {
+    UserFavorite { username: self.username.clone(), item_type, item_id, date: crate::utils::now() }
   }
 
-  pub fn hide(&self, item_id: Uuid, item_creation_date: DateTime<Utc>) -> UserHidden {
-    UserHidden { username: self.username.clone(), item_id, date: Utc::now(), item_creation_date }
-  }
+  // pub fn hide(&self, item_id: Uid, item_creation_date: DateTime<Utc>) -> UserHidden {
+  //   UserHidden { username: self.username.clone(), item_id, date: Utc::now(), item_creation_date }
+  // }
 
-  pub fn vote(
-    &self,
-    vote_type: VoteType,
-    content_id: Uuid,
-    parent_item_id: Option<Uuid>,
-    upvote: bool,
-  ) -> UserVote {
-    let downvote = !upvote;
-    UserVote {
-      username: self.username.clone(),
-      vote_type,
-      content_id,
-      parent_item_id,
-      upvote,
-      downvote,
-      date: Utc::now(),
-    }
-  }
+  // pub fn vote(
+  //   &self,
+  //   vote_type: VoteType,
+  //   content_id: Uid,
+  //   parent_item_id: Option<Uid>,
+  //   upvote: bool,
+  // ) -> UserVote {
+  //   let downvote = !upvote;
+  //   UserVote {
+  //     username: self.username.clone(),
+  //     vote_type,
+  //     content_id,
+  //     parent_item_id,
+  //     upvote,
+  //     downvote,
+  //     date: crate::utils::now(),
+  //   }
+  // }
 }
