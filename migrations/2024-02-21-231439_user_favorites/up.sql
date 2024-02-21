@@ -1,4 +1,6 @@
--- Add up migration script here
+-- Your SQL goes here
+drop table if exists user_favorites;
+
 CREATE TABLE user_favorites (
     username VARCHAR(255) NOT NULL,
     item_type VARCHAR(50) NOT NULL,

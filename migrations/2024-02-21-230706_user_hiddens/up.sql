@@ -1,5 +1,9 @@
--- Add up migration script here
-CREATE TABLE user_hidden (
+-- Your SQL goes here
+
+drop table if exists user_hidden;
+drop table if exists user_hiddens;
+
+CREATE TABLE user_hiddens (
     username VARCHAR(255) NOT NULL,
     item_id UUID NOT NULL,
     date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
@@ -9,3 +13,4 @@ CREATE TABLE user_hidden (
     CONSTRAINT fk_user_hidden_users FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE,
     CONSTRAINT fk_user_hidden_items FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
+

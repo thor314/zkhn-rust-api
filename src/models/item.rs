@@ -1,22 +1,24 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use diesel::{sql_types::*, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
-use sqlx::{
-  types::{Text, Uuid},
-  FromRow,
-};
+use uuid::Uuid as Uid;
 
-use super::comment::Comment;
+use crate::{models::comment::Comment, schema::items};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+/// Comments on a post
+#[derive(Queryable, Selectable, Debug)]
+// match to a schema for selectable
+#[diesel(table_name = items)]
+// use postgres, improve compiler error messages.
+#[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Item {
-  pub id:            Uuid,
+  pub id:            Uid,
   pub by:            String,
   pub title:         String,
   /// news, show ask, etc.
-  #[serde(rename = "type")]
-  pub item_type:     String, // `type` is a reserved keyword in Rust
+  pub item_type:     ItemType,
   pub url:           Option<String>,
   pub domain:        Option<String>,
   pub text:          Option<String>,
@@ -24,9 +26,9 @@ pub struct Item {
   pub points:        i32,
   /// internal algorithmic score to sort items on home page by popularity
   pub score:         i32, // todo: both points and score?
-  pub comment_count: u32,
-  pub category:      ItemCategory,
-  pub created:       DateTime<Utc>,
+  pub comment_count: i32,
+  pub item_category: ItemCategory,
+  pub created:       NaiveDateTime,
   pub dead:          bool,
 }
 
@@ -34,10 +36,10 @@ impl Item {
   pub fn new(
     by: String,
     title: String,
-    item_type: String,
+    item_type: ItemType,
     is_text: bool,
     text_or_url_content: String,
-    category: ItemCategory,
+    item_category: ItemCategory,
   ) -> Self {
     let (url, domain, text) = if is_text {
       (None, None, Some(text_or_url_content.clone()))
@@ -48,7 +50,7 @@ impl Item {
     };
 
     Item {
-      id: Uuid::new_v4(),
+      id: Uid::new_v4(),
       by,
       title,
       item_type,
@@ -58,8 +60,8 @@ impl Item {
       points: 1,
       score: 0,
       comment_count: 0,
-      category,
-      created: Utc::now(),
+      item_category,
+      created: crate::utils::now(),
       dead: false,
     }
   }
@@ -74,10 +76,20 @@ impl Item {
 }
 
 // todo: add other types rest
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
+#[ExistingTypePath = "crate::schema::sql_types::ItemCategoryEnum"]
 pub enum ItemCategory {
   Tweet,
   Blog,
   Paper,
   Other,
+}
+
+#[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
+#[ExistingTypePath = "crate::schema::sql_types::ItemType"]
+#[serde(rename_all = "lowercase")]
+pub enum ItemType {
+  News,
+  Show,
+  Ask,
 }
