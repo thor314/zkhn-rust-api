@@ -12,6 +12,10 @@ pub mod sql_types {
     #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "moderator_action_enum"))]
     pub struct ModeratorActionEnum;
+
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "vote_type"))]
+    pub struct VoteType;
 }
 
 diesel::table! {
@@ -93,6 +97,22 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::VoteType;
+
+    user_votes (username, content_id, vote_type) {
+        #[max_length = 255]
+        username -> Varchar,
+        vote_type -> VoteType,
+        content_id -> Uuid,
+        parent_item_id -> Nullable<Uuid>,
+        upvote -> Bool,
+        downvote -> Bool,
+        date -> Timestamp,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Uuid,
         username -> Text,
@@ -114,6 +134,8 @@ diesel::table! {
 
 diesel::joinable!(user_favorites -> items (item_id));
 diesel::joinable!(user_hidden -> items (item_id));
+diesel::joinable!(user_votes -> comments (content_id));
+diesel::joinable!(user_votes -> items (content_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     comments,
@@ -121,5 +143,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     moderation_logs,
     user_favorites,
     user_hidden,
+    user_votes,
     users,
 );
