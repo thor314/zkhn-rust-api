@@ -18,7 +18,7 @@ pub struct Item {
   pub by:            String,
   pub title:         String,
   /// news, show ask, etc.
-  pub item_type:     String, 
+  pub item_type:     ItemType,
   pub url:           Option<String>,
   pub domain:        Option<String>,
   pub text:          Option<String>,
@@ -27,7 +27,7 @@ pub struct Item {
   /// internal algorithmic score to sort items on home page by popularity
   pub score:         i32, // todo: both points and score?
   pub comment_count: i32,
-  pub category:      ItemCategory,
+  pub item_category: ItemCategory,
   pub created:       NaiveDateTime,
   pub dead:          bool,
 }
@@ -36,10 +36,10 @@ impl Item {
   pub fn new(
     by: String,
     title: String,
-    item_type: String,
+    item_type: ItemType,
     is_text: bool,
     text_or_url_content: String,
-    category: ItemCategory,
+    item_category: ItemCategory,
   ) -> Self {
     let (url, domain, text) = if is_text {
       (None, None, Some(text_or_url_content.clone()))
@@ -60,7 +60,7 @@ impl Item {
       points: 1,
       score: 0,
       comment_count: 0,
-      category,
+      item_category,
       created: crate::utils::now(),
       dead: false,
     }
@@ -77,10 +77,19 @@ impl Item {
 
 // todo: add other types rest
 #[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
-#[ExistingTypePath = "crate::schema::sql_types::CategoryEnum"]
+#[ExistingTypePath = "crate::schema::sql_types::ItemCategoryEnum"]
 pub enum ItemCategory {
   Tweet,
   Blog,
   Paper,
   Other,
+}
+
+#[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
+#[ExistingTypePath = "crate::schema::sql_types::ItemType"]
+#[serde(rename_all = "lowercase")]
+pub enum ItemType {
+  News,
+  Show,
+  Ask,
 }
