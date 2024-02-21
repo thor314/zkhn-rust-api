@@ -29,7 +29,6 @@ pub struct Item {
   pub score:         i32, // todo: both points and score?
   pub comment_count: i32,
   pub category:      ItemCategory,
-  // pub created:       DateTime<Utc>,
   pub created:       NaiveDateTime,
   pub dead:          bool,
 }
@@ -63,7 +62,8 @@ impl Item {
       score: 0,
       comment_count: 0,
       category,
-      created: Utc::now(),
+      // created: Utc::now(),
+      created: NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap(),
       dead: false,
     }
   }
@@ -79,6 +79,8 @@ impl Item {
 
 // todo: add other types rest
 #[derive(Debug, Serialize, Deserialize)]
+#[derive(diesel_derive_enum::DbEnum)]
+#[ExistingTypePath = "crate::schema::sql_types::CategoryEnum"]
 pub enum ItemCategory {
   Tweet,
   Blog,

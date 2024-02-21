@@ -38,6 +38,7 @@ bcrypt           ="0.15.0"
 shuttle-diesel-async = { git = "https://github.com/aumetra/shuttle-diesel-async", features = ["deadpool"] }
 diesel-async = { version = "0.4.1", features = ["postgres", "deadpool"] }
 diesel = { version = "2.1.4", features = ["postgres", "uuid", "chrono"] }
+diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }
 
 [dev-dependencies]
 rstest           ="0.18"                                 # testing convenience proc-macros

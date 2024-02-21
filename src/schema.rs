@@ -1,5 +1,11 @@
 // @generated automatically by Diesel CLI.
 
+pub mod sql_types {
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "category_enum"))]
+    pub struct CategoryEnum;
+}
+
 diesel::table! {
     comments (id) {
         id -> Uuid,
@@ -18,6 +24,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::CategoryEnum;
+
     items (id) {
         id -> Uuid,
         by -> Text,
@@ -29,7 +38,7 @@ diesel::table! {
         points -> Int4,
         score -> Int4,
         comment_count -> Int4,
-        category -> Nullable<Text>,
+        category -> CategoryEnum,
         created -> Timestamptz,
         dead -> Bool,
     }

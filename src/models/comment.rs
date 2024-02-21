@@ -1,5 +1,6 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use diesel::{sql_types::*, Queryable, Selectable};
+use diesel_async::AsyncPgConnection;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
@@ -37,17 +38,30 @@ pub struct Comment {
   /// sum total of upvotes and downvotes the comment has received. The minimum point value for a
   /// comment is -4
   pub points:            i32,
-  // pub created:           DateTime<Utc>,
   pub created:           NaiveDateTime,
   /// Dead comments cannot be commented on, and are not displayed by default
   pub dead:              bool,
 }
 
 // async fn fetch_child_comments(
-//   pool: &sqlx::PgPool,
+//   pool: &Pool<AsyncPgConnection>,
+//   id: &Uid,
+//   show_dead_comments: bool,
+// ) -> Vec<Comment> {
+//   let record: Vec<CommenT> = crate::schema::comments::dsl::comments
+//     .select(Comment::as_select())
+//     .load_async(pool)
+//     .await
+//     .unwrap();
+// }
+
+// async fn fetch_child_comments(
+//   // pool: &sqlx::PgPool,
+//   pool: Pool<AsyncPgConnection>,
 //   id: &Uuid,
 //   show_dead_comments: bool,
 // ) -> Result<Vec<Comment>, sqlx::Error> {
+
 //   let s = if show_dead_comments { "AND dead = true" } else { "" };
 //   let record =
 //     sqlx::query_as::<_, Comment>(r#"SELECT * FROM comments WHERE parent_comment_id = $1 $2"#)
