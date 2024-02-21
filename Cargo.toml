@@ -20,6 +20,7 @@ env_logger="0.11"
 
 axum           ={ version="0.7.3", features=["macros"] }
 shuttle-axum   ="0.39.0"
+# shuttle-runtime={ version="0.39"}
 shuttle-runtime={ version="0.39", default-features=false }
 serde          ={ version="1.0.196", features=["derive"] }
 shuttle-secrets="0.39.0"
@@ -28,7 +29,7 @@ chrono         ={ version="0.4.34", features=["serde"] }
 # sqlx = "0.7.3"
 # axum-extra = { version = "0.9.2", features = ["cookie", "typed-header"] }
 # tower-http = { version = "0.5.1", features = ["fs"] }
-# shuttle-shared-db={ version="0.39.0", features=["postgres", "sqlx"] }
+shuttle-shared-db={ version="0.39.0", features=["postgres"] }
 # sqlx             ={ version="0.7.3", features=["postgres", "chrono", "uuid"] }
 # uuid             ={ version="1.1.2", features=["serde", "postgres"] }
 uuid = "1.7.0"
@@ -39,6 +40,8 @@ shuttle-diesel-async = { git = "https://github.com/aumetra/shuttle-diesel-async"
 diesel-async = { version = "0.4.1", features = ["postgres", "deadpool"] }
 diesel = { version = "2.1.4", features = ["postgres", "uuid", "chrono"] }
 diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }
+deadpool = "0.10.0"
+# deadpool = "0.10.0"
 
 [dev-dependencies]
 rstest           ="0.18"                                 # testing convenience proc-macros

@@ -78,8 +78,7 @@ impl Item {
 }
 
 // todo: add other types rest
-#[derive(Debug, Serialize, Deserialize)]
-#[derive(diesel_derive_enum::DbEnum)]
+#[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
 #[ExistingTypePath = "crate::schema::sql_types::CategoryEnum"]
 pub enum ItemCategory {
   Tweet,

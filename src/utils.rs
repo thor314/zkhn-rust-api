@@ -12,6 +12,6 @@ pub(crate) fn setup(secret_store: &shuttle_secrets::SecretStore) -> Result<(), M
   let filter =
     EnvFilter::builder().with_default_directive(LevelFilter::INFO.into()).from_env_lossy();
   tracing_subscriber::fmt().with_env_filter(filter).init();
-  secret_store.get("DOTENV_OK").unwrap();
+  secret_store.get("DOTENV_OK").context("failed to get secrets")?;
   Ok(())
 }

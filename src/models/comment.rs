@@ -1,16 +1,17 @@
+use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use diesel::{sql_types::*, Queryable, Selectable};
-use diesel_async::AsyncPgConnection;
+use diesel::{prelude::*, sql_types::*, QueryDsl, Queryable, Selectable, SelectableHelper};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
-use crate::schema::comments;
+use crate::schema::comments::{self, dsl as comments_dsl};
 
 /// the minimum points a comment can have
 const MIN_POINTS: i32 = -4;
 
 /// Comments on a post
-#[derive(Queryable, Selectable, Debug)]
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
 // match to a schema for selectable
 #[diesel(table_name = comments)]
 // use postgres, improve compiler error messages.
@@ -43,16 +44,44 @@ pub struct Comment {
   pub dead:              bool,
 }
 
+async fn fetch_something_handler(
+  State(state): State<crate::SharedState>,
+  show_dead_comments: bool,
+) {
+  let mut conn = state.pool.get().await.unwrap();
+  // let dead_comments_predicate = if show_dead_comments {true } else
+  comments::dsl::comments
+    // .filter(comments_dsl::parent_comment_id.eq(Some(comments_dsl::id)))
+    // .filter(comments_dsl::parent_comment_id.nullable().eq(Some(comments_dsl::id)))
+    // .filter(if show_dead_comments {
+    //   crate::schema::comments::dsl::dead.eq(false)
+    // } else {
+    //   crate::schema::comments::dsl::dead.eq(false)
+    // })
+    .select(Comment::as_select())
+    .load(&mut conn)
+    .await
+    .optional()
+    .unwrap()
+    .unwrap();
+}
+
 // async fn fetch_child_comments(
-//   pool: &Pool<AsyncPgConnection>,
-//   id: &Uid,
+//   // pool: &sqlx::PgPool,
+//   mut pool: AsyncPgConnection,
+//   id: &Uuid,
 //   show_dead_comments: bool,
-// ) -> Vec<Comment> {
-//   let record: Vec<CommenT> = crate::schema::comments::dsl::comments
-//     .select(Comment::as_select())
-//     .load_async(pool)
-//     .await
-//     .unwrap();
+// ) -> Result<Vec<Comment>, sqlx::Error> {
+
+//   let s = if show_dead_comments { "AND dead = true" } else { "" };
+//   let record =
+//     sqlx::query_as::<_, Comment>(r#"SELECT * FROM comments WHERE parent_comment_id = $1 $2"#)
+//       .bind(id)
+//       .bind(s)
+//       .fetch_all(pool)
+//       .await?;
+
+//   Ok(record)
 // }
 
 // async fn fetch_child_comments(
