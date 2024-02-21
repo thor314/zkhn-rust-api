@@ -12,6 +12,8 @@ use crate::models::{
 };
 use crate::{error::PasswordError, schema::users};
 
+use super::user_hidden::UserHidden;
+
 #[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
 // match to a schema for selectable
 #[diesel(table_name = users)]
@@ -86,9 +88,9 @@ impl User {
     UserFavorite { username: self.username.clone(), item_type, item_id, date: crate::utils::now() }
   }
 
-  // pub fn hide(&self, item_id: Uid, item_creation_date: DateTime<Utc>) -> UserHidden {
-  //   UserHidden { username: self.username.clone(), item_id, date: Utc::now(), item_creation_date }
-  // }
+  pub fn hide(&self, item_id: Uid, item_creation_date: DateTime<Utc>) -> UserHidden {
+    UserHidden { username: self.username.clone(), item_id, date: Utc::now(), item_creation_date }
+  }
 
   // pub fn vote(
   //   &self,

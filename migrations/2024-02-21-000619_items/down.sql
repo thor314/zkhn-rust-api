@@ -1,4 +1,4 @@
 -- This file should undo anything in `up.sql`
-DROP TABLE items;
--- DROP TYPE item_category_enum;
--- DROP TYPE item_type;
+DROP TABLE if exists items;
+DROP TYPE if exists item_category_enum;
+DROP TYPE if exists item_type ;

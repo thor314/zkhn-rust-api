@@ -1,17 +1,17 @@
 // @generated automatically by Diesel CLI.
 
 pub mod sql_types {
-  #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-  #[diesel(postgres_type(name = "item_category_enum"))]
-  pub struct ItemCategoryEnum;
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "item_category_enum"))]
+    pub struct ItemCategoryEnum;
 
-  #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-  #[diesel(postgres_type(name = "item_type"))]
-  pub struct ItemType;
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "item_type"))]
+    pub struct ItemType;
 
-  #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-  #[diesel(postgres_type(name = "moderator_action_enum"))]
-  pub struct ModeratorActionEnum;
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "moderator_action_enum"))]
+    pub struct ModeratorActionEnum;
 }
 
 diesel::table! {
@@ -83,6 +83,16 @@ diesel::table! {
 }
 
 diesel::table! {
+    user_hidden (username, item_id) {
+        #[max_length = 255]
+        username -> Varchar,
+        item_id -> Uuid,
+        date -> Timestamp,
+        item_creation_date -> Timestamp,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Uuid,
         username -> Text,
@@ -103,11 +113,13 @@ diesel::table! {
 }
 
 diesel::joinable!(user_favorites -> items (item_id));
+diesel::joinable!(user_hidden -> items (item_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-  comments,
-  items,
-  moderation_logs,
-  user_favorites,
-  users,
+    comments,
+    items,
+    moderation_logs,
+    user_favorites,
+    user_hidden,
+    users,
 );
