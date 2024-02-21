@@ -32,7 +32,7 @@ chrono         ={ version="0.4.34", features=["serde"] }
 shuttle-shared-db={ version="0.39.0", features=["postgres"] }
 # sqlx             ={ version="0.7.3", features=["postgres", "chrono", "uuid"] }
 # uuid             ={ version="1.1.2", features=["serde", "postgres"] }
-uuid = "1.7.0"
+uuid = { version = "1.7.0", features = ["serde", "v4"] }
 url              ="2.5.0"
 bcrypt           ="0.15.0"
 

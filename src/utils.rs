@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context};
+use chrono::{NaiveDate, NaiveDateTime, Utc};
 use tracing::trace;
 use tracing_subscriber::{
   filter::{EnvFilter, LevelFilter},
@@ -14,4 +15,8 @@ pub(crate) fn setup(secret_store: &shuttle_secrets::SecretStore) -> Result<(), M
   tracing_subscriber::fmt().with_env_filter(filter).init();
   secret_store.get("DOTENV_OK").context("failed to get secrets")?;
   Ok(())
+}
+
+pub fn now() -> NaiveDateTime {
+  NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap()
 }

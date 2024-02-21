@@ -5,7 +5,7 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
-use crate::schema::comments::{self, dsl as comments_dsl};
+use crate::{error::MyError, schema::comments};
 
 /// the minimum points a comment can have
 const MIN_POINTS: i32 = -4;
@@ -44,63 +44,20 @@ pub struct Comment {
   pub dead:              bool,
 }
 
-async fn fetch_something_handler(
-  State(state): State<crate::SharedState>,
+async fn child_comments(
+  mut conn: AsyncPgConnection,
+  id: Uid,
   show_dead_comments: bool,
-) {
-  let mut conn = state.pool.get().await.unwrap();
-  // let dead_comments_predicate = if show_dead_comments {true } else
-  comments::dsl::comments
-    // .filter(comments_dsl::parent_comment_id.eq(Some(comments_dsl::id)))
-    // .filter(comments_dsl::parent_comment_id.nullable().eq(Some(comments_dsl::id)))
-    // .filter(if show_dead_comments {
-    //   crate::schema::comments::dsl::dead.eq(false)
-    // } else {
-    //   crate::schema::comments::dsl::dead.eq(false)
-    // })
-    .select(Comment::as_select())
-    .load(&mut conn)
-    .await
-    .optional()
-    .unwrap()
-    .unwrap();
+) -> Result<Vec<Comment>, MyError> {
+  // boxed does happy type-erasure magic for us
+  let mut query =
+    comments::dsl::comments.filter(comments::parent_comment_id.eq(Some(id))).into_boxed();
+  if !show_dead_comments {
+    query = query.filter(comments::dead.eq(false));
+  }
+  let result = query.select(Comment::as_select()).load(&mut conn).await.unwrap();
+  Ok(result)
 }
-
-// async fn fetch_child_comments(
-//   // pool: &sqlx::PgPool,
-//   mut pool: AsyncPgConnection,
-//   id: &Uuid,
-//   show_dead_comments: bool,
-// ) -> Result<Vec<Comment>, sqlx::Error> {
-
-//   let s = if show_dead_comments { "AND dead = true" } else { "" };
-//   let record =
-//     sqlx::query_as::<_, Comment>(r#"SELECT * FROM comments WHERE parent_comment_id = $1 $2"#)
-//       .bind(id)
-//       .bind(s)
-//       .fetch_all(pool)
-//       .await?;
-
-//   Ok(record)
-// }
-
-// async fn fetch_child_comments(
-//   // pool: &sqlx::PgPool,
-//   pool: Pool<AsyncPgConnection>,
-//   id: &Uuid,
-//   show_dead_comments: bool,
-// ) -> Result<Vec<Comment>, sqlx::Error> {
-
-//   let s = if show_dead_comments { "AND dead = true" } else { "" };
-//   let record =
-//     sqlx::query_as::<_, Comment>(r#"SELECT * FROM comments WHERE parent_comment_id = $1 $2"#)
-//       .bind(id)
-//       .bind(s)
-//       .fetch_all(pool)
-//       .await?;
-
-//   Ok(record)
-// }
 
 impl Comment {
   pub fn new(
@@ -125,8 +82,7 @@ impl Comment {
       text,
       children_count: 0,
       points: 1,
-      // created: Utc::now(),
-      created: NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap(),
+      created: crate::utils::now(),
       dead: false,
     }
   }

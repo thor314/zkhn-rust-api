@@ -3,8 +3,7 @@ use diesel::{sql_types::*, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
-use super::comment::Comment;
-use crate::schema::items;
+use crate::{models::comment::Comment, schema::items};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
@@ -19,7 +18,7 @@ pub struct Item {
   pub by:            String,
   pub title:         String,
   /// news, show ask, etc.
-  pub item_type:     String, // `type` is a reserved keyword in Rust
+  pub item_type:     String, 
   pub url:           Option<String>,
   pub domain:        Option<String>,
   pub text:          Option<String>,
@@ -62,8 +61,7 @@ impl Item {
       score: 0,
       comment_count: 0,
       category,
-      // created: Utc::now(),
-      created: NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap(),
+      created: crate::utils::now(),
       dead: false,
     }
   }
