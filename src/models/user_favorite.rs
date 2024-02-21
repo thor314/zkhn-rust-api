@@ -1,12 +1,21 @@
-use chrono::{DateTime, Utc};
+use axum::{extract::State, response::IntoResponse};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use diesel::{prelude::*, sql_types::*, QueryDsl, Queryable, Selectable, SelectableHelper};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use sqlx::types::Uuid;
+use uuid::Uuid as Uid;
 
+use crate::schema::user_favorites;
+
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
+// match to a schema for selectable
+#[diesel(table_name = user_favorites)]
+// use postgres, improve compiler error messages.
+#[diesel(check_for_backend(diesel::pg::Pg))]
 /// Represents a user's favorite item, including type and timestamp.
-#[derive(Debug, Serialize, Deserialize)]
 pub struct UserFavorite {
-  pub username:  String, // The username of the user who favorited this item.
-  pub item_type: String, // Type of favorited item.
-  pub item_id:   Uuid,   // The id of the favorited item.
-  pub date:      DateTime<Utc>, // When the item was favorited, in UNIX timestamp.
+  pub username:  String,
+  pub item_type: String,
+  pub item_id:   Uid,
+  pub date:      NaiveDateTime,
 }

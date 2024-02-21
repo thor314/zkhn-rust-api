@@ -71,8 +71,22 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    user_favorites (username, item_type, item_id) {
+        #[max_length = 255]
+        username -> Varchar,
+        #[max_length = 50]
+        item_type -> Varchar,
+        item_id -> Uuid,
+        date -> Timestamp,
+    }
+}
+
+diesel::joinable!(user_favorites -> items (item_id));
+
 diesel::allow_tables_to_appear_in_same_query!(
     comments,
     items,
     moderation_logs,
+    user_favorites,
 );
