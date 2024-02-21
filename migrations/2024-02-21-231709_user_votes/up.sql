@@ -1,6 +1,7 @@
 -- Your SQL goes here
 drop table if exists user_votes;
 drop type if exists vote_type;
+drop type if exists user_vote_type;
 
 CREATE TYPE user_vote_type AS ENUM ('Item', 'Comment');
 
