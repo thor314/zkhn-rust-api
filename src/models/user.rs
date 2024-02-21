@@ -5,10 +5,12 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
+use super::{
+  user_favorite::UserFavorite,
+  user_hidden::UserHidden,
+  user_vote::{UserVote, VoteType},
+};
 use crate::{error::PasswordError, schema::users};
-
-use super::{user_favorite::UserFavorite, user_vote::{UserVote, VoteType}};
-use super::user_hidden::UserHidden;
 
 #[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
 // match to a schema for selectable
@@ -85,7 +87,12 @@ impl User {
   }
 
   pub fn hide(&self, item_id: Uid, item_creation_date: NaiveDateTime) -> UserHidden {
-    UserHidden { username: self.username.clone(), item_id, date: crate::utils::now(), item_creation_date }
+    UserHidden {
+      username: self.username.clone(),
+      item_id,
+      date: crate::utils::now(),
+      item_creation_date,
+    }
   }
 
   pub fn vote(
