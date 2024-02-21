@@ -1,5 +1,5 @@
 mod comment;
-// mod item;
+mod item;
 // mod moderation_log;
 // mod user;
 // mod user_favorite;

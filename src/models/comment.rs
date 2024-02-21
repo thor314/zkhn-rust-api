@@ -4,13 +4,6 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
 use crate::schema::comments;
-// use sqlx::{
-//   query_as,
-//   types::{
-//     chrono::{DateTime, Utc},
-//     Uuid,
-//   },
-// };
 
 /// the minimum points a comment can have
 const MIN_POINTS: i32 = -4;
