@@ -6,10 +6,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum MyError {
-  // Derive Into<MyError> for io errors
   #[error("My Io error: {0}")]
   Io(#[from] std::io::Error),
-  // Derive Into<MyError> for anyhow errors
   #[error(transparent)]
   Anyhow(#[from] anyhow::Error),
   #[error("My Password error: {0}")]
@@ -18,7 +16,6 @@ pub enum MyError {
   Diesel(#[from] diesel::result::Error),
   #[error("deadpool error: {0}")]
   Deadpool(#[from] PoolError),
-  // Some other error type
   #[allow(dead_code)]
   #[error("an unhandled error")]
   Unhandled,
@@ -26,8 +23,8 @@ pub enum MyError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum PasswordError {
-  #[error("bcrypt error: {0}")]
-  BcryptError(#[from] bcrypt::BcryptError),
-  #[error("passwords do not match")]
-  PasswordMismatch,
+  #[error("scrypt error: {0}")]
+  ScryptPwHashError(#[from] scrypt::password_hash::Error),
+  // #[error("failed to hash password, do not match")]
+  // PasswordMismatch,
 }
