@@ -1,4 +1,8 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{
+  extract::{Path, State},
+  http::StatusCode,
+  Json,
+};
 use diesel::prelude::*;
 use diesel_async::{
   scoped_futures::ScopedFutureExt, AsyncConnection, AsyncPgConnection, RunQueryDsl,
@@ -11,7 +15,7 @@ use crate::{
     self,
     comment::{Comment, NewCommentPayload},
   },
-  schema::comments::{self, dsl::comments as comments_dsl},
+  schema::{self, comments, comments::dsl::comments as comments_dsl},
   SharedState,
 };
 
@@ -21,11 +25,8 @@ pub async fn add_new_comment(
   State(state): State<SharedState>,
 ) -> Result<StatusCode, MyError> {
   let new_comment = Comment::from(payload);
-
-  // Insert into database using Diesel
   let conn = &mut *state.pool.get().await?;
-
-  // use a transaction, such that all operations are atomic; fail or succeed together
+  // transaction: all operations are atomic; fail or succeed together
   conn
     .transaction(|conn| {
       async move {
@@ -34,7 +35,10 @@ pub async fn add_new_comment(
         models::item::increment_comments(conn, new_comment.parent_item_id).await?;
         if !new_comment.dead {
           // todo: search api: if user is not shadow-banned, tell the search api about the new
-          // comment
+          // tell search api about
+          // - comment
+          // - item.id
+          // - item comment count increment
         }
 
         Ok::<(), MyError>(())
@@ -44,4 +48,39 @@ pub async fn add_new_comment(
     .await?;
 
   Ok(StatusCode::CREATED)
+}
+
+pub async fn get_comment_by_id(
+  Path(comment_id): Path<Uid>,
+  State(state): State<SharedState>,
+) -> Result<Json<Comment>, MyError> {
+  let conn = &mut *state.pool.get().await?;
+  let comment = conn
+    .transaction(|conn| {
+      async move {
+        // Step 1: Query for the comment
+        let comment: Comment =
+        comments_dsl.filter(comments::id.eq(comment_id)).first(conn).await?;
+
+        // todo: not sure what this is for, leave commented
+        // let processed_text = comment_result.text.replace(/<[^>]+>/g, "");
+
+        // Assuming `children` is a Vec<Comment> and needs processing based on your application
+        // logic Placeholder for sorting logic, adapt as needed
+        // let mut sorted_children = comment_result.children;
+        // sorted_children
+        //   .sort_by(|a, b| a.points.cmp(&b.points).then_with(|| a.created.cmp(&b.created)));
+
+        // let response = CommentResponse {
+        //   text:     processed_text,
+        //   children: sorted_children,
+        //   // Populate other fields as necessary
+        // };
+        Ok::<Comment, MyError>(comment)
+      }
+      .scope_boxed()
+    })
+    .await?;
+
+  Ok(Json(comment))
 }

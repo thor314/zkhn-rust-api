@@ -123,6 +123,7 @@ pub async fn child_comments(
   Ok(result)
 }
 
+// corresponding to `add_new_comment` in API
 #[derive(Debug, Deserialize)]
 pub struct NewCommentPayload {
   by:                String,
