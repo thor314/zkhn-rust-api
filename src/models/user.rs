@@ -10,6 +10,7 @@ use super::{
   user_hidden::UserHidden,
   user_vote::{UserVote, VoteType},
 };
+use crate::schema::users::dsl::users as users_dsl;
 use crate::{error::PasswordError, schema::users};
 
 #[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
@@ -114,3 +115,17 @@ impl User {
     }
   }
 }
+
+// pub async fn increment_karma(
+//   mut conn: AsyncPgConnection,
+//   username: &str,
+// ) -> Result<(), diesel::result::Error> {
+//   use crate::schema::users::dsl::*;
+
+//   diesel::update(users_dsl.filter(users::username.eq(username)))
+//     .set(users::karma.eq(users::karma + 1))
+//     .execute(&mut conn)
+//     .await?;
+
+//   Ok(())
+// }

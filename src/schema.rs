@@ -1,21 +1,21 @@
 // @generated automatically by Diesel CLI.
 
 pub mod sql_types {
-  #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-  #[diesel(postgres_type(name = "item_category_enum"))]
-  pub struct ItemCategoryEnum;
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "item_category_enum"))]
+    pub struct ItemCategoryEnum;
 
-  #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-  #[diesel(postgres_type(name = "item_type"))]
-  pub struct ItemType;
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "item_type"))]
+    pub struct ItemType;
 
-  #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-  #[diesel(postgres_type(name = "moderator_action_enum"))]
-  pub struct ModeratorActionEnum;
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "moderator_action_enum"))]
+    pub struct ModeratorActionEnum;
 
-  #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-  #[diesel(postgres_type(name = "user_vote_type"))]
-  pub struct UserVoteType;
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "user_vote_type"))]
+    pub struct UserVoteType;
 }
 
 diesel::table! {
@@ -138,11 +138,11 @@ diesel::joinable!(user_votes -> comments (content_id));
 diesel::joinable!(user_votes -> items (content_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-  comments,
-  items,
-  moderation_logs,
-  user_favorites,
-  user_hiddens,
-  user_votes,
-  users,
+    comments,
+    items,
+    moderation_logs,
+    user_favorites,
+    user_hiddens,
+    user_votes,
+    users,
 );

@@ -1,9 +1,12 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use diesel::prelude::*;
 use diesel::{sql_types::*, Queryable, Selectable};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
-use crate::{models::comment::Comment, schema::items};
+use crate::schema::items::dsl::items as items_dsl;
+use crate::{error::MyError, models::comment::Comment, schema::items};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
@@ -14,22 +17,22 @@ use crate::{models::comment::Comment, schema::items};
 // use postgres, improve compiler error messages.
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Item {
-  pub id:            Uid,
-  pub by:            String,
-  pub title:         String,
+  pub id: Uid,
+  pub by: String,
+  pub title: String,
   /// news, show ask, etc.
-  pub item_type:     ItemType,
-  pub url:           Option<String>,
-  pub domain:        Option<String>,
-  pub text:          Option<String>,
+  pub item_type: ItemType,
+  pub url: Option<String>,
+  pub domain: Option<String>,
+  pub text: Option<String>,
   /// karma for the item
-  pub points:        i32,
+  pub points: i32,
   /// internal algorithmic score to sort items on home page by popularity
-  pub score:         i32, // todo: both points and score?
+  pub score: i32, // todo: both points and score?
   pub comment_count: i32,
   pub item_category: ItemCategory,
-  pub created:       NaiveDateTime,
-  pub dead:          bool,
+  pub created: NaiveDateTime,
+  pub dead: bool,
 }
 
 impl Item {
@@ -70,9 +73,13 @@ impl Item {
     Comment::new(by, self.id, self.title.clone(), true, None, None, text)
   }
 
-  pub fn kill(&mut self) { self.dead = true; }
+  pub fn kill(&mut self) {
+    self.dead = true;
+  }
 
-  pub fn unkill(&mut self) { self.dead = false; }
+  pub fn unkill(&mut self) {
+    self.dead = false;
+  }
 }
 
 // todo: add other types rest
@@ -92,4 +99,16 @@ pub enum ItemType {
   News,
   Show,
   Ask,
+}
+
+pub(crate) async fn increment_comments(
+  mut conn: AsyncPgConnection,
+  parent_item_id: Uid,
+) -> Result<(), MyError> {
+  diesel::update(items_dsl.filter(items::id.eq(parent_item_id)))
+    .set(items::comment_count.eq(items::comment_count + 1))
+    .execute(&mut conn)
+    .await?;
+
+  Ok(())
 }

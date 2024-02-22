@@ -40,7 +40,6 @@ pub struct SharedState {
 #[shuttle_runtime::main]
 async fn main(
   #[shuttle_secrets::Secrets] secret_store: shuttle_secrets::SecretStore,
-  // shuttle will provision the database connection
   #[shuttle_shared_db::Postgres(
     local_uri = "postgres://postgres:{secrets.DB_PASSWORD}@localhost:{secrets.DB_PORT}/postgres"
   )]
