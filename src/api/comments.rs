@@ -108,3 +108,15 @@ pub async fn upvote_comment(
 
   Ok(StatusCode::OK)
 }
+
+// downvote_comment
+// unvote_comment
+// favorite_comment
+// unavorite_comment
+// get_edit_comment_page_data
+// edit_comment
+// get_delete_comment_page_data
+// delete_comment
+// get_replay_page_data
+// get_newest_comments_by_page
+// ...
