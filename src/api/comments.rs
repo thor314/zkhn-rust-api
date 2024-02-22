@@ -21,8 +21,8 @@ use crate::{
 
 // todo: auth
 pub async fn add_new_comment(
-  Json(payload): Json<NewCommentPayload>,
   State(state): State<SharedState>,
+  Json(payload): Json<NewCommentPayload>,
 ) -> Result<StatusCode, MyError> {
   let new_comment = Comment::from(payload);
   let conn = &mut *state.pool.get().await?;
@@ -51,16 +51,15 @@ pub async fn add_new_comment(
 }
 
 pub async fn get_comment_by_id(
-  Path(comment_id): Path<Uid>,
   State(state): State<SharedState>,
+  Path(comment_id): Path<Uid>,
 ) -> Result<Json<Comment>, MyError> {
   let conn = &mut *state.pool.get().await?;
   let comment = conn
     .transaction(|conn| {
       async move {
         // Step 1: Query for the comment
-        let comment: Comment =
-        comments_dsl.filter(comments::id.eq(comment_id)).first(conn).await?;
+        let comment: Comment = comments_dsl.filter(comments::id.eq(comment_id)).first(conn).await?;
 
         // todo: not sure what this is for, leave commented
         // let processed_text = comment_result.text.replace(/<[^>]+>/g, "");
@@ -83,4 +82,29 @@ pub async fn get_comment_by_id(
     .await?;
 
   Ok(Json(comment))
+}
+
+/// Query for comment with `comment_id`
+/// update the `user_votes` table with the new vote
+/// Increment comment author's karma by 1
+/// Increment comment's points by 1
+pub async fn upvote_comment(
+  State(state): State<SharedState>,
+  Path(comment_id): Path<Uid>,
+  Path(user_id): Path<Uid>,
+) -> Result<StatusCode, MyError> {
+  let conn = &mut *state.pool.get().await?;
+  let comment = conn
+    .transaction(|conn| {
+      async move {
+        let comment = comments_dsl.filter(comments::id.eq(comment_id)).first(conn).await?;
+        // let user_vote = models::user::vote(&comment.by, "comment", comment_id, None, true);
+        // diesel::insert_into(user_votes::table).values(&user_vote).execute(conn).await?;
+        Ok::<Comment, MyError>(comment)
+      }
+      .scope_boxed()
+    })
+    .await?;
+
+  Ok(StatusCode::OK)
 }
