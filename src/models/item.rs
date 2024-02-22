@@ -71,8 +71,8 @@ impl Item {
     }
   }
 
-  pub fn create_comment(&self, by: String, text: String) -> Comment {
-    Comment::new(by, self.id, self.title.clone(), true, None, None, text)
+  pub fn create_comment(&self, by: String, text: String, dead: bool) -> Comment {
+    Comment::new(by, self.id, self.title.clone(), true, None, None, text, dead)
   }
 
   pub fn kill(&mut self) { self.dead = true; }

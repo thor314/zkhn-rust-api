@@ -44,7 +44,8 @@ pub struct Comment {
   /// comment is -4
   pub points:            i32,
   pub created:           NaiveDateTime,
-  /// Dead comments cannot be commented on, and are not displayed by default
+  /// Dead comments cannot be commented on, and are not displayed by default.
+  /// Comments submitted by shadow-banned users are dead.
   pub dead:              bool,
 }
 
@@ -57,6 +58,7 @@ impl Comment {
     root_comment_id: Option<Uid>,
     parent_comment_id: Option<Uid>,
     text: String,
+    dead: bool,
   ) -> Self {
     // if root_comment_id is None, then this is the root comment
     let root_comment_id = root_comment_id.unwrap_or(Uid::new_v4());
@@ -74,7 +76,7 @@ impl Comment {
       children_count: 0,
       points: 1,
       created: crate::utils::now(),
-      dead: false,
+      dead,
     }
   }
 
@@ -89,7 +91,7 @@ impl Comment {
 
   pub fn unkill(&mut self) { self.dead = true }
 
-  pub fn create_child_comment(&mut self, by: String, text: String) -> Comment {
+  pub fn create_child_comment(&mut self, by: String, text: String, dead: bool) -> Comment {
     let comment = Comment::new(
       by,
       self.parent_item_id,
@@ -98,6 +100,7 @@ impl Comment {
       Some(self.root_comment_id),
       Some(self.id),
       text,
+      dead,
     );
 
     self.children_count += 1;
@@ -129,6 +132,7 @@ pub struct NewCommentPayload {
   root_comment_id:   Option<Uid>,
   parent_comment_id: Option<Uid>,
   text:              String,
+  dead:              bool,
 }
 
 impl From<NewCommentPayload> for Comment {
@@ -141,6 +145,7 @@ impl From<NewCommentPayload> for Comment {
       payload.root_comment_id,
       payload.parent_comment_id,
       payload.text,
+      payload.dead,
     )
   }
 }
