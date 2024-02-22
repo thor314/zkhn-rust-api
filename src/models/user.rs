@@ -10,7 +10,10 @@ use super::{
   user_hidden::UserHidden,
   user_vote::{UserVote, VoteType},
 };
-use crate::{error::PasswordError, schema::users};
+use crate::{
+  error::{MyError, PasswordError},
+  schema::users::{self, dsl::users as users_dsl},
+};
 
 #[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
 // match to a schema for selectable
@@ -113,4 +116,16 @@ impl User {
       date: crate::utils::now(),
     }
   }
+}
+
+// type
+// trait Conn = AsyncConnection + Send + Sync;
+
+pub async fn increment_karma(conn: &mut AsyncPgConnection, username: &str) -> Result<(), MyError> {
+  diesel::update(users_dsl.filter(users::username.eq(username)))
+    .set(users::karma.eq(users::karma + 1))
+    .execute(conn)
+    .await?;
+
+  Ok(())
 }

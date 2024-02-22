@@ -1,9 +1,14 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use diesel::{sql_types::*, Queryable, Selectable};
+use diesel::{prelude::*, sql_types::*, Queryable, Selectable};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
-use crate::{models::comment::Comment, schema::items};
+use crate::{
+  error::MyError,
+  models::comment::Comment,
+  schema::{items, items::dsl::items as items_dsl},
+};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
@@ -66,8 +71,8 @@ impl Item {
     }
   }
 
-  pub fn create_comment(&self, by: String, text: String) -> Comment {
-    Comment::new(by, self.id, self.title.clone(), true, None, None, text)
+  pub fn create_comment(&self, by: String, text: String, dead: bool) -> Comment {
+    Comment::new(by, self.id, self.title.clone(), true, None, None, text, dead)
   }
 
   pub fn kill(&mut self) { self.dead = true; }
@@ -92,4 +97,16 @@ pub enum ItemType {
   News,
   Show,
   Ask,
+}
+
+pub(crate) async fn increment_comments(
+  conn: &mut AsyncPgConnection,
+  parent_item_id: Uid,
+) -> Result<(), MyError> {
+  diesel::update(items_dsl.filter(items::id.eq(parent_item_id)))
+    .set(items::comment_count.eq(items::comment_count + 1))
+    .execute(conn)
+    .await?;
+
+  Ok(())
 }
