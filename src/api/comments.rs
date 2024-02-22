@@ -17,11 +17,11 @@ pub async fn add_new_comment(
   let new_comment = Comment::from(payload);
 
   // Insert into database using Diesel
-  let mut conn = state.pool.get().await?;
-  diesel::insert_into(comments::table).values(new_comment).execute(&mut conn).await?;
+  let conn = &mut *state.pool.get().await?;
+  diesel::insert_into(comments::table).values(&new_comment).execute(conn).await?;
 
-  // crate::models::user::increment_karma(conn, &new_comment.by).await?;
-  // crate::models::item::increment_comments(conn, new_comment.parent_item_id).await?;
+  crate::models::user::increment_karma(conn, &new_comment.by).await?;
+  crate::models::item::increment_comments(conn, new_comment.parent_item_id).await?;
 
   Ok(StatusCode::CREATED)
 }

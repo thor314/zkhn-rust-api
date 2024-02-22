@@ -100,12 +100,12 @@ pub enum ItemType {
 }
 
 pub(crate) async fn increment_comments(
-  mut conn: AsyncPgConnection,
+  conn: &mut AsyncPgConnection,
   parent_item_id: Uid,
 ) -> Result<(), MyError> {
   diesel::update(items_dsl.filter(items::id.eq(parent_item_id)))
     .set(items::comment_count.eq(items::comment_count + 1))
-    .execute(&mut conn)
+    .execute(conn)
     .await?;
 
   Ok(())

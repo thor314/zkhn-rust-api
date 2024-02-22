@@ -11,8 +11,8 @@ use super::{
   user_vote::{UserVote, VoteType},
 };
 use crate::{
-  error::PasswordError,
-  schema::{users, users::dsl::users as users_dsl},
+  error::{MyError, PasswordError},
+  schema::users::{self, dsl::users as users_dsl},
 };
 
 #[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
@@ -118,16 +118,14 @@ impl User {
   }
 }
 
-// pub async fn increment_karma(
-//   mut conn: AsyncPgConnection,
-//   username: &str,
-// ) -> Result<(), diesel::result::Error> {
-//   use crate::schema::users::dsl::*;
+// type
+// trait Conn = AsyncConnection + Send + Sync;
 
-//   diesel::update(users_dsl.filter(users::username.eq(username)))
-//     .set(users::karma.eq(users::karma + 1))
-//     .execute(&mut conn)
-//     .await?;
+pub async fn increment_karma(conn: &mut AsyncPgConnection, username: &str) -> Result<(), MyError> {
+  diesel::update(users_dsl.filter(users::username.eq(username)))
+    .set(users::karma.eq(users::karma + 1))
+    .execute(conn)
+    .await?;
 
-//   Ok(())
-// }
+  Ok(())
+}
