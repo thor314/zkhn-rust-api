@@ -10,8 +10,10 @@ use super::{
   user_hidden::UserHidden,
   user_vote::{UserVote, VoteType},
 };
-use crate::schema::users::dsl::users as users_dsl;
-use crate::{error::PasswordError, schema::users};
+use crate::{
+  error::PasswordError,
+  schema::{users, users::dsl::users as users_dsl},
+};
 
 #[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
 // match to a schema for selectable

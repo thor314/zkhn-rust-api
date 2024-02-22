@@ -45,6 +45,6 @@ pub fn sanitize_text(text: &str) -> String {
   let re_url = Regex::new(r"http://[^\s]+").unwrap(); // Simplified URL regex
   text = re_url.replace_all(&text, "<a href=\"$0\">$0</a>").to_string();
   // Prevent XSS Attacks
-  text = ammonia::clean(&text); 
+  text = ammonia::clean(&text);
   text
 }

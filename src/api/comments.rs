@@ -23,6 +23,5 @@ pub async fn add_new_comment(
   // crate::models::user::increment_karma(conn, &new_comment.by).await?;
   // crate::models::item::increment_comments(conn, new_comment.parent_item_id).await?;
 
-
   Ok(StatusCode::CREATED)
 }

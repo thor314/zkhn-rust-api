@@ -6,8 +6,10 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
-use crate::schema::comments::dsl::comments as comments_dsl;
-use crate::{error::MyError, schema::comments};
+use crate::{
+  error::MyError,
+  schema::{comments, comments::dsl::comments as comments_dsl},
+};
 
 /// the minimum points a comment can have
 const MIN_POINTS: i32 = -4;
@@ -20,30 +22,30 @@ const MIN_POINTS: i32 = -4;
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Comment {
   /// the unique identifier given to each comment in the form of a randomly generated string
-  pub id: Uid, // Assuming UUIDs for unique identifiers, common in SQL databases
+  pub id:                Uid, // Assuming UUIDs for unique identifiers, common in SQL databases
   /// username of the user who created the comment
-  pub by: String,
+  pub by:                String,
   /// the id of the item the comment was placed on
-  pub parent_item_id: Uid,
+  pub parent_item_id:    Uid,
   /// the title of the item the comment was placed on
   pub parent_item_title: String,
   /// body text for the comment
-  pub text: String,
+  pub text:              String,
   /// a boolean value that indicates whether or not the comment is a parent comment(not a child of
   /// any other comment)
-  pub is_parent: bool,
+  pub is_parent:         bool,
   /// a unique identifier for the root comment of a child comment, or else self
-  pub root_comment_id: Uid,
+  pub root_comment_id:   Uid,
   /// the id of the parent comment. This will only be added if the comment is a direct reply to
   /// another comment
   pub parent_comment_id: Option<Uid>,
-  pub children_count: i32,
+  pub children_count:    i32,
   /// sum total of upvotes and downvotes the comment has received. The minimum point value for a
   /// comment is -4
-  pub points: i32,
-  pub created: NaiveDateTime,
+  pub points:            i32,
+  pub created:           NaiveDateTime,
   /// Dead comments cannot be commented on, and are not displayed by default
-  pub dead: bool,
+  pub dead:              bool,
 }
 
 impl Comment {
@@ -76,26 +78,16 @@ impl Comment {
     }
   }
 
-  pub fn edit(&mut self, text: String) {
-    self.text = text;
-  }
+  pub fn edit(&mut self, text: String) { self.text = text; }
 
-  pub fn increment_point(&mut self) {
-    self.points += 1;
-  }
+  pub fn increment_point(&mut self) { self.points += 1; }
 
-  pub fn decrement_point(&mut self) {
-    self.points = std::cmp::max(MIN_POINTS, self.points - 1);
-  }
+  pub fn decrement_point(&mut self) { self.points = std::cmp::max(MIN_POINTS, self.points - 1); }
 
   // todo: set children to dead?
-  pub fn kill(&mut self) {
-    self.dead = true
-  }
+  pub fn kill(&mut self) { self.dead = true }
 
-  pub fn unkill(&mut self) {
-    self.dead = true
-  }
+  pub fn unkill(&mut self) { self.dead = true }
 
   pub fn create_child_comment(&mut self, by: String, text: String) -> Comment {
     let comment = Comment::new(
@@ -130,13 +122,13 @@ pub async fn child_comments(
 
 #[derive(Debug, Deserialize)]
 pub struct NewCommentPayload {
-  by: String,
-  parent_item_id: Uid,
+  by:                String,
+  parent_item_id:    Uid,
   parent_item_title: String,
-  is_parent: bool,
-  root_comment_id: Option<Uid>,
+  is_parent:         bool,
+  root_comment_id:   Option<Uid>,
   parent_comment_id: Option<Uid>,
-  text: String,
+  text:              String,
 }
 
 impl From<NewCommentPayload> for Comment {
