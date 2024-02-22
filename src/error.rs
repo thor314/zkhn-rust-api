@@ -1,6 +1,7 @@
 //! zkhn-rust-api error types
 // https://docs.rs/thiserror/latest/thiserror/
 
+use diesel_async::pooled_connection::deadpool::PoolError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -13,6 +14,10 @@ pub enum MyError {
   Anyhow(#[from] anyhow::Error),
   #[error("My Password error: {0}")]
   PwError(#[from] PasswordError),
+  #[error("Diesel error: {0}")]
+  Diesel(#[from] diesel::result::Error),
+  #[error("deadpool error: {0}")]
+  Deadpool(#[from] PoolError),
   // Some other error type
   #[allow(dead_code)]
   #[error("an unhandled error")]

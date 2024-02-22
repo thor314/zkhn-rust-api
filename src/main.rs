@@ -5,6 +5,7 @@
 #![allow(non_snake_case)]
 #![allow(clippy::clone_on_copy)]
 
+mod api;
 mod error;
 mod models;
 mod schema;

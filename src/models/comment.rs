@@ -11,7 +11,7 @@ use crate::{error::MyError, schema::comments};
 const MIN_POINTS: i32 = -4;
 
 /// Comments on a post
-#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Selectable, Insertable, Debug, Serialize)]
 // match to a schema for selectable
 #[diesel(table_name = comments)]
 // use postgres, improve compiler error messages.
@@ -111,5 +111,30 @@ impl Comment {
 
     self.children_count += 1;
     comment
+  }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct NewCommentPayload {
+  by:                String,
+  parent_item_id:    Uid,
+  parent_item_title: String,
+  is_parent:         bool,
+  root_comment_id:   Option<Uid>,
+  parent_comment_id: Option<Uid>,
+  text:              String,
+}
+
+impl From<NewCommentPayload> for Comment {
+  fn from(payload: NewCommentPayload) -> Self {
+    Comment::new(
+      payload.by,
+      payload.parent_item_id,
+      payload.parent_item_title,
+      payload.is_parent,
+      payload.root_comment_id,
+      payload.parent_comment_id,
+      payload.text,
+    )
   }
 }
