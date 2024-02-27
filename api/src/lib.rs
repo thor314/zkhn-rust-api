@@ -18,7 +18,6 @@ use axum::{
 };
 use diesel_async::{pooled_connection::deadpool::Pool, AsyncPgConnection};
 use error::MyError;
-use shuttle_secrets::SecretStore;
 use tracing::info;
 
 #[derive(Clone)]
