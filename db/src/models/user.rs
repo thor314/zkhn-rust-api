@@ -19,7 +19,7 @@ use crate::{
   schema::users::{self, dsl::users as users_dsl},
 };
 
-#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Clone)]
 // match to a schema for selectable
 #[diesel(table_name = users)]
 // use postgres, improve compiler error messages.
@@ -29,7 +29,7 @@ pub struct User {
   pub username: String,
   /// Hashed password.
   // todo: look for a password hash wrapper, this should be a hash
-  pub password: String,
+  pub password_hash: String,
   // todo: auth
   /// Authentication token.
   pub auth_token: Option<String>,
@@ -63,7 +63,7 @@ impl User {
     User {
       id: Uid::new_v4(),
       username,
-      password,
+      password_hash: password,
       auth_token: None,
       auth_token_expiration: None,
       reset_password_token: None,
@@ -80,7 +80,7 @@ impl User {
   }
 
   pub fn compare_password(&self, other_password: &str) -> Result<bool, PasswordError> {
-    let parsed_hash = PasswordHash::new(&self.password)?;
+    let parsed_hash = PasswordHash::new(&self.password_hash)?;
     match Scrypt.verify_password(other_password.as_bytes(), &parsed_hash) {
       Ok(_) => Ok(true),
       Err(_) => Ok(false),

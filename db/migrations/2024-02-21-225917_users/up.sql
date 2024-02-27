@@ -2,7 +2,7 @@
 CREATE TABLE users (
     id UUID PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
     auth_token TEXT,
     auth_token_expiration BIGINT,
     reset_password_token TEXT,

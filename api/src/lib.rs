@@ -33,11 +33,11 @@ pub struct SharedState {
   pub pool: DbPool,
 }
 
-impl SharedState {
-  pub fn new() -> Self {
-    let conn_str = "todo";
-    let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(conn_str);
-    let pool = Pool::builder(config).build().unwrap();
-    Self { pool }
-  }
-}
+// impl SharedState {
+//   pub fn new() -> Self {
+//     let conn_str = "todo";
+//     let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(conn_str);
+//     let pool = Pool::builder(config).build().unwrap();
+//     Self { pool }
+//   }
+// }

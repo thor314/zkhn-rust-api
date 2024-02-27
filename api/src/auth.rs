@@ -1,3 +1,5 @@
+use anyhow::Context;
+use axum::async_trait;
 use axum_login::{AuthUser, AuthnBackend, UserId};
 // use db::models::comment::Comment;
 use db::models::user::User;
@@ -18,7 +20,7 @@ impl AuthUser for UserNewType {
   fn session_auth_hash(&self) -> &[u8] { self.0.password_hash.as_bytes() }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct Backend {
   db_pool: DbPool,
 }
@@ -31,24 +33,18 @@ struct Credentials {
 impl AuthnBackend for Backend {
   type Credentials = Credentials;
   type Error = MyError;
-  type User = User;
+  type User = UserNewType;
 
   async fn authenticate(
     &self,
     Credentials { id }: Self::Credentials,
   ) -> Result<Option<Self::User>, Self::Error> {
-    let user = db::get_user_from_id(&self.db_pool, id)
-      .await
-      .map(|user| user.map(UserNewType))
-      .context("Failed to get user")?;
+    let user = db::get_user_from_id(&self.db_pool, id).await.map(UserNewType);
     Ok(user)
   }
 
   async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    let user = db::get_user_from_id(&self.db_pool, user_id.0)
-      .await
-      .map(|user| user.map(UserNewType))
-      .context("Failed to get user")?;
-    Ok(self.users.get(user_id).cloned())
+    let user = db::get_user_from_id(&self.db_pool, *user_id).await.map(UserNewType);
+    Ok(user)
   }
 }
