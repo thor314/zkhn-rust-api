@@ -10,8 +10,6 @@ pub enum MyError {
   Io(#[from] std::io::Error),
   #[error(transparent)]
   Anyhow(#[from] anyhow::Error),
-  #[error("My Password error: {0}")]
-  PwError(#[from] PasswordError),
   #[error("Diesel error: {0}")]
   Diesel(#[from] diesel::result::Error),
   #[error("deadpool error: {0}")]
@@ -19,12 +17,4 @@ pub enum MyError {
   #[allow(dead_code)]
   #[error("an unhandled error")]
   Unhandled,
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum PasswordError {
-  #[error("scrypt error: {0}")]
-  ScryptPwHashError(#[from] scrypt::password_hash::Error),
-  // #[error("failed to hash password, do not match")]
-  // PasswordMismatch,
 }
