@@ -5,10 +5,7 @@
 #![allow(non_snake_case)]
 #![allow(clippy::clone_on_copy)]
 
-mod api;
 mod error;
-mod models;
-mod schema;
 #[cfg(test)] mod tests;
 mod utils;
 
@@ -40,23 +37,25 @@ pub struct SharedState {
 #[shuttle_runtime::main]
 async fn main(
   #[shuttle_secrets::Secrets] secret_store: shuttle_secrets::SecretStore,
-  #[shuttle_shared_db::Postgres(
-    local_uri = "postgres://postgres:{secrets.DB_PASSWORD}@localhost:{secrets.DB_PORT}/postgres"
-  )]
-  conn_str: String,
+  // #[shuttle_shared_db::Postgres(
+  //   local_uri = "postgres://postgres:{secrets.DB_PASSWORD}@localhost:{secrets.DB_PORT}/postgres"
+  // )]
+  // conn_str: String,
 ) -> shuttle_axum::ShuttleAxum {
   utils::setup(&secret_store).unwrap();
 
-  let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(conn_str);
-  let pool = Pool::builder(config).build().unwrap();
-  let shared_state = SharedState { pool };
+  // let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(conn_str);
+  // let pool = Pool::builder(config).build().unwrap();
+  // let shared_state = SharedState { pool };
 
   let router = Router::new()
-    .route("/", get(index))
-    .route("/comments", get(index)) // todo
-    .route("/-1/error", get(error_handler))
-    .route("/-1/health", get(|| async { StatusCode::OK }))
-    .with_state(shared_state);
+  //
+  ;
+    // .route("/", get(index))
+    // .route("/comments", get(index)) // todo
+    // .route("/-1/error", get(error_handler))
+    // .route("/-1/health", get(|| async { StatusCode::OK }))
+    // .with_state(shared_state);
 
   Ok(router.into())
 }

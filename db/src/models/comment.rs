@@ -1,8 +1,7 @@
-use axum::{extract::State, response::IntoResponse};
+// use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use diesel::{prelude::*, sql_types::*, QueryDsl, Queryable, Selectable, SelectableHelper};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
@@ -62,7 +61,7 @@ impl Comment {
   ) -> Self {
     // if root_comment_id is None, then this is the root comment
     let root_comment_id = root_comment_id.unwrap_or(Uid::new_v4());
-    let text = crate::utils::sanitize_text(&text);
+    // let text = crate::utils::sanitize_text(&text); // todo
 
     Comment {
       id: Uid::new_v4(),
