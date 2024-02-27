@@ -7,7 +7,6 @@ use uuid::Uuid as Uid;
 
 use crate::{error::MyError, DbPool};
 
-// SharedState,
 // models::{self},
 //   comment::{Comment, NewCommentPayload},
 // schema::{self, comments, comments::dsl::comments as comments_dsl},
@@ -20,6 +19,7 @@ pub async fn comment_router(db_pool: &DbPool) -> Router {
 pub async fn add_new_comment(
   State(pool): State<DbPool>,
   // Json(payload): Json<NewCommentPayload>,
+  // Auth()
 ) -> Result<StatusCode, MyError> {
   todo!()
 }
