@@ -11,11 +11,11 @@ db  = { path = "../db" }
 
 # # cute="0.3.0"
 # ammonia="3.3.0"
-# anyhow="1.0"
+anyhow="1.0"
 axum={ version="0.7.3", features=["macros"] }
 # chrono={ version="0.4.34", features=["serde"] }
 # deadpool="0.10.0"
-# diesel-async={ version="0.4.1", features=["postgres", "deadpool"] }
+diesel-async={ version="0.4.1", features=["postgres", "deadpool"] }
 # diesel={ version="2.1.4", features=["postgres", "uuid", "chrono"] }
 # diesel-derive-enum={ version="2.1.0", features=["postgres"] }
 # regex="1.10.3"
@@ -29,21 +29,21 @@ shuttle-secrets="0.39.0"
 shuttle-shared-db={ version="0.39.0", features=["postgres"] }
 # serde={ version="1.0.196", features=["derive"] }
 # serde_json="1.0.113"
-# tracing="0.1"
-# tracing-subscriber={ version="0.3", features=["env-filter", "fmt"] }
-# tokio={ version="1", features=["full"] }
-# thiserror="1.0"
+tracing="0.1"
+tracing-subscriber={ version="0.3", features=["env-filter", "fmt"] }
+tokio={ version="1", features=["full"] }
+thiserror="1.0"
 # uuid={ version="1.7.0", features=["serde", "v4"] }
 # url="2.5.0"
 # # futures = "0.3.30"
 # # axum-extra = { version = "0.9.2", features = ["cookie", "typed-header"] }
 # # tower-http = { version = "0.5.1", features = ["fs"] }
 
-# [dev-dependencies]
-# rstest           ="0.18"                                 # testing convenience proc-macros
-# arbitrary        ={ version="1.1", features=["derive"] } # see quickcheck
-# quickcheck       ="1.0"                                  # lowkey proptest suite
-# quickcheck_macros="1"                                    # derive 
+[dev-dependencies]
+rstest           ="0.18"                                 # testing convenience proc-macros
+arbitrary        ={ version="1.1", features=["derive"] } # see quickcheck
+quickcheck       ="1.0"                                  # lowkey proptest suite
+quickcheck_macros="1"                                    # derive 
 
 # [[test]]
 # name="integration"
