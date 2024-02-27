@@ -1,19 +1,11 @@
 [package]
-authors    =["Thor Kampefner <thorck@pm.me>"]
-description="""zkhn api"""
-edition    ="2021"
-license    ="Apache2.0 OR MIT"
-name       ="zkhn-rust-api"
-repository ="https://github.com/thor314/zkhn-rust-api"
-version    ="0.1.0"
+name = "server"
+version = "0.1.0"
+edition = "2021"
 
-[workspace]
-members = [
-    "api",
-    "db", 
-    "server",
-]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[dependencies]
 # [dependencies]
 # # cute="0.3.0"
 # ammonia="3.3.0"
