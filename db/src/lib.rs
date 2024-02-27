@@ -6,20 +6,7 @@
 #![allow(clippy::clone_on_copy)]
 
 pub mod error;
+pub mod models;
 pub mod schema;
 #[cfg(test)] mod tests;
 mod utils;
-
-// use axum::{
-//   http::StatusCode,
-//   response::IntoResponse,
-//   routing::{get, post},
-//   Router,
-// };
-// use diesel_async::{
-//   pooled_connection::{deadpool::Pool, AsyncDieselConnectionManager},
-//   AsyncConnection, AsyncPgConnection,
-// };
-// use error::MyError;
-// use shuttle_secrets::SecretStore;
-// use tracing::info;

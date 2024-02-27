@@ -8,7 +8,7 @@ repository ="https://github.com/thor314/zkhn-rust-api"
 version    ="0.1.0"
 
 [dependencies]
-models = { path = "../models" }
+db = { path = "../db" }
 
 ammonia="3.3.0"
 anyhow="1.0"

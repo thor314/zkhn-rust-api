@@ -8,19 +8,16 @@ repository ="https://github.com/thor314/zkhn-rust-api"
 version    ="0.1.0"
 
 [dependencies]
-# models = { path = "../models" }
-
-# cute="0.3.0"
-# ammonia="3.3.0"
+ammonia="3.3.0"
 anyhow="1.0"
-# axum={ version="0.7.3", features=["macros"] }
+axum={ version="0.7.3", features=["macros"] }
 chrono={ version="0.4.34", features=["serde"] }
 deadpool="0.10.0"
 diesel-async={ version="0.4.1", features=["postgres", "deadpool"] }
 diesel={ version="2.1.4", features=["postgres", "uuid", "chrono"] }
 diesel-derive-enum={ version="2.1.0", features=["postgres"] }
-# regex="1.10.3"
-# scrypt = "0.11.0"
+regex="1.10.3"
+scrypt = "0.11.0"
 # shuttle-axum="0.39.0"
 # shuttle-runtime={ version="0.39", default-features=false }
 # shuttle-secrets="0.39.0"
