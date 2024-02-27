@@ -6,7 +6,7 @@
 #![allow(clippy::clone_on_copy)]
 
 mod api;
-mod error;
+pub mod error;
 #[cfg(test)] mod tests;
 mod utils;
 
