@@ -5,8 +5,8 @@
 #![allow(non_snake_case)]
 #![allow(clippy::clone_on_copy)]
 
-mod error;
-mod schema;
+pub mod error;
+pub mod schema;
 #[cfg(test)] mod tests;
 mod utils;
 
