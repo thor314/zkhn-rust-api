@@ -11,8 +11,8 @@ use crate::{error::MyError, DbPool};
 //   comment::{Comment, NewCommentPayload},
 // schema::{self, comments, comments::dsl::comments as comments_dsl},
 
-pub async fn comment_router(db_pool: &DbPool) -> Router {
-  Router::new().with_state(db_pool.clone())
+pub async fn comment_router() -> Router {
+  Router::new()
 }
 
 // todo: auth
