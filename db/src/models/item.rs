@@ -2,7 +2,7 @@ use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use diesel::{prelude::*, sql_types::*, Queryable, Selectable};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid as Uid;
+use sqlx::types::Uuid;
 
 use crate::{
   error::MyError,
@@ -13,13 +13,13 @@ use crate::{
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
 /// Comments on a post
-#[derive(Queryable, Selectable, Debug)]
+#[derive(sqlx::FromRow, Selectable, Debug)]
 // match to a schema for selectable
 #[diesel(table_name = items)]
 // use postgres, improve compiler error messages.
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Item {
-  pub id:            Uid,
+  pub id:            Uuid,
   pub by:            String,
   pub title:         String,
   /// news, show ask, etc.
@@ -55,7 +55,7 @@ impl Item {
     };
 
     Item {
-      id: Uid::new_v4(),
+      id: Uuid::new_v4(),
       by,
       title,
       item_type,
@@ -101,7 +101,7 @@ pub enum ItemType {
 
 pub(crate) async fn increment_comments(
   conn: &mut AsyncPgConnection,
-  parent_item_id: Uid,
+  parent_item_id: Uuid,
 ) -> Result<(), MyError> {
   diesel::update(items_dsl.filter(items::id.eq(parent_item_id)))
     .set(items::comment_count.eq(items::comment_count + 1))

@@ -3,7 +3,7 @@ use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use diesel::{prelude::*, sql_types::*, QueryDsl, Queryable, Selectable, SelectableHelper};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid as Uid;
+use sqlx::types::Uuid;
 
 use crate::{
   error::MyError,
@@ -14,18 +14,18 @@ use crate::{
 const MIN_POINTS: i32 = -4;
 
 /// Comments on a post
-#[derive(Queryable, Selectable, Insertable, Debug, Serialize)]
+#[derive(sqlx::FromRow, Insertable, Debug, Serialize)]
 // match to a schema for selectable
 #[diesel(table_name = comments)]
 // use postgres, improve compiler error messages.
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Comment {
   /// the unique identifier given to each comment in the form of a randomly generated string
-  pub id:                Uid, // Assuming UUIDs for unique identifiers, common in SQL databases
+  pub id:                Uuid, // Assuming UUIDs for unique identifiers, common in SQL databases
   /// username of the user who created the comment
   pub by:                String,
   /// the id of the item the comment was placed on
-  pub parent_item_id:    Uid,
+  pub parent_item_id:    Uuid,
   /// the title of the item the comment was placed on
   pub parent_item_title: String,
   /// body text for the comment
@@ -34,10 +34,10 @@ pub struct Comment {
   /// any other comment)
   pub is_parent:         bool,
   /// a unique identifier for the root comment of a child comment, or else self
-  pub root_comment_id:   Uid,
+  pub root_comment_id:   Uuid,
   /// the id of the parent comment. This will only be added if the comment is a direct reply to
   /// another comment
-  pub parent_comment_id: Option<Uid>,
+  pub parent_comment_id: Option<Uuid>,
   pub children_count:    i32,
   /// sum total of upvotes and downvotes the comment has received. The minimum point value for a
   /// comment is -4
@@ -51,20 +51,20 @@ pub struct Comment {
 impl Comment {
   pub fn new(
     by: String,
-    parent_item_id: Uid,
+    parent_item_id: Uuid,
     parent_item_title: String,
     is_parent: bool,
-    root_comment_id: Option<Uid>,
-    parent_comment_id: Option<Uid>,
+    root_comment_id: Option<Uuid>,
+    parent_comment_id: Option<Uuid>,
     text: String,
     dead: bool,
   ) -> Self {
     // if root_comment_id is None, then this is the root comment
-    let root_comment_id = root_comment_id.unwrap_or(Uid::new_v4());
+    let root_comment_id = root_comment_id.unwrap_or(Uuid::new_v4());
     // let text = crate::utils::sanitize_text(&text); // todo
 
     Comment {
-      id: Uid::new_v4(),
+      id: Uuid::new_v4(),
       by,
       parent_item_id,
       parent_item_title,
@@ -109,7 +109,7 @@ impl Comment {
 
 pub async fn child_comments(
   mut conn: AsyncPgConnection,
-  id: Uid,
+  id: Uuid,
   show_dead_comments: bool,
 ) -> Result<Vec<Comment>, MyError> {
   // boxed does happy type-erasure magic for us
@@ -126,11 +126,11 @@ pub async fn child_comments(
 #[derive(Debug, Deserialize)]
 pub struct NewCommentPayload {
   by:                String,
-  parent_item_id:    Uid,
+  parent_item_id:    Uuid,
   parent_item_title: String,
   is_parent:         bool,
-  root_comment_id:   Option<Uid>,
-  parent_comment_id: Option<Uid>,
+  root_comment_id:   Option<Uuid>,
+  parent_comment_id: Option<Uuid>,
   text:              String,
   dead:              bool,
 }

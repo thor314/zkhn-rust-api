@@ -1,67 +1,67 @@
 use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use once_cell::sync::Lazy;
+use regex::Regex;
 use scrypt::{
   password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
   Scrypt,
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid as Uid;
+use sqlx::types::Uuid;
+use validator::Validate;
 
-use crate::{error::{DbError, PasswordError}, DbPool};
+use super::{
+  user_favorite::UserFavorite,
+  user_hidden::UserHidden,
+  user_vote::{UserVote, VoteType},
+};
+use crate::{
+  error::{DbError, PasswordError},
+  DbPool,
+};
 
-// use super::{
-//   user_favorite::UserFavorite,
-//   user_hidden::UserHidden,
-//   user_vote::{UserVote, VoteType},
-// };
-// use crate::{
-//   error::{MyError, PasswordError},
-//   schema::users::{self, dsl::users as users_dsl},
-// };
+static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[0-9A-Za-z_]+$").unwrap());
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-// match to a schema for selectable
-// #[diesel(table_name = users)]
-// use postgres, improve compiler error messages.
-// #[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone, Validate)]
 pub struct User {
-  pub id: Uid,
+  pub id: Uuid,
+  #[validate(length(min = 3, max = 16), regex = "USERNAME_REGEX")]
   pub username: String,
-  /// Hashed password.
+  /// Hashed password
   // todo: look for a password hash wrapper, this should be a hash
   pub password_hash: String,
   // todo: auth
-  /// Authentication token.
+  /// Authentication token
   pub auth_token: Option<String>,
-  /// Expiration of auth token.
+  /// Expiration of auth token
   pub auth_token_expiration: Option<i64>,
-  /// Reset password token.
+  /// Reset password token
   pub reset_password_token: Option<String>,
-  /// Expiration of reset password token.
+  /// Expiration of reset password token
   pub reset_password_token_expiration: Option<i64>,
-  /// User email.
+  /// User email
   // todo: email wrapper
   pub email: String,
-  /// Account creation timestamp.
+  /// Account creation timestamp
   pub created: NaiveDateTime,
-  /// User karma score.
+  /// User karma score
   pub karma: i32,
-  /// User biography.
+  /// User biography
   pub about: Option<String>,
-  /// Flag to show dead posts.
+  /// Flag to show dead posts
   pub show_dead: bool,
-  /// Is user a moderator.
+  /// Is user a moderator
   pub is_moderator: bool,
-  /// Is user shadow banned.
+  /// Is user shadow banned
   pub shadow_banned: bool,
-  /// Is user banned.
+  /// Is user banned
   pub banned: bool,
 }
 
 impl User {
   pub fn new(username: String, password: String, email: String, about: Option<String>) -> Self {
     User {
-      id: Uid::new_v4(),
+      id: Uuid::new_v4(),
       username,
       password_hash: password,
       auth_token: None,
@@ -87,37 +87,37 @@ impl User {
     }
   }
 
-  // pub fn favorite(&self, item_type: String, item_id: Uid) -> UserFavorite {
-  //   UserFavorite { username: self.username.clone(), item_type, item_id, date: crate::utils::now() }
-  // }
+  pub fn favorite(&self, item_type: String, item_id: Uuid) -> UserFavorite {
+    UserFavorite { username: self.username.clone(), item_type, item_id, date: crate::utils::now() }
+  }
 
-  // pub fn hide(&self, item_id: Uid, item_creation_date: NaiveDateTime) -> UserHidden {
-  //   UserHidden {
-  //     username: self.username.clone(),
-  //     item_id,
-  //     date: crate::utils::now(),
-  //     item_creation_date,
-  //   }
-  // }
+  pub fn hide(&self, item_id: Uuid, item_creation_date: NaiveDateTime) -> UserHidden {
+    UserHidden {
+      username: self.username.clone(),
+      item_id,
+      date: crate::utils::now(),
+      item_creation_date,
+    }
+  }
 
-  // pub fn vote(
-  //   &self,
-  //   vote_type: VoteType,
-  //   content_id: Uid,
-  //   parent_item_id: Option<Uid>,
-  //   upvote: bool,
-  // ) -> UserVote {
-  //   let downvote = !upvote;
-  //   UserVote {
-  //     username: self.username.clone(),
-  //     vote_type,
-  //     content_id,
-  //     parent_item_id,
-  //     upvote,
-  //     downvote,
-  //     date: crate::utils::now(),
-  //   }
-  // }
+  pub fn vote(
+    &self,
+    vote_type: VoteType,
+    content_id: Uuid,
+    parent_item_id: Option<Uuid>,
+    upvote: bool,
+  ) -> UserVote {
+    let downvote = !upvote;
+    UserVote {
+      username: self.username.clone(),
+      vote_type,
+      content_id,
+      parent_item_id,
+      upvote,
+      downvote,
+      date: crate::utils::now(),
+    }
+  }
 }
 
 // todo: move this somewhere else?

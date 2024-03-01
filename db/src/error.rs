@@ -21,6 +21,6 @@ pub enum DbError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum PasswordError {
-  #[error("scrypt error: {0}")]
+  #[error(transparent)]
   ScryptPwHashError(#[from] scrypt::password_hash::Error),
 }

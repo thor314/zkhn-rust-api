@@ -1,17 +1,9 @@
 use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use diesel::{prelude::*, sql_types::*, QueryDsl, Queryable, Selectable, SelectableHelper};
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid as Uid;
+use sqlx::types::Uuid;
 
-use crate::schema::user_votes;
-
-#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
-// match to a schema for selectable
-#[diesel(table_name = user_votes)]
-// use postgres, improve compiler error messages.
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 /// Represents a vote cast by a user on an item or comment.
 pub struct UserVote {
   /// The username of the user who cast the vote.
@@ -19,9 +11,9 @@ pub struct UserVote {
   /// The type of content voted on.
   pub vote_type:      VoteType,
   /// The ID of the item or comment voted on.
-  pub content_id:     Uid,
+  pub content_id:     Uuid,
   /// The ID of the parent item for votes on comments.
-  pub parent_item_id: Option<Uid>,
+  pub parent_item_id: Option<Uuid>,
   /// Indicates if the vote was an upvote.
   pub upvote:         bool,
   /// Indicates if the vote was a downvote (comments only).
@@ -31,8 +23,7 @@ pub struct UserVote {
 }
 
 /// Defines the type of content a vote is associated with.
-#[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
-#[ExistingTypePath = "crate::schema::sql_types::UserVoteType"]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum VoteType {
   Item,
   Comment,

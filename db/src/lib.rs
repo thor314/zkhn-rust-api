@@ -11,8 +11,8 @@ pub mod models;
 mod utils;
 
 use models::user::User;
-use uuid::Uuid as Uid;
+use sqlx::types::Uuid;
 
 pub type DbPool = sqlx::postgres::PgPool;
 
-pub async fn get_user_from_id(db_pool: &DbPool, id: Uid) -> Option<User> { todo!() }
+pub async fn get_user_from_id(db_pool: &DbPool, id: Uuid) -> Option<User> { todo!() }
