@@ -10,6 +10,7 @@ mod auth;
 pub mod error;
 #[cfg(test)] mod tests;
 mod utils;
+mod session;
 
 use axum::{
   extract::Request,
@@ -27,7 +28,7 @@ use diesel_async::{
   pooled_connection::{deadpool::Pool, AsyncDieselConnectionManager},
   AsyncPgConnection,
 };
-use error::MyError;
+use error::ApiError;
 use tracing::info;
 
 use crate::api::comments::comment_router;
@@ -53,12 +54,12 @@ pub async fn api_router() -> Router {
   let session_store = MemoryStore::default();
   let session_layer = SessionManagerLayer::new(session_store);
   let state = SharedState::default();
-  let auth_layer = AuthManagerLayerBuilder::new(state, session_layer).build();
+  // let auth_layer = AuthManagerLayerBuilder::new(state, session_layer).build();
 
   Router::new()
     .nest("/comments", comment_router().await)
     // .nest("/auth", auth)
-        .route_layer(login_required!(SharedState, login_url = "/login"))
-        .layer(auth_layer)
+        // .route_layer(login_required!(SharedState, login_url = "/login"))
+        // .layer(auth_layer)
         // .with_state(state)
 }

@@ -3,9 +3,12 @@
 
 use diesel_async::pooled_connection::deadpool::PoolError;
 use thiserror::Error;
+use tokio::task;
 
 #[derive(Debug, Error)]
-pub enum MyError {
+pub enum ApiError {
+  #[error(transparent)]
+  TaskJoin(#[from] task::JoinError),
   #[error("My Io error: {0}")]
   Io(#[from] std::io::Error),
   #[error(transparent)]

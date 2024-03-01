@@ -36,6 +36,8 @@ uuid={ version="1.7.0", features=["serde", "v4"] }
 url="2.5.0"
 axum-login = "0.13.1"
 tower = "0.4.13"
+tower-sessions = "0.10.4"
+tower-sessions-sqlx-store = { version = "0.10.0", features = ["postgres"] }
 # futures = "0.3.30"
 # axum-extra = { version = "0.9.2", features = ["cookie", "typed-header"] }
 # tower-http = { version = "0.5.1", features = ["fs"] }

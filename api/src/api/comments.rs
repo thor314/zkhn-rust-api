@@ -5,7 +5,7 @@ use axum::{
 };
 use uuid::Uuid as Uid;
 
-use crate::{error::MyError, DbPool};
+use crate::{error::ApiError, DbPool};
 
 // models::{self},
 //   comment::{Comment, NewCommentPayload},
@@ -20,7 +20,7 @@ pub async fn add_new_comment(
   State(pool): State<DbPool>,
   // Json(payload): Json<NewCommentPayload>,
   // Auth()
-) -> Result<StatusCode, MyError> {
+) -> Result<StatusCode, ApiError> {
   todo!()
 }
 //   let new_comment = Comment::from(payload);

@@ -79,7 +79,7 @@ impl User {
     }
   }
 
-  pub fn compare_password(&self, other_password: &str) -> Result<bool, PasswordError> {
+  pub fn verify_password(&self, other_password: &str) -> Result<bool, PasswordError> {
     let parsed_hash = PasswordHash::new(&self.password_hash)?;
     match Scrypt.verify_password(other_password.as_bytes(), &parsed_hash) {
       Ok(_) => Ok(true),
