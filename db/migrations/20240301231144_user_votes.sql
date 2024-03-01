@@ -1,10 +1,8 @@
--- Your SQL goes here
-drop table if exists user_votes;
-drop type if exists vote_type;
+-- Add migration script here
 drop type if exists user_vote_type;
-
 CREATE TYPE user_vote_type AS ENUM ('Item', 'Comment');
 
+drop table if exists user_votes;
 CREATE TABLE user_votes (
     username VARCHAR(255) NOT NULL,
     vote_type USER_VOTE_TYPE NOT NULL,

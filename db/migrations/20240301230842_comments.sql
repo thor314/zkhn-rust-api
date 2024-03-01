@@ -1,5 +1,7 @@
--- Your SQL goes here
--- Add up migration script here
+-- Add migration script here
+
+DROP TABLE IF EXISTS comments;
+
 CREATE TABLE comments (
     id UUID PRIMARY KEY,
     by TEXT NOT NULL,

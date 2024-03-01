@@ -1,3 +1,5 @@
+-- Add migration script here
+DROP TABLE IF EXISTS moderator_action_enum;
 CREATE TYPE moderator_action_enum AS ENUM (
   'KillItem',
   'UnkillItem',
@@ -9,6 +11,7 @@ CREATE TYPE moderator_action_enum AS ENUM (
   'RemoveUserBan'
 );
 
+DROP TABLE IF EXISTS moderation_logs;
 CREATE TABLE moderation_logs (
     id UUID PRIMARY KEY,
     moderator_username TEXT NOT NULL,
@@ -21,3 +24,4 @@ CREATE TABLE moderation_logs (
     comment_by TEXT,
     created TIMESTAMP WITH TIME ZONE NOT NULL
 );
+
