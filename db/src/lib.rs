@@ -11,7 +11,7 @@ pub mod models;
 mod utils;
 
 use models::user::User;
-use sqlx::types::Uuid;
+use uuid::Uuid;
 
 pub type DbPool = sqlx::postgres::PgPool;
 

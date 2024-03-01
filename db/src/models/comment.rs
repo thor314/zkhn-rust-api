@@ -1,7 +1,9 @@
 // use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::types::Uuid;
+use uuid::Uuid;
+
+use crate::error::DbError;
 
 /// the minimum points a comment can have
 const MIN_POINTS: i32 = -4;
@@ -96,20 +98,19 @@ impl Comment {
   }
 }
 
-// pub async fn child_comments(
-//   mut conn: AsyncPgConnection,
-//   id: Uuid,
-//   show_dead_comments: bool,
-// ) -> Result<Vec<Comment>, MyError> {
-//   // boxed does happy type-erasure magic for us
-//   let mut query = comments_dsl.filter(comments::parent_comment_id.eq(Some(id))).into_boxed();
-//   if !show_dead_comments {
-//     query = query.filter(comments::dead.eq(false));
-//   }
-//   let result = query.select(Comment::as_select()).load(&mut conn).await.unwrap();
+pub async fn child_comments(
+  mut conn: sqlx::PgConnection,
+  id: Uuid,
+  show_dead_comments: bool,
+) -> Result<Vec<Comment>, DbError> {
+  let comments: Vec<Comment> =
+    sqlx::query_as("SELECT * FROM comments WHERE parent_comment_id = $1")
+      .bind(id)
+      .fetch_all(&mut conn)
+      .await.unwrap();
 
-//   Ok(result)
-// }
+  Ok(comments)
+}
 
 // corresponding to `add_new_comment` in API
 #[derive(Debug, Deserialize)]

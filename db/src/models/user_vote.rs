@@ -1,7 +1,7 @@
 use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::types::Uuid;
+use uuid::Uuid;
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 /// Represents a vote cast by a user on an item or comment.

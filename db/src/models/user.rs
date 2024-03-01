@@ -7,7 +7,7 @@ use scrypt::{
   Scrypt,
 };
 use serde::{Deserialize, Serialize};
-use sqlx::types::Uuid;
+use uuid::Uuid;
 use validator::Validate;
 
 use super::{

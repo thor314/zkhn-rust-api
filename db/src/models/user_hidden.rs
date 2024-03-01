@@ -1,7 +1,7 @@
 use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::types::Uuid;
+use uuid::Uuid;
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct UserHidden {
