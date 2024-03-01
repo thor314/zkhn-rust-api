@@ -1,8 +1,10 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::PgConnection;
 use uuid::Uuid;
 
 use super::comment::Comment;
+use crate::error::DbError;
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
@@ -71,7 +73,8 @@ impl Item {
 }
 
 // todo: add other types rest
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+#[sqlx(type_name = "item_category_enum")]
 pub enum ItemCategory {
   Tweet,
   Blog,
@@ -79,7 +82,8 @@ pub enum ItemCategory {
   Other,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+#[sqlx(type_name = "item_type")]
 #[serde(rename_all = "lowercase")]
 pub enum ItemType {
   News,
@@ -87,14 +91,16 @@ pub enum ItemType {
   Ask,
 }
 
-// pub(crate) async fn increment_comments(
-//   conn: &mut AsyncPgConnection,
-//   parent_item_id: Uuid,
-// ) -> Result<(), MyError> {
-//   diesel::update(items_dsl.filter(items::id.eq(parent_item_id)))
-//     .set(items::comment_count.eq(items::comment_count + 1))
-//     .execute(conn)
-//     .await?;
+pub(crate) async fn increment_comments(
+  conn: &mut PgConnection,
+  parent_item_id: Uuid,
+) -> Result<(), DbError> {
+  let query = r#"
+    UPDATE items
+    SET comment_count = comment_count + 1
+    WHERE id = $1
+  "#;
+  sqlx::query(query).bind(parent_item_id).execute(conn).await?;
 
-//   Ok(())
-// }
+  Ok(())
+}

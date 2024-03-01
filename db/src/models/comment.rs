@@ -107,7 +107,7 @@ pub async fn child_comments(
     sqlx::query_as("SELECT * FROM comments WHERE parent_comment_id = $1")
       .bind(id)
       .fetch_all(&mut conn)
-      .await.unwrap();
+      .await?;
 
   Ok(comments)
 }

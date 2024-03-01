@@ -9,6 +9,8 @@ pub enum DbError {
   #[error(transparent)]
   TaskJoin(#[from] task::JoinError),
   #[error(transparent)]
+  Sqlx(#[from] sqlx::Error),
+  #[error(transparent)]
   Io(#[from] std::io::Error),
   #[error(transparent)]
   Anyhow(#[from] anyhow::Error),

@@ -7,6 +7,8 @@ use scrypt::{
   Scrypt,
 };
 use serde::{Deserialize, Serialize};
+use sqlx::PgConnection;
+// use uuid::Uuid;
 use uuid::Uuid;
 use validator::Validate;
 
@@ -128,12 +130,17 @@ pub fn hash_password(password: &str) -> Result<String, PasswordError> {
   Ok(pw_hash.to_string())
 }
 
-pub async fn increment_karma(conn: &mut DbPool, username: &str) -> Result<(), DbError> {
-  // diesel::update(users_dsl.filter(users::username.eq(username)))
-  //   .set(users::karma.eq(users::karma + 1))
-  //   .execute(conn)
-  //   .await?;
+pub async fn increment_karma(conn: &mut PgConnection, username: &str) -> Result<(), DbError> {
+  sqlx::query!(
+    r#"
+      UPDATE users
+      SET karma = karma + 1
+      WHERE username = $1
+    "#,
+    username
+  )
+  .execute(conn)
+  .await?;
 
-  // Ok(())
-  todo!()
+  Ok(())
 }

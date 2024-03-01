@@ -23,7 +23,9 @@ pub struct UserVote {
 }
 
 /// Defines the type of content a vote is associated with.
-#[derive(Debug, Serialize, Deserialize)]
+// #[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+#[sqlx(type_name = "vote_type_type")]
 pub enum VoteType {
   Item,
   Comment,

@@ -29,7 +29,8 @@ pub struct ModerationLog {
 }
 
 // todo: extend
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+#[sqlx(type_name = "moderator_action_enum")]
 pub enum ModeratorAction {
   KillItem,
   UnkillItem,
