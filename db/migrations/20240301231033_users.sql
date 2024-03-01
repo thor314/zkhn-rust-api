@@ -1,4 +1,5 @@
--- Your SQL goes here
+-- Add migration script here
+DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id UUID PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,

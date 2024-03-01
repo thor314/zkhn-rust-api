@@ -5,16 +5,20 @@
 #![allow(non_snake_case)]
 #![allow(clippy::clone_on_copy)]
 
-use diesel_async::{pooled_connection::deadpool::Pool, AsyncPgConnection};
-use models::user::User;
-use uuid::Uuid as Uid;
-
 pub mod error;
 pub mod models;
-pub mod schema;
 #[cfg(test)] mod tests;
 mod utils;
 
-pub type DbPool = Pool<AsyncPgConnection>;
+use error::DbError;
+use models::user::User;
+use uuid::Uuid;
 
-pub async fn get_user_from_id(db_pool: &DbPool, id: Uid) -> Option<User> { todo!() }
+pub type DbPool = sqlx::postgres::PgPool;
+
+pub async fn migrate(pool: &DbPool) -> Result<(), DbError> {
+  sqlx::migrate!("../db/migrations").run(pool).await?;
+  Ok(())
+}
+
+pub async fn get_user_from_id(db_pool: &DbPool, id: Uuid) -> Option<User> { todo!() }

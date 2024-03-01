@@ -1,6 +1,3 @@
-use tracing::Level;
-use tracing_subscriber::FmtSubscriber;
-
 static INIT: std::sync::Once = std::sync::Once::new();
 fn setup_test_tracing() {
   use tracing::Level;

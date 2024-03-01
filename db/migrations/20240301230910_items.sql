@@ -1,8 +1,4 @@
--- Your SQL goes here
-
--- DROP TABLE IF EXISTS items;
--- DROP TABLE IF EXISTS item_category_enum;
--- DROP TABLE IF EXISTS item_type;
+-- Add migration script here
 
 DROP TYPE IF EXISTS item_category_enum;
 CREATE TYPE item_category_enum as ENUM ('Tweet', 'Blog', 'Paper', 'Other');
@@ -10,6 +6,7 @@ CREATE TYPE item_category_enum as ENUM ('Tweet', 'Blog', 'Paper', 'Other');
 DROP TYPE IF EXISTS item_type;
 CREATE TYPE item_type as ENUM ('news', 'show', 'ask');
 
+DROP TABLE IF EXISTS items;
 CREATE TABLE items (
     id UUID PRIMARY KEY,
     by TEXT NOT NULL,

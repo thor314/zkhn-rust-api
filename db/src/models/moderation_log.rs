@@ -1,21 +1,13 @@
 use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use diesel::{prelude::*, sql_types::*, QueryDsl, Queryable, Selectable, SelectableHelper};
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid as Uid;
-
-use crate::schema::moderation_logs;
+use uuid::Uuid;
 
 /// Represents a single moderation action taken by a moderator.
-#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
-// match to a schema for selectable
-#[diesel(table_name = moderation_logs)]
-// use postgres, improve compiler error messages.
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct ModerationLog {
   /// The unique identifier for the log entry.
-  pub id:                 Uid,
+  pub id:                 Uuid,
   /// The username of the moderator who took the action.
   pub moderator_username: String,
   /// The type of action the moderator took. This will be one of several specified strings.
@@ -23,13 +15,13 @@ pub struct ModerationLog {
   /// Username of the user the moderator action is related to.
   pub username:           Option<String>,
   /// ID of the item the moderator action was taken on.
-  pub item_id:            Option<Uid>,
+  pub item_id:            Option<Uuid>,
   /// Title of the item the moderator action was taken on.
   pub item_title:         Option<String>,
   /// Author's username of the item the moderator action was taken on.
   pub item_by:            Option<String>,
   /// ID of the comment the moderator action was taken on.
-  pub comment_id:         Option<Uid>,
+  pub comment_id:         Option<Uuid>,
   /// Author's username of the comment the moderator action was taken on.
   pub comment_by:         Option<String>,
   /// UNIX timestamp that represents when the moderator action was taken.
@@ -37,8 +29,8 @@ pub struct ModerationLog {
 }
 
 // todo: extend
-#[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
-#[ExistingTypePath = "crate::schema::sql_types::ModeratorActionEnum"]
+#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+#[sqlx(type_name = "moderator_action_enum")]
 pub enum ModeratorAction {
   KillItem,
   UnkillItem,
@@ -55,14 +47,14 @@ impl ModerationLog {
     moderator_username: String,
     action_type: ModeratorAction,
     username: Option<String>,
-    item_id: Option<Uid>,
+    item_id: Option<Uuid>,
     item_title: Option<String>,
     item_by: Option<String>,
-    comment_id: Option<Uid>,
+    comment_id: Option<Uuid>,
     comment_by: Option<String>,
   ) -> Self {
     ModerationLog {
-      id: Uid::new_v4(),
+      id: Uuid::new_v4(),
       moderator_username,
       action_type,
       username,

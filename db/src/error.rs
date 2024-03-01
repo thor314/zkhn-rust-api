@@ -1,24 +1,24 @@
 //! zkhn-rust-api error types
 // https://docs.rs/thiserror/latest/thiserror/
 
-use diesel_async::pooled_connection::deadpool::PoolError;
+use sqlx::migrate::MigrateError;
 use thiserror::Error;
 use tokio::task;
 
 #[derive(Debug, Error)]
-pub enum MyError {
+pub enum DbError {
   #[error(transparent)]
   TaskJoin(#[from] task::JoinError),
-  #[error("My Io error: {0}")]
+  #[error(transparent)]
+  Sqlx(#[from] sqlx::Error),
+  #[error(transparent)]
+  SqlxMigrate(#[from] MigrateError),
+  #[error(transparent)]
   Io(#[from] std::io::Error),
   #[error(transparent)]
   Anyhow(#[from] anyhow::Error),
-  #[error("My Password error: {0}")]
+  #[error(transparent)]
   PwError(#[from] PasswordError),
-  #[error("Diesel error: {0}")]
-  Diesel(#[from] diesel::result::Error),
-  #[error("deadpool error: {0}")]
-  Deadpool(#[from] PoolError),
   #[allow(dead_code)]
   #[error("an unhandled error")]
   Unhandled,
@@ -26,8 +26,6 @@ pub enum MyError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum PasswordError {
-  #[error("scrypt error: {0}")]
+  #[error(transparent)]
   ScryptPwHashError(#[from] scrypt::password_hash::Error),
-  // #[error("failed to hash password, do not match")]
-  // PasswordMismatch,
 }

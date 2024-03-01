@@ -1,10 +1,5 @@
-use anyhow::{anyhow, Context};
-use tracing::trace;
-use tracing_subscriber::{
-  filter::{EnvFilter, LevelFilter},
-  layer::SubscriberExt,
-  util::SubscriberInitExt,
-};
+use anyhow::Context;
+use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
 use crate::error::MyError;
 /// Set up crate logging and environment variables.

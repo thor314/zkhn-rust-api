@@ -1,8 +1,6 @@
 use axum::{extract::State, http::StatusCode, Json};
-use diesel::prelude::*;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use uuid::Uuid as Uid;
 
+// use sqlx::types::Uuid;
 use crate::{
   error::ApiError,
   // models::comment::{Comment, NewCommentPayload},

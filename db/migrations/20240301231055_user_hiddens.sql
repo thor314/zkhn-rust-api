@@ -1,8 +1,5 @@
--- Your SQL goes here
-
-drop table if exists user_hidden;
+-- Add migration script here
 drop table if exists user_hiddens;
-
 CREATE TABLE user_hiddens (
     username VARCHAR(255) NOT NULL,
     item_id UUID NOT NULL,

@@ -8,7 +8,7 @@ use tracing_subscriber::{
   util::SubscriberInitExt,
 };
 
-use crate::error::MyError;
+use crate::error::DbError;
 
 pub fn now() -> NaiveDateTime {
   NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap()
