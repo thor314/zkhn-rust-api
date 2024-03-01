@@ -1,18 +1,10 @@
 use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use diesel::{prelude::*, sql_types::*, QueryDsl, Queryable, Selectable, SelectableHelper};
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
-use crate::schema::moderation_logs;
-
 /// Represents a single moderation action taken by a moderator.
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
-// match to a schema for selectable
-#[diesel(table_name = moderation_logs)]
-// use postgres, improve compiler error messages.
-#[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ModerationLog {
   /// The unique identifier for the log entry.
   pub id:                 Uuid,
@@ -37,8 +29,7 @@ pub struct ModerationLog {
 }
 
 // todo: extend
-#[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
-#[ExistingTypePath = "crate::schema::sql_types::ModeratorActionEnum"]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum ModeratorAction {
   KillItem,
   UnkillItem,

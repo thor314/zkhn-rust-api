@@ -134,5 +134,6 @@ pub async fn increment_karma(conn: &mut DbPool, username: &str) -> Result<(), Db
   //   .execute(conn)
   //   .await?;
 
-  Ok(())
+  // Ok(())
+  todo!()
 }

@@ -1,24 +1,13 @@
 // use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use diesel::{prelude::*, sql_types::*, QueryDsl, Queryable, Selectable, SelectableHelper};
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
-
-use crate::{
-  error::MyError,
-  schema::{comments, comments::dsl::comments as comments_dsl},
-};
 
 /// the minimum points a comment can have
 const MIN_POINTS: i32 = -4;
 
 /// Comments on a post
-#[derive(sqlx::FromRow, Insertable, Debug, Serialize)]
-// match to a schema for selectable
-#[diesel(table_name = comments)]
-// use postgres, improve compiler error messages.
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(sqlx::FromRow, Debug, Serialize)]
 pub struct Comment {
   /// the unique identifier given to each comment in the form of a randomly generated string
   pub id:                Uuid, // Assuming UUIDs for unique identifiers, common in SQL databases
@@ -107,20 +96,20 @@ impl Comment {
   }
 }
 
-pub async fn child_comments(
-  mut conn: AsyncPgConnection,
-  id: Uuid,
-  show_dead_comments: bool,
-) -> Result<Vec<Comment>, MyError> {
-  // boxed does happy type-erasure magic for us
-  let mut query = comments_dsl.filter(comments::parent_comment_id.eq(Some(id))).into_boxed();
-  if !show_dead_comments {
-    query = query.filter(comments::dead.eq(false));
-  }
-  let result = query.select(Comment::as_select()).load(&mut conn).await.unwrap();
+// pub async fn child_comments(
+//   mut conn: AsyncPgConnection,
+//   id: Uuid,
+//   show_dead_comments: bool,
+// ) -> Result<Vec<Comment>, MyError> {
+//   // boxed does happy type-erasure magic for us
+//   let mut query = comments_dsl.filter(comments::parent_comment_id.eq(Some(id))).into_boxed();
+//   if !show_dead_comments {
+//     query = query.filter(comments::dead.eq(false));
+//   }
+//   let result = query.select(Comment::as_select()).load(&mut conn).await.unwrap();
 
-  Ok(result)
-}
+//   Ok(result)
+// }
 
 // corresponding to `add_new_comment` in API
 #[derive(Debug, Deserialize)]

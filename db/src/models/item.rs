@@ -1,23 +1,13 @@
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use diesel::{prelude::*, sql_types::*, Queryable, Selectable};
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
-use crate::{
-  error::MyError,
-  models::comment::Comment,
-  schema::{items, items::dsl::items as items_dsl},
-};
+use super::comment::Comment;
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
 /// Comments on a post
-#[derive(sqlx::FromRow, Selectable, Debug)]
-// match to a schema for selectable
-#[diesel(table_name = items)]
-// use postgres, improve compiler error messages.
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(sqlx::FromRow, Debug)]
 pub struct Item {
   pub id:            Uuid,
   pub by:            String,
@@ -81,8 +71,7 @@ impl Item {
 }
 
 // todo: add other types rest
-#[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
-#[ExistingTypePath = "crate::schema::sql_types::ItemCategoryEnum"]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum ItemCategory {
   Tweet,
   Blog,
@@ -90,8 +79,7 @@ pub enum ItemCategory {
   Other,
 }
 
-#[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
-#[ExistingTypePath = "crate::schema::sql_types::ItemType"]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ItemType {
   News,
@@ -99,14 +87,14 @@ pub enum ItemType {
   Ask,
 }
 
-pub(crate) async fn increment_comments(
-  conn: &mut AsyncPgConnection,
-  parent_item_id: Uuid,
-) -> Result<(), MyError> {
-  diesel::update(items_dsl.filter(items::id.eq(parent_item_id)))
-    .set(items::comment_count.eq(items::comment_count + 1))
-    .execute(conn)
-    .await?;
+// pub(crate) async fn increment_comments(
+//   conn: &mut AsyncPgConnection,
+//   parent_item_id: Uuid,
+// ) -> Result<(), MyError> {
+//   diesel::update(items_dsl.filter(items::id.eq(parent_item_id)))
+//     .set(items::comment_count.eq(items::comment_count + 1))
+//     .execute(conn)
+//     .await?;
 
-  Ok(())
-}
+//   Ok(())
+// }
