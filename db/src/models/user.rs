@@ -1,7 +1,5 @@
 use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use diesel::{prelude::*, sql_types::*, QueryDsl, Queryable, Selectable, SelectableHelper};
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use scrypt::{
   password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
   Scrypt,
@@ -9,21 +7,23 @@ use scrypt::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid as Uid;
 
-use super::{
-  user_favorite::UserFavorite,
-  user_hidden::UserHidden,
-  user_vote::{UserVote, VoteType},
-};
-use crate::{
-  error::{MyError, PasswordError},
-  schema::users::{self, dsl::users as users_dsl},
-};
+use crate::{error::{DbError, PasswordError}, DbPool};
 
-#[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Clone)]
+// use super::{
+//   user_favorite::UserFavorite,
+//   user_hidden::UserHidden,
+//   user_vote::{UserVote, VoteType},
+// };
+// use crate::{
+//   error::{MyError, PasswordError},
+//   schema::users::{self, dsl::users as users_dsl},
+// };
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 // match to a schema for selectable
-#[diesel(table_name = users)]
+// #[diesel(table_name = users)]
 // use postgres, improve compiler error messages.
-#[diesel(check_for_backend(diesel::pg::Pg))]
+// #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
   pub id: Uid,
   pub username: String,
@@ -87,37 +87,37 @@ impl User {
     }
   }
 
-  pub fn favorite(&self, item_type: String, item_id: Uid) -> UserFavorite {
-    UserFavorite { username: self.username.clone(), item_type, item_id, date: crate::utils::now() }
-  }
+  // pub fn favorite(&self, item_type: String, item_id: Uid) -> UserFavorite {
+  //   UserFavorite { username: self.username.clone(), item_type, item_id, date: crate::utils::now() }
+  // }
 
-  pub fn hide(&self, item_id: Uid, item_creation_date: NaiveDateTime) -> UserHidden {
-    UserHidden {
-      username: self.username.clone(),
-      item_id,
-      date: crate::utils::now(),
-      item_creation_date,
-    }
-  }
+  // pub fn hide(&self, item_id: Uid, item_creation_date: NaiveDateTime) -> UserHidden {
+  //   UserHidden {
+  //     username: self.username.clone(),
+  //     item_id,
+  //     date: crate::utils::now(),
+  //     item_creation_date,
+  //   }
+  // }
 
-  pub fn vote(
-    &self,
-    vote_type: VoteType,
-    content_id: Uid,
-    parent_item_id: Option<Uid>,
-    upvote: bool,
-  ) -> UserVote {
-    let downvote = !upvote;
-    UserVote {
-      username: self.username.clone(),
-      vote_type,
-      content_id,
-      parent_item_id,
-      upvote,
-      downvote,
-      date: crate::utils::now(),
-    }
-  }
+  // pub fn vote(
+  //   &self,
+  //   vote_type: VoteType,
+  //   content_id: Uid,
+  //   parent_item_id: Option<Uid>,
+  //   upvote: bool,
+  // ) -> UserVote {
+  //   let downvote = !upvote;
+  //   UserVote {
+  //     username: self.username.clone(),
+  //     vote_type,
+  //     content_id,
+  //     parent_item_id,
+  //     upvote,
+  //     downvote,
+  //     date: crate::utils::now(),
+  //   }
+  // }
 }
 
 // todo: move this somewhere else?
@@ -128,11 +128,11 @@ pub fn hash_password(password: &str) -> Result<String, PasswordError> {
   Ok(pw_hash.to_string())
 }
 
-pub async fn increment_karma(conn: &mut AsyncPgConnection, username: &str) -> Result<(), MyError> {
-  diesel::update(users_dsl.filter(users::username.eq(username)))
-    .set(users::karma.eq(users::karma + 1))
-    .execute(conn)
-    .await?;
+pub async fn increment_karma(conn: &mut DbPool, username: &str) -> Result<(), DbError> {
+  // diesel::update(users_dsl.filter(users::username.eq(username)))
+  //   .set(users::karma.eq(users::karma + 1))
+  //   .execute(conn)
+  //   .await?;
 
   Ok(())
 }
