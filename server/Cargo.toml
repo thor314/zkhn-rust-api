@@ -27,7 +27,7 @@ tracing="0.1"
 tracing-subscriber={ version="0.3", features=["env-filter", "fmt"] }
 tokio={ version="1", features=["full"] }
 thiserror="1.0"
-sqlx = { version = "0.7.3", features = ["postgres"] }
+sqlx = { version = "0.7.3", features = ["postgres", "tls-rustls"] }
 # uuid={ version="1.7.0", features=["serde", "v4"] }
 # url="2.5.0"
 # # futures = "0.3.30"

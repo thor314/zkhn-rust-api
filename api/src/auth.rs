@@ -14,8 +14,9 @@ use axum_login::{
 // use db::models::comment::Comment;
 use db::models::user::User;
 use tokio::task;
-use uuid::Uuid as Uid;
+use uuid::Uuid;
 
+// use sqlx::types::Uuid;
 use crate::{error::ApiError, DbPool, SharedState};
 // use crate::{error::ApiError, session::get_session_manager_layer, DbPool, SharedState};
 
@@ -54,7 +55,7 @@ pub async fn login(
 pub struct UserAuthWrapper(User);
 
 impl AuthUser for UserAuthWrapper {
-  type Id = Uid;
+  type Id = Uuid;
 
   fn id(&self) -> Self::Id { self.0.id }
 
@@ -64,7 +65,7 @@ impl AuthUser for UserAuthWrapper {
 
 #[derive(Debug, Clone)]
 pub struct Credentials {
-  id:           Uid,
+  id:           Uuid,
   pub username: String,
   pub password: String,
   // todo: should this live here?

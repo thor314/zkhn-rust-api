@@ -3,8 +3,8 @@ use axum::{
   http::StatusCode,
   Json, Router,
 };
-use uuid::Uuid as Uid;
 
+// use sqlx::types::Uuid;
 use crate::{error::ApiError, DbPool};
 
 // models::{self},
@@ -49,7 +49,7 @@ pub async fn add_new_comment(
 
 // pub async fn get_comment_by_id(
 //   State(state): State<SharedState>,
-//   Path(comment_id): Path<Uid>,
+//   Path(comment_id): Path<Uuid>,
 // ) -> Result<Json<Comment>, MyError> {
 //   let conn = &mut *state.pool.get().await?;
 //   let comment = conn
@@ -88,8 +88,8 @@ pub async fn add_new_comment(
 // /// Increment comment's points by 1
 // pub async fn upvote_comment(
 //   State(state): State<SharedState>,
-//   Path(comment_id): Path<Uid>,
-//   Path(user_id): Path<Uid>,
+//   Path(comment_id): Path<Uuid>,
+//   Path(user_id): Path<Uuid>,
 // ) -> Result<StatusCode, MyError> {
 //   let conn = &mut *state.pool.get().await?;
 //   let comment = conn
