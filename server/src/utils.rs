@@ -15,4 +15,3 @@ pub(crate) fn setup(secret_store: &shuttle_secrets::SecretStore) -> Result<(), M
   secret_store.get("DOTENV_OK").context("failed to get secrets")?;
   Ok(())
 }
-

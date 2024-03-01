@@ -16,7 +16,7 @@ pub enum MyError {
   #[error(transparent)]
   Db(#[from] db::error::MyError),
   #[error(transparent)]
-  Api(#[from] api::error::MyError),
+  Api(#[from] api::error::ApiError),
   #[error("an unhandled error")]
   Unhandled,
 }

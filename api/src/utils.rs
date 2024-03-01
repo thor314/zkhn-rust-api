@@ -8,7 +8,7 @@ use tracing_subscriber::{
   util::SubscriberInitExt,
 };
 
-use crate::error::MyError;
+use crate::error::ApiError;
 /// Set up crate logging and environment variables.
 
 pub fn now() -> NaiveDateTime {

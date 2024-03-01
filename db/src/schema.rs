@@ -116,7 +116,7 @@ diesel::table! {
     users (id) {
         id -> Uuid,
         username -> Text,
-        password -> Text,
+        password_hash -> Text,
         auth_token -> Nullable<Text>,
         auth_token_expiration -> Nullable<Int8>,
         reset_password_token -> Nullable<Text>,

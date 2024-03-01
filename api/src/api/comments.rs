@@ -1,22 +1,26 @@
 use axum::{
   extract::{Path, State},
   http::StatusCode,
-  Json,
+  Json, Router,
 };
 use uuid::Uuid as Uid;
 
-use crate::{error::MyError, SharedState};
+use crate::{error::ApiError, DbPool};
 
-// SharedState,
 // models::{self},
 //   comment::{Comment, NewCommentPayload},
 // schema::{self, comments, comments::dsl::comments as comments_dsl},
 
+pub async fn comment_router() -> Router { Router::new() }
+
 // todo: auth
-// pub async fn add_new_comment(
-//   State(state): State<SharedState>,
-//   Json(payload): Json<NewCommentPayload>,
-// ) -> Result<StatusCode, MyError> {
+pub async fn add_new_comment(
+  State(pool): State<DbPool>,
+  // Json(payload): Json<NewCommentPayload>,
+  // Auth()
+) -> Result<StatusCode, ApiError> {
+  todo!()
+}
 //   let new_comment = Comment::from(payload);
 //   let conn = &mut *state.pool.get().await?;
 //   // transaction: all operations are atomic; fail or succeed together

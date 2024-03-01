@@ -48,14 +48,12 @@ async fn main(
   // let pool = Pool::builder(config).build().unwrap();
   // let shared_state = SharedState { pool };
 
-  let router = Router::new()
-  //
-  ;
-    // .route("/", get(index))
-    // .route("/comments", get(index)) // todo
-    // .route("/-1/error", get(error_handler))
-    // .route("/-1/health", get(|| async { StatusCode::OK }))
-    // .with_state(shared_state);
+  let router = Router::new();
+  // .route("/", get(index))
+  // .route("/comments", get(index)) // todo
+  // .route("/-1/error", get(error_handler))
+  // .route("/-1/health", get(|| async { StatusCode::OK }))
+  // .with_state(shared_state);
 
   Ok(router.into())
 }
