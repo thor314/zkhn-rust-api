@@ -21,6 +21,9 @@ tokio={ version="1", features=["full"] }
 thiserror="1.0"
 sqlx = { version = "0.7.3", features = ["postgres", "tls-rustls"] }
 serde = { version = "1.0.197", features = ["derive"] }
+tower-sessions = "0.10.4"
+tower-sessions-sqlx-store = { version = "0.10.0", features = ["postgres"] }
+time = "0.3.34"
 
 [dev-dependencies]
 rstest           ="0.18"                                 # testing convenience proc-macros

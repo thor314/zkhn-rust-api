@@ -19,9 +19,6 @@ pub enum DbError {
   Anyhow(#[from] anyhow::Error),
   #[error(transparent)]
   PwError(#[from] PasswordError),
-  #[allow(dead_code)]
-  #[error("an unhandled error")]
-  Unhandled,
 }
 
 #[derive(Debug, thiserror::Error)]
