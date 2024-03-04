@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context};
 use chrono::{NaiveDate, NaiveDateTime, Utc};
+use once_cell::sync::Lazy;
 use regex::Regex;
 use tracing::trace;
 use tracing_subscriber::{
@@ -7,8 +8,11 @@ use tracing_subscriber::{
   layer::SubscriberExt,
   util::SubscriberInitExt,
 };
+use validator::{Validate, ValidationError};
 
 use crate::error::DbError;
+
+static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[0-9A-Za-z_]+$").unwrap());
 
 pub fn now() -> NaiveDateTime {
   NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap()
@@ -39,4 +43,18 @@ pub fn sanitize_text(text: &str) -> String {
   // Prevent XSS Attacks
   text = ammonia::clean(&text);
   text
+}
+
+pub(crate) fn validate_username(username: &str) -> Result<(), ValidationError> {
+  if username.len() < 3 {
+    return Err(ValidationError::new("username_length must be greater than 3"));
+  } else if username.len() > 16 {
+    return Err(ValidationError::new("username_length must be less than 16"));
+  } else if !USERNAME_REGEX.is_match(username) {
+    return Err(ValidationError::new(
+      "username must only contain alphanumeric characters and underscores",
+    ));
+  }
+
+  Ok(())
 }

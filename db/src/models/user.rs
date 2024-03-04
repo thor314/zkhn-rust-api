@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
 // use uuid::Uuid;
 use uuid::Uuid;
-use validator::Validate;
+use validator::{Validate, ValidationError};
 
 use super::{
   user_favorite::UserFavorite,
@@ -22,12 +22,10 @@ use crate::{
   DbPool,
 };
 
-static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[0-9A-Za-z_]+$").unwrap());
-
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone, Validate)]
 pub struct User {
   pub id: Uuid,
-  #[validate(length(min = 3, max = 16), regex = "USERNAME_REGEX")]
+  #[validate(custom(function = crate::utils::validate_username))]
   pub username: String,
   /// Hashed password
   // todo: look for a password hash wrapper, this should be a hash
