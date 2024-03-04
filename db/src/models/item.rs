@@ -4,7 +4,10 @@ use sqlx::PgConnection;
 use uuid::Uuid;
 
 use super::comment::Comment;
-use crate::{error::DbError, utils::{now, Timestamp}};
+use crate::{
+  error::DbError,
+  utils::{now, Timestamp},
+};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
@@ -91,16 +94,19 @@ pub enum ItemType {
   Ask,
 }
 
+// todo: move
 pub(crate) async fn increment_comments(
   conn: &mut PgConnection,
   parent_item_id: Uuid,
 ) -> Result<(), DbError> {
-  let query = r#"
-    UPDATE items
+  sqlx::query!(
+    "UPDATE items
     SET comment_count = comment_count + 1
-    WHERE id = $1
-  "#;
-  sqlx::query(query).bind(parent_item_id).execute(conn).await?;
+    WHERE id = $1",
+    parent_item_id
+  )
+  .execute(conn)
+  .await?;
 
   Ok(())
 }

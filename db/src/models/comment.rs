@@ -3,7 +3,10 @@ use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{error::DbError, utils::{now, Timestamp}};
+use crate::{
+  error::DbError,
+  utils::{now, Timestamp},
+};
 
 /// the minimum points a comment can have
 const MIN_POINTS: i32 = -4;
@@ -103,9 +106,7 @@ pub async fn child_comments(
   id: Uuid,
   show_dead_comments: bool,
 ) -> Result<Vec<Comment>, DbError> {
-  let comments: Vec<Comment> =
-    sqlx::query_as("SELECT * FROM comments WHERE parent_comment_id = $1")
-      .bind(id)
+  let comments: Vec<Comment> = sqlx::query_as!(Comment, "SELECT * FROM comments WHERE parent_comment_id = $1", id)
       .fetch_all(&mut conn)
       .await?;
 

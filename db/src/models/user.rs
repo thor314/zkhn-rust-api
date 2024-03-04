@@ -130,7 +130,7 @@ pub fn hash_password(password: &str) -> Result<String, PasswordError> {
 }
 
 pub async fn increment_karma(conn: &mut PgConnection, username: &str) -> Result<(), DbError> {
-  sqlx::query!(
+  sqlx::query!( 
     r#"
       UPDATE users
       SET karma = karma + 1

@@ -21,7 +21,11 @@ static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[0-9A-Za-z_]+$")
 #[sqlx(transparent)]
 pub struct Timestamp(DateTime<Utc>);
 
-pub fn now() -> Timestamp { Timestamp(Utc::now()) }
+pub fn now() -> Timestamp { Utc::now().into() }
+
+impl From<DateTime<Utc>> for Timestamp {
+  fn from(dt: DateTime<Utc>) -> Self { Timestamp(dt) }
+}
 
 // todo: test. Most of this should probably be done with a crate like ammonia, plus latex rendering?
 /// Sanitize text:
