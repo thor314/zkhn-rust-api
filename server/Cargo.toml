@@ -14,7 +14,7 @@ axum={ version="0.7.3", features=["macros"] }
 shuttle-axum="0.39.0"
 shuttle-runtime={ version="0.39", default-features=false }
 shuttle-secrets="0.39.0"
-shuttle-shared-db = { version = "0.39.0", features = ["postgres", "sqlx"] }
+shuttle-shared-db = { version = "0.40.0", features = ["postgres", "sqlx"] }
 tracing="0.1"
 tracing-subscriber={ version="0.3", features=["env-filter", "fmt"] }
 tokio={ version="1", features=["full"] }
