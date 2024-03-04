@@ -23,7 +23,7 @@ tracing-subscriber={ version="0.3", features=["env-filter", "fmt"] }
 tokio={ version="1", features=["full"] }
 thiserror="1.0"
 url="2.5.0"
-validator = { version = "0.16.1", features = ["derive"] }
+validator = { version = "0.17.0", features = ["derive"] }
 uuid = { version = "1.7.0", features = ["serde", "v4"] }
 
 # futures = "0.3.30"
