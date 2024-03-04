@@ -1,5 +1,5 @@
 use axum::{extract::State, response::IntoResponse};
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -8,5 +8,5 @@ pub struct UserFavorite {
   pub username:  String,
   pub item_type: String,
   pub item_id:   Uuid,
-  pub date:      NaiveDateTime,
+  pub date:      crate::utils::Timestamp,
 }

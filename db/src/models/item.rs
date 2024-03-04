@@ -1,10 +1,13 @@
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
 use uuid::Uuid;
 
 use super::comment::Comment;
-use crate::error::DbError;
+use crate::{
+  error::DbError,
+  utils::{now, Timestamp},
+};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
@@ -25,7 +28,7 @@ pub struct Item {
   pub score:         i32, // todo: both points and score?
   pub comment_count: i32,
   pub item_category: ItemCategory,
-  pub created:       NaiveDateTime,
+  pub created:       Timestamp,
   pub dead:          bool,
 }
 
@@ -58,7 +61,7 @@ impl Item {
       score: 0,
       comment_count: 0,
       item_category,
-      created: crate::utils::now(),
+      created: now(),
       dead: false,
     }
   }
@@ -91,16 +94,19 @@ pub enum ItemType {
   Ask,
 }
 
+// todo: move
 pub(crate) async fn increment_comments(
   conn: &mut PgConnection,
   parent_item_id: Uuid,
 ) -> Result<(), DbError> {
-  let query = r#"
-    UPDATE items
+  sqlx::query!(
+    "UPDATE items
     SET comment_count = comment_count + 1
-    WHERE id = $1
-  "#;
-  sqlx::query(query).bind(parent_item_id).execute(conn).await?;
+    WHERE id = $1",
+    parent_item_id
+  )
+  .execute(conn)
+  .await?;
 
   Ok(())
 }

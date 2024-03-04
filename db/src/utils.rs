@@ -1,7 +1,9 @@
 use anyhow::{anyhow, Context};
-use chrono::{NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use once_cell::sync::Lazy;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
+use sqlx::Decode;
 use tracing::trace;
 use tracing_subscriber::{
   filter::{EnvFilter, LevelFilter},
@@ -14,8 +16,15 @@ use crate::error::DbError;
 
 static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[0-9A-Za-z_]+$").unwrap());
 
-pub fn now() -> NaiveDateTime {
-  NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap()
+/// A timestamp wrapper that we can use in our sqlx models.
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
+pub struct Timestamp(DateTime<Utc>);
+
+pub fn now() -> Timestamp { Utc::now().into() }
+
+impl From<DateTime<Utc>> for Timestamp {
+  fn from(dt: DateTime<Utc>) -> Self { Timestamp(dt) }
 }
 
 // todo: test. Most of this should probably be done with a crate like ammonia, plus latex rendering?
