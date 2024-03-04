@@ -26,16 +26,16 @@ pub async fn migrate(pool: &DbPool) -> Result<(), DbError> {
 }
 
 // todo: move to user-queries
-pub async fn get_user_by_id(db_pool: &DbPool, id: Uuid) -> DbResult<Option<User>> {
+pub async fn get_user_by_id(pool: &DbPool, id: Uuid) -> DbResult<Option<User>> {
   sqlx::query_as!(User, "SELECT * FROM users WHERE id = $1", id) // syntax error at end of input
-    .fetch_optional(db_pool)
+    .fetch_optional(pool)
     .await
     .map_err(DbError::from)
 }
 
-pub async fn get_user_by_username(db_pool: &DbPool, username: &str) -> DbResult<Option<User>> {
+pub async fn get_user_by_username(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
   sqlx::query_as!(User, "SELECT * FROM users WHERE username = $1", username)
-    .fetch_optional(db_pool)
+    .fetch_optional(pool)
     .await
     .map_err(DbError::from)
 }
