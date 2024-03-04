@@ -1,5 +1,5 @@
 use axum::{extract::State, response::IntoResponse};
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use scrypt::{
@@ -18,8 +18,7 @@ use super::{
   user_vote::{UserVote, VoteType},
 };
 use crate::{
-  error::{DbError, PasswordError},
-  DbPool,
+  error::{DbError, PasswordError}, utils::now, DbPool
 };
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone, Validate)]
@@ -43,7 +42,8 @@ pub struct User {
   // todo: email wrapper
   pub email: String,
   /// Account creation timestamp
-  pub created: NaiveDateTime,
+  // pub created: crate::utils::Timestamp,
+  pub created: crate::utils::Timestamp,
   /// User karma score
   pub karma: i32,
   /// User biography
@@ -69,7 +69,7 @@ impl User {
       reset_password_token: None,
       reset_password_token_expiration: None,
       email,
-      created: crate::utils::now(),
+      created: now(),
       karma: 1,
       about,
       show_dead: false,
@@ -79,6 +79,7 @@ impl User {
     }
   }
 
+  /// verify the provided password against the user's stored password hash
   pub fn verify_password(&self, other_password: &str) -> Result<bool, PasswordError> {
     let parsed_hash = PasswordHash::new(&self.password_hash)?;
     match Scrypt.verify_password(other_password.as_bytes(), &parsed_hash) {
@@ -88,14 +89,14 @@ impl User {
   }
 
   pub fn favorite(&self, item_type: String, item_id: Uuid) -> UserFavorite {
-    UserFavorite { username: self.username.clone(), item_type, item_id, date: crate::utils::now() }
+    UserFavorite { username: self.username.clone(), item_type, item_id, date: now() }
   }
 
-  pub fn hide(&self, item_id: Uuid, item_creation_date: NaiveDateTime) -> UserHidden {
+  pub fn hide(&self, item_id: Uuid, item_creation_date: crate::utils::Timestamp) -> UserHidden {
     UserHidden {
       username: self.username.clone(),
       item_id,
-      date: crate::utils::now(),
+      date: now(),
       item_creation_date,
     }
   }
@@ -115,7 +116,7 @@ impl User {
       parent_item_id,
       upvote,
       downvote,
-      date: crate::utils::now(),
+      date: now(),
     }
   }
 }

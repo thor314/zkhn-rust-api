@@ -1,5 +1,5 @@
 use axum::{extract::State, response::IntoResponse};
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -19,7 +19,7 @@ pub struct UserVote {
   /// Indicates if the vote was a downvote (comments only).
   pub downvote:       bool,
   /// When the vote was cast.
-  pub date:           NaiveDateTime,
+  pub date:           crate::utils::Timestamp,
 }
 
 /// Defines the type of content a vote is associated with.

@@ -1,9 +1,9 @@
 // use axum::{extract::State, response::IntoResponse};
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::error::DbError;
+use crate::{error::DbError, utils::{now, Timestamp}};
 
 /// the minimum points a comment can have
 const MIN_POINTS: i32 = -4;
@@ -33,7 +33,7 @@ pub struct Comment {
   /// sum total of upvotes and downvotes the comment has received. The minimum point value for a
   /// comment is -4
   pub points:            i32,
-  pub created:           NaiveDateTime,
+  pub created:           Timestamp,
   /// Dead comments cannot be commented on, and are not displayed by default.
   /// Comments submitted by shadow-banned users are dead.
   pub dead:              bool,
@@ -65,7 +65,7 @@ impl Comment {
       text,
       children_count: 0,
       points: 1,
-      created: crate::utils::now(),
+      created: now(),
       dead,
     }
   }

@@ -1,7 +1,9 @@
 use axum::{extract::State, response::IntoResponse};
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use crate::utils::{now, Timestamp};
 
 /// Represents a single moderation action taken by a moderator.
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
@@ -25,7 +27,7 @@ pub struct ModerationLog {
   /// Author's username of the comment the moderator action was taken on.
   pub comment_by:         Option<String>,
   /// UNIX timestamp that represents when the moderator action was taken.
-  pub created:            NaiveDateTime,
+  pub created:            Timestamp,
 }
 
 // todo: extend
@@ -63,7 +65,7 @@ impl ModerationLog {
       item_by,
       comment_id,
       comment_by,
-      created: crate::utils::now(),
+      created: now(),
     }
   }
 }
