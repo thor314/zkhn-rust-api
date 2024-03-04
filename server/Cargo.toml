@@ -11,7 +11,7 @@ db  = { path = "../db" }
 
 anyhow="1.0"
 axum={ version="0.7.3", features=["macros"] }
-shuttle-axum="0.39.0"
+shuttle-axum="0.40.0"
 shuttle-runtime={ version="0.40", default-features=false }
 shuttle-secrets="0.40.0"
 shuttle-shared-db = { version = "0.40.0", features = ["postgres", "sqlx"] }
