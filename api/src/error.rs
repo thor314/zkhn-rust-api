@@ -1,6 +1,7 @@
 //! zkhn-rust-api error types
 // https://docs.rs/thiserror/latest/thiserror/
 
+use db::error::DbError;
 use thiserror::Error;
 use tokio::task;
 
@@ -14,6 +15,8 @@ pub enum ApiError {
   Anyhow(#[from] anyhow::Error),
   #[error(transparent)]
   PwError(#[from] PasswordError),
+  #[error(transparent)]
+  DbError(#[from] DbError),
   #[allow(dead_code)]
   #[error("an unhandled error")]
   Unhandled,

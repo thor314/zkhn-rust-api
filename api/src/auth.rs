@@ -13,6 +13,7 @@ use axum_login::{
 };
 // use db::models::comment::Comment;
 use db::models::user::User;
+use serde::{Deserialize, Serialize};
 use tokio::task;
 use uuid::Uuid;
 
@@ -50,9 +51,14 @@ pub async fn login(
 // session_layer).build();   auth_manager_layer
 // }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 // Newtype since cannot derive traits for types defined in other crates
 pub struct UserAuthWrapper(User);
+
+impl From<User> for UserAuthWrapper {
+  fn from(user: User) -> Self { Self(user) }
+}
+
 
 impl AuthUser for UserAuthWrapper {
   type Id = Uuid;
@@ -63,9 +69,9 @@ impl AuthUser for UserAuthWrapper {
   fn session_auth_hash(&self) -> &[u8] { self.0.password_hash.as_bytes() }
 }
 
-#[derive(Debug, Clone)]
+/// Form extractor for authentication fields.
+#[derive(Debug, Clone, Deserialize)]
 pub struct Credentials {
-  id:           Uuid,
   pub username: String,
   pub password: String,
   // todo: should this live here?
@@ -92,7 +98,9 @@ impl AuthnBackend for Backend {
     &self,
     credentials: Self::Credentials,
   ) -> Result<Option<Self::User>, Self::Error> {
-    let user = self.get_user(&credentials.id).await?;
+    let user =
+      db::get_user_by_username(&self.pool, &credentials.username).await?.map(UserAuthWrapper::from);
+
     // Verifying the password is blocking and potentially slow, so use `spawn_blocking`.
     task::spawn_blocking(move || {
       Ok(user.filter(|user| user.0.verify_password(&credentials.password).is_ok()))
@@ -101,7 +109,7 @@ impl AuthnBackend for Backend {
   }
 
   async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    let user = db::get_user_from_id(&self.pool, *user_id).await.map(UserAuthWrapper);
+    let user = db::get_user_by_id(&self.pool, *user_id).await?.map(UserAuthWrapper::from);
     Ok(user)
   }
 }
