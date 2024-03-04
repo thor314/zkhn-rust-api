@@ -2,13 +2,18 @@
 //!
 //! Usage in a handler:
 //! ```rust
-//! pub async fn protected(auth_session: AuthSession) -> impl IntoResponse {
+//! use axum::{http::StatusCode, response::IntoResponse};
+//! pub async fn protected(auth_session: api::AuthSession) -> impl IntoResponse {
 //!   match auth_session.user {
 //!     Some(user) => StatusCode::OK, // do stuff
 //!     None => StatusCode::INTERNAL_SERVER_ERROR,
 //!   }
 //! }
 //! ```
+//!
+//! For more advanced setting of permissions, see:
+//! https://github.com/maxcountryman/axum-login/blob/main/examples/permissions/src/users.rs#L107
+
 // Axum-login cheatsheet
 // ---------------------
 //
@@ -54,7 +59,7 @@ pub fn auth_router(pool: &DbPool, session_layer: &SessionManagerLayer<PostgresSt
     .route_layer(login_required!(Backend, login_url = "/login"))
     .route("/login", post(post::login))
     .route("/logout", post(post::logout))
-    .layer(auth_layer) 
+    .layer(auth_layer)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

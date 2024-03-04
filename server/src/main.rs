@@ -28,8 +28,8 @@ async fn main(
   tracing::info!("Migrating db...");
   db::migrate(&pool).await.unwrap();
   tracing::info!("Initializing router...");
-  // todo: make these concurrent
   let router = {
+    // todo: make these concurrent
     let router = api::api_router(pool.clone()).await;
     tracing::info!("Building middleware layers...");
     let session_layer = get_session_layer(&pool).await?;

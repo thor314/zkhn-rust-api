@@ -18,7 +18,9 @@ use super::{
   user_vote::{UserVote, VoteType},
 };
 use crate::{
-  error::{DbError, PasswordError}, utils::now, DbPool
+  error::{DbError, PasswordError},
+  utils::now,
+  DbPool,
 };
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone, Validate)]
@@ -93,12 +95,7 @@ impl User {
   }
 
   pub fn hide(&self, item_id: Uuid, item_creation_date: crate::utils::Timestamp) -> UserHidden {
-    UserHidden {
-      username: self.username.clone(),
-      item_id,
-      date: now(),
-      item_creation_date,
-    }
+    UserHidden { username: self.username.clone(), item_id, date: now(), item_creation_date }
   }
 
   pub fn vote(
@@ -130,7 +127,7 @@ pub fn hash_password(password: &str) -> Result<String, PasswordError> {
 }
 
 pub async fn increment_karma(conn: &mut PgConnection, username: &str) -> Result<(), DbError> {
-  sqlx::query!( 
+  sqlx::query!(
     r#"
       UPDATE users
       SET karma = karma + 1

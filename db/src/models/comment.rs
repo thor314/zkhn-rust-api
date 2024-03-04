@@ -106,7 +106,8 @@ pub async fn child_comments(
   id: Uuid,
   show_dead_comments: bool,
 ) -> Result<Vec<Comment>, DbError> {
-  let comments: Vec<Comment> = sqlx::query_as!(Comment, "SELECT * FROM comments WHERE parent_comment_id = $1", id)
+  let comments: Vec<Comment> =
+    sqlx::query_as!(Comment, "SELECT * FROM comments WHERE parent_comment_id = $1", id)
       .fetch_all(&mut conn)
       .await?;
 
