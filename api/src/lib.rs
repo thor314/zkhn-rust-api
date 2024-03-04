@@ -29,6 +29,8 @@ use error::ApiError;
 use tracing::info;
 
 use crate::api::comments::comment_router;
+// pub use crate::auth::{AuthSession, }
+pub use auth::auth_router;
 
 /// Access to the database
 #[derive(Clone)]

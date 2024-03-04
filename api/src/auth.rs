@@ -1,4 +1,18 @@
-// Axum-login cheatsheet there are 3 main traits to implement:
+//! Authentication with axum-login.
+//!
+//! Usage in a handler:
+//! ```rust
+//! pub async fn protected(auth_session: AuthSession) -> impl IntoResponse {
+//!   match auth_session.user {
+//!     Some(user) => StatusCode::OK, // do stuff
+//!     None => StatusCode::INTERNAL_SERVER_ERROR,
+//!   }
+//! }
+//! ```
+// Axum-login cheatsheet
+// ---------------------
+//
+// there are 3 main traits to implement:
 // - AuthUser - state the user struct, and provide methods to get the id and session_auth_hash
 // - AuthnBackend - given a user_id, get the user from the database
 //   - session_auth_hash, which is used to validate the session; provide some credentials to
@@ -6,50 +20,42 @@
 //   - get_user, which is used to load the user from the backend into the session.
 // - AuthzBackend -
 use anyhow::Context;
-use axum::{async_trait, http::StatusCode, response::IntoResponse, Form};
-use axum_login::{
-  tower_sessions::{session, SessionStore},
-  AuthUser, AuthnBackend, AuthzBackend, UserId,
+use axum::{
+  async_trait,
+  http::StatusCode,
+  response::{IntoResponse, Redirect},
+  routing::post,
+  Form, Router,
 };
-// use db::models::comment::Comment;
+use axum_login::{
+  login_required,
+  tower_sessions::{session, SessionStore},
+  AuthManagerLayerBuilder, AuthUser, AuthnBackend, AuthzBackend, UserId,
+};
 use db::models::user::User;
 use serde::{Deserialize, Serialize};
 use tokio::task;
+use tower_sessions::{MemoryStore, SessionManagerLayer};
+use tower_sessions_sqlx_store::PostgresStore;
 use uuid::Uuid;
 
-// use sqlx::types::Uuid;
 use crate::{error::ApiError, DbPool, SharedState};
-// use crate::{error::ApiError, session::get_session_manager_layer, DbPool, SharedState};
 
 /// Axum extractor for the current user session
 pub type AuthSession = axum_login::AuthSession<Backend>;
 
-// todo verify
-pub async fn login(
-  mut auth_session: AuthSession,
-  Form(creds): Form<Credentials>,
-) -> impl IntoResponse {
-  let user = match auth_session.authenticate(creds.clone()).await {
-    Ok(Some(user)) => user,
-    Ok(None) => return StatusCode::UNAUTHORIZED.into_response(),
-    Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-  };
+/// construct the auth router, with access to the database and session layer.
+/// reference: https://github.com/maxcountryman/axum-login/blob/main/examples/sqlite/src/web/app.rs#L55
+pub fn auth_router(pool: &DbPool, session_layer: &SessionManagerLayer<PostgresStore>) -> Router {
+  let backend = Backend::new(pool.clone());
+  let auth_layer = AuthManagerLayerBuilder::new(backend, session_layer.clone()).build();
 
-  if auth_session.login(&user).await.is_err() {
-    return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-  }
-
-  axum::response::Redirect::to("/").into_response()
+  Router::new()
+    .route_layer(login_required!(Backend, login_url = "/login"))
+    .route("/login", post(post::login))
+    .route("/logout", post(post::logout))
+    .layer(auth_layer) 
 }
-
-// pub async fn get_auth_manager_layer(
-//   pool: DbPool,
-// ) -> axum_login::AuthManagerLayer<Backend, impl SessionStore> {
-//   let backend = Backend::new(pool.clone());
-//   let session_layer = get_session_manager_layer(&pool).await;
-//   let auth_manager_layer = axum_login::AuthManagerLayerBuilder::new(backend,
-// session_layer).build();   auth_manager_layer
-// }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 // Newtype since cannot derive traits for types defined in other crates
@@ -58,7 +64,6 @@ pub struct UserAuthWrapper(User);
 impl From<User> for UserAuthWrapper {
   fn from(user: User) -> Self { Self(user) }
 }
-
 
 impl AuthUser for UserAuthWrapper {
   type Id = Uuid;
@@ -72,11 +77,10 @@ impl AuthUser for UserAuthWrapper {
 /// Form extractor for authentication fields.
 #[derive(Debug, Clone, Deserialize)]
 pub struct Credentials {
-  pub username: String,
-  pub password: String,
-  // todo: should this live here?
-  // /// where to redirect the user after login
-  // pub redirect_url: Option<String>,
+  pub username:     String,
+  pub password:     String,
+  /// where to redirect the user after login; i.e. the page they were trying to access
+  pub redirect_url: Option<String>,
 }
 
 #[derive(Clone)]
@@ -127,14 +131,44 @@ impl AuthnBackend for Backend {
 //   Mod,
 // }
 
-mod protected {
+mod post {
+  //! The login and logout handlers
   use super::*;
 
-  pub async fn protected(auth_session: AuthSession) -> impl IntoResponse {
-    match auth_session.user {
-      Some(user) => StatusCode::OK,
-      // do something protected
-      None => StatusCode::INTERNAL_SERVER_ERROR,
+  /// User login. If successful, redirect to the next page, or to `/login` if no next page is
+  /// provided.
+  pub async fn login(
+    mut auth_session: AuthSession,
+    Form(creds): Form<Credentials>,
+  ) -> impl IntoResponse {
+    let login_url = match &creds.redirect_url {
+      Some(next) => format!("/login?next={}", next),
+      None => "/login".to_string(),
+    };
+
+    let user = match auth_session.authenticate(creds.clone()).await {
+      Ok(Some(user)) => user,
+      Ok(None) => {
+        tracing::info!("Redirecting user {} to login", creds.username);
+        return Redirect::to(&login_url).into_response();
+      },
+      Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    };
+
+    if auth_session.login(&user).await.is_err() {
+      tracing::error!("Failed to log in user {}", user.0.username);
+      return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
+
+    tracing::info!("User {} is already logged in", user.0.username);
+    Redirect::to(&login_url).into_response()
+  }
+
+  /// User logout. Redirect to `/login` on success, or return a 500 error on failure.
+  pub async fn logout(mut auth_session: AuthSession) -> impl IntoResponse {
+    match auth_session.logout().await {
+      Ok(_) => Redirect::to("/login").into_response(),
+      Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     }
   }
 }
