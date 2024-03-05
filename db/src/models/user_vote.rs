@@ -9,7 +9,8 @@ pub struct UserVote {
   /// The username of the user who cast the vote.
   pub username:       String,
   /// The type of content voted on.
-  pub vote_type:      VoteType,
+  /// Item, Comment
+  pub vote_type:      String,
   /// The ID of the item or comment voted on.
   pub content_id:     Uuid,
   /// The ID of the parent item for votes on comments.
@@ -22,11 +23,11 @@ pub struct UserVote {
   pub date:           crate::utils::Timestamp,
 }
 
-/// Defines the type of content a vote is associated with.
-// #[derive(Debug, Serialize, Deserialize)]
-#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-#[sqlx(type_name = "vote_type_type")]
-pub enum VoteType {
-  Item,
-  Comment,
-}
+// /// Defines the type of content a vote is associated with.
+// // #[derive(Debug, Serialize, Deserialize)]
+// #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+// #[sqlx(type_name = "vote_type_type")]
+// pub enum VoteType {
+//   Item,
+//   Comment,
+// }

@@ -13,7 +13,10 @@ pub struct ModerationLog {
   /// The username of the moderator who took the action.
   pub moderator_username: String,
   /// The type of action the moderator took. This will be one of several specified strings.
-  pub action_type:        ModeratorAction,
+  /// 
+  /// KillItem, UnkillItem, KillComment, UnkillComment, AddUserShadowBan, RemoveUserShadowBan,
+  /// AddUserBan, RemoveUserBan,
+  pub action_type:        String,
   /// Username of the user the moderator action is related to.
   pub username:           Option<String>,
   /// ID of the item the moderator action was taken on.
@@ -30,24 +33,24 @@ pub struct ModerationLog {
   pub created:            Timestamp,
 }
 
-// todo: extend
-#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-#[sqlx(type_name = "moderator_action_enum")]
-pub enum ModeratorAction {
-  KillItem,
-  UnkillItem,
-  KillComment,
-  UnkillComment,
-  AddUserShadowBan,
-  RemoveUserShadowBan,
-  AddUserBan,
-  RemoveUserBan,
-}
+// // todo: extend
+// #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+// #[sqlx(type_name = "moderator_action_enum")]
+// pub enum ModeratorAction {
+//   KillItem,
+//   UnkillItem,
+//   KillComment,
+//   UnkillComment,
+//   AddUserShadowBan,
+//   RemoveUserShadowBan,
+//   AddUserBan,
+//   RemoveUserBan,
+// }
 
 impl ModerationLog {
   pub fn new(
     moderator_username: String,
-    action_type: ModeratorAction,
+    action_type: String,
     username: Option<String>,
     item_id: Option<Uuid>,
     item_title: Option<String>,
