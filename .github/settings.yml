@@ -2,8 +2,8 @@
 # Requires sign up, and allowing Probot to manage your repos.
 
 repository:
-  description: cryptography algorithms in Rust
-  #homepage: docs.rs/tkcrypto
+  description: backend for zkhn site
+  #homepage: docs.rs/zkhn-rust-api
   # topics: rust other_topics
   has_issues: true
   has_projects: false
