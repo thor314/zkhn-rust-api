@@ -13,7 +13,7 @@ use tower::ServiceExt;
 #[sqlx::test]
 // https://github.com/launchbadge/sqlx/blob/main/examples/postgres/axum-social-with-tests/tests/user.rs
 async fn test_create_user(pool: PgPool) {
-  let mut app = api::api_router(&pool).await.expect("failed to build router");
+  let mut app = api::api_router(&pool, None).await.expect("failed to build router");
 
   let resp1 = app
       .borrow_mut()

@@ -20,6 +20,7 @@ use axum::{
   routing::{get, post},
   Router,
 };
+use axum_analytics::Analytics;
 use axum_login::{
   login_required,
   tower_sessions::{MemoryStore, SessionManagerLayer},
@@ -51,13 +52,14 @@ impl SharedState {
 /// - Session management
 /// - Authentication
 /// - State
-pub async fn api_router(pool: &DbPool) -> ApiResult<Router> {
+pub async fn api_router(pool: &DbPool, analytics_key: Option<String>) -> ApiResult<Router> {
   let state = SharedState::new(pool.clone());
   let session_layer = get_session_layer(pool).await?;
 
   let router = Router::new()
     .merge(standard_router(state)) // 
     .layer(session_layer.clone()) // must precede auth router
+    .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth router
     .merge(auth_router(pool, &session_layer)) // all routes above this may have auth middleware applied
 ;
 

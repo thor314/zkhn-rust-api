@@ -2,6 +2,8 @@
 # ref: https://github.com/github/gitignore/blob/main/Rust.gitignore
 cgt* # ignore instatiations of my test template
 
+Secrets.toml
+
 # don't leak secret env vars
 .env  
 
