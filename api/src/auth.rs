@@ -56,10 +56,11 @@ pub fn auth_router(pool: &DbPool, session_layer: &SessionManagerLayer<PostgresSt
   let auth_layer = AuthManagerLayerBuilder::new(backend, session_layer.clone()).build();
 
   Router::new()
-    .route_layer(login_required!(Backend, login_url = "/login"))
     .route("/login", post(post::login))
     .route("/logout", post(post::logout))
     .layer(auth_layer)
+    .route_layer(login_required!(Backend, login_url = "/login")) // routes after route layer will
+                                                                 // not have middleware applied
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

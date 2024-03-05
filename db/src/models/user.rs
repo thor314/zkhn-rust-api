@@ -1,14 +1,10 @@
 use axum::{extract::State, response::IntoResponse};
-use chrono::{DateTime, NaiveDate, Utc};
-use once_cell::sync::Lazy;
-use regex::Regex;
 use scrypt::{
   password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
   Scrypt,
 };
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
-// use uuid::Uuid;
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
 

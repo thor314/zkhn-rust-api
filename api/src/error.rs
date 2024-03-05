@@ -17,6 +17,8 @@ pub enum ApiError {
   PwError(#[from] PasswordError),
   #[error(transparent)]
   DbError(#[from] DbError),
+  #[error(transparent)]
+  Session(#[from] tower_sessions::session_store::Error),
   #[allow(dead_code)]
   #[error("an unhandled error")]
   Unhandled,

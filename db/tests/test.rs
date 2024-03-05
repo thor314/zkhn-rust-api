@@ -4,13 +4,12 @@
 
 // use rstest::{fixture, rstest};
 
-use sqlx::{PgConnection, PgPool, Row};
+use db::*;
+use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{get_user_by_id, get_user_by_username, models::user::User};
-
 static INIT: std::sync::Once = std::sync::Once::new();
-fn setup_test_tracing() {
+fn _setup_test_tracing() {
   use tracing::Level;
   use tracing_subscriber::FmtSubscriber;
 
@@ -25,7 +24,7 @@ failed",
 }
 
 #[sqlx::test]
-async fn basic_test(pool: PgPool) -> sqlx::Result<()> {
+async fn integration_test(pool: PgPool) -> sqlx::Result<()> {
   let id = Uuid::new_v4();
   let user = get_user_by_id(&pool, id).await.unwrap();
   assert!(user.is_none());
