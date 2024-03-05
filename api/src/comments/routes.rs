@@ -4,21 +4,24 @@ use axum::{
   Json, Router,
 };
 
+use super::extractors::CommentExtractor;
 // use sqlx::types::Uuid;
-use crate::{error::ApiError, DbPool};
+use crate::{
+  auth::{assert_authenticated, AuthSession},
+  error::{ApiError, RouteError},
+  ApiResult, DbPool,
+};
 
 // models::{self},
 //   comment::{Comment, NewCommentPayload},
 // schema::{self, comments, comments::dsl::comments as comments_dsl},
 
-pub fn comment_router() -> Router { Router::new() }
-
-// todo: auth
 pub async fn add_new_comment(
   State(pool): State<DbPool>,
-  // Json(payload): Json<NewCommentPayload>,
-  // Auth()
-) -> Result<StatusCode, ApiError> {
+  Json(payload): Json<CommentExtractor>,
+  auth_session: AuthSession,
+) -> ApiResult<StatusCode> {
+  assert_authenticated(&auth_session)?;
   todo!()
 }
 //   let new_comment = Comment::from(payload);

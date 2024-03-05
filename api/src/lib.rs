@@ -6,6 +6,7 @@
 #![allow(clippy::clone_on_copy)]
 
 mod api;
+mod comments;
 mod auth;
 pub mod error;
 mod session;
@@ -32,7 +33,7 @@ use tower_sessions::{ExpiredDeletion, Expiry};
 use tower_sessions_sqlx_store::PostgresStore;
 use tracing::info;
 
-use crate::api::comments::comment_router;
+use comments::comment_router;
 pub use crate::auth::{auth_router, AuthSession};
 
 pub type ApiResult<T> = Result<T, ApiError>;
