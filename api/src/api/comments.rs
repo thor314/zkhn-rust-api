@@ -11,7 +11,7 @@ use crate::{error::ApiError, DbPool};
 //   comment::{Comment, NewCommentPayload},
 // schema::{self, comments, comments::dsl::comments as comments_dsl},
 
-pub async fn comment_router() -> Router { Router::new() }
+pub fn comment_router() -> Router { Router::new() }
 
 // todo: auth
 pub async fn add_new_comment(

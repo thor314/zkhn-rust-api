@@ -9,6 +9,7 @@ mod error;
 #[cfg(test)] mod tests;
 mod utils;
 
+use anyhow::Context;
 use db::DbPool;
 use error::ServerError;
 use sqlx::PgPool;
@@ -28,34 +29,10 @@ async fn main(
   tracing::info!("Migrating db...");
   db::migrate(&pool).await.unwrap();
   tracing::info!("Initializing router...");
-  let router = {
-    // todo: make these concurrent
-    let router = api::api_router(pool.clone()).await;
-    tracing::info!("Building middleware layers...");
-    let session_layer = get_session_layer(&pool).await?;
-    let auth_router = api::auth_router(&pool, &session_layer);
-    router.layer(session_layer).merge(auth_router)
-  };
+
+  tracing::info!("Building middleware layers...");
+  let router = api::api_router(&pool).await.context("failed to build router").unwrap();
 
   tracing::info!("🚀🚀🚀");
   Ok(router.into())
-}
-
-// ref: https://github.com/maxcountryman/tower-sessions-stores/blob/main/sqlx-store/examples/postgres.rs
-/// Get the `tower-sessions` Manager Layer,
-async fn get_session_layer(
-  pool: &DbPool,
-) -> ServerResult<tower_sessions::SessionManagerLayer<PostgresStore>> {
-  let session_store = PostgresStore::new(pool.clone());
-
-  // delete expired connections continuously
-  let deletion_task = tokio::task::spawn(
-    session_store.clone().continuously_delete_expired(tokio::time::Duration::from_secs(60)),
-  );
-  deletion_task.await.map_err(ServerError::from)?.map_err(ServerError::from)?;
-
-  let manager = SessionManagerLayer::new(session_store)
-    .with_secure(false) // todo
-    .with_expiry(Expiry::OnInactivity(time::Duration::seconds(10)));
-  Ok(manager)
 }
