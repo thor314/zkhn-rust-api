@@ -73,7 +73,7 @@ pub fn assert_authenticated(auth_session: &AuthSession) -> ApiResult<()> {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 // Newtype since cannot derive traits for types defined in other crates
-pub struct UserAuthWrapper(User);
+pub struct UserAuthWrapper(pub User);
 
 impl From<User> for UserAuthWrapper {
   fn from(user: User) -> Self { Self(user) }

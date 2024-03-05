@@ -6,11 +6,12 @@
 #![allow(clippy::clone_on_copy)]
 
 mod api;
-mod comments;
 mod auth;
+mod comments;
 pub mod error;
 mod session;
 #[cfg(test)] mod tests;
+mod user_votes;
 mod utils;
 
 use anyhow::Context;
@@ -27,14 +28,17 @@ use axum_login::{
   tower_sessions::{MemoryStore, SessionManagerLayer},
   AuthManagerLayerBuilder,
 };
+use comments::comment_router;
 use db::DbPool;
 use error::ApiError;
 use tower_sessions::{ExpiredDeletion, Expiry};
 use tower_sessions_sqlx_store::PostgresStore;
 use tracing::info;
 
-use comments::comment_router;
-pub use crate::auth::{auth_router, AuthSession};
+pub use crate::{
+  auth::{auth_router, AuthSession},
+  user_votes::payload::*,
+};
 
 pub type ApiResult<T> = Result<T, ApiError>;
 

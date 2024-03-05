@@ -3,6 +3,8 @@ use chrono::{DateTime, NaiveDate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::utils::Timestamp;
+
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 /// Represents a vote cast by a user on an item or comment.
 pub struct UserVote {
@@ -20,7 +22,7 @@ pub struct UserVote {
   /// Indicates if the vote was a downvote (comments only).
   pub downvote:       bool,
   /// When the vote was cast.
-  pub date:           crate::utils::Timestamp,
+  pub date:           Timestamp,
 }
 
 // /// Defines the type of content a vote is associated with.

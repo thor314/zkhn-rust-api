@@ -11,7 +11,7 @@ pub mod models;
 mod utils;
 
 use error::DbError;
-use models::{item::Item, user::User};
+use models::{item::Item, user::User, user_vote::UserVote};
 use uuid::Uuid;
 
 use crate::models::comment::Comment;
@@ -40,7 +40,7 @@ pub async fn get_user_by_username(pool: &DbPool, username: &str) -> DbResult<Opt
 }
 
 pub async fn get_item_by_id(
-  pool: &sqlx::Pool<sqlx::Postgres>,
+  pool: &DbPool,
   item_id: Uuid,
 ) -> DbResult<Option<Item>> {
   sqlx::query_as!(Item, "SELECT * FROM items WHERE id = $1", item_id)
@@ -108,4 +108,18 @@ pub async fn insert_comment(
   tx.commit().await?;
 
   Ok(())
+}
+
+pub async fn get_comment_by_id(  pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
+sqlx::query_as!(Comment, "SELECT * FROM comments WHERE id = $1", comment_id)
+    .fetch_optional(pool)
+    .await
+    .map_err(DbError::from)
+}
+
+pub async fn get_user_vote_by_content_id(pool: &DbPool, username: &str, content_id: Uuid) -> DbResult<Option<UserVote>>{
+sqlx::query_as!(UserVote, "SELECT * FROM user_votes WHERE content_id = $1 and username = $2", content_id, username)
+    .fetch_optional(pool)
+    .await
+    .map_err(DbError::from)
 }

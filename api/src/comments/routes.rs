@@ -3,67 +3,55 @@ use axum::{
   http::StatusCode,
   Json, Router,
 };
+use axum_login::AuthUser;
 use db::models::comment::Comment;
+use uuid::Uuid;
 
 use super::payload::CommentPayload;
 // use sqlx::types::Uuid;
 use crate::{
-  auth::{assert_authenticated, AuthSession},
+  auth::{self, assert_authenticated, AuthSession},
   error::{ApiError, RouteError},
-  ApiResult, DbPool,
+  ApiResult, DbPool, SharedState, VoteState,
 };
 
+/// Add a new comment to the database.
+/// Also update user karma, and item comment count, and tell the search-api.
 pub async fn add_new_comment(
-  State(pool): State<DbPool>,
+  State(state): State<SharedState>,
   Json(payload): Json<CommentPayload>,
   auth_session: AuthSession,
 ) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
   let item =
-    db::get_item_by_id(&pool, payload.parent_item_id).await?.ok_or(RouteError::NotFound)?;
+    db::get_item_by_id(&state.pool, payload.parent_item_id).await?.ok_or(RouteError::NotFound)?;
   let new_comment: Comment = payload.try_into()?;
-  db::insert_comment(&pool, &new_comment).await?;
+  db::insert_comment(&state.pool, &new_comment).await?;
 
   Ok(StatusCode::CREATED)
 }
-//   // transaction: all operations are atomic; fail or succeed together
-//   conn
-//     .transaction(|conn| {
-//       async move {
-//         diesel::insert_into(comments::table).values(&new_comment).execute(conn).await?;
-//         models::user::increment_karma(conn, &new_comment.by).await?;
-//         models::item::increment_comments(conn, new_comment.parent_item_id).await?;
-//         if !new_comment.dead {
-//           // todo: search api: if user is not shadow-banned, tell the search api about the new
-//           // tell search api about
-//           // - comment
-//           // - item.id
-//           // - item comment count increment
-//         }
 
-//         Ok::<(), MyError>(())
-//       }
-//       .scope_boxed()
-//     })
-//     .await?;
+///  if user is signed in, check if the user has voted on this comment.
+/// If no comment exists, return Not Found.
+/// If the comment exists, but the user is not signed in, return the Ok((Comment, None)).
+/// If the comment exists, and the user is signed in, return the Ok((Comment, bool)), where bool
+/// indicates whether the user has voted.
+pub async fn get_comment_by_id(
+  State(state): State<SharedState>,
+  Path(comment_id): Path<Uuid>,
+  auth_session: AuthSession,
+) -> ApiResult<(Json<Comment>, Option<Json<VoteState>>)> {
+  let comment =
+    db::get_comment_by_id(&state.pool, comment_id).await?.ok_or(RouteError::NotFound)?;
+  let user_vote = auth_session.user.map(|user| async move {
+    let user_name = &user.0.username;
+    db::get_user_vote_by_content_id(&state.pool, user_name, comment_id).await.ok()?
+  });
+  // todo: should I mirror this sanitization?
+  // comment.pageMetadataTitle = comment.text.replace(/<[^>]+>/g, "");
 
-//   Ok(StatusCode::CREATED)
-// }
-
-// pub async fn get_comment_by_id(
-//   State(state): State<SharedState>,
-//   Path(comment_id): Path<Uuid>,
-// ) -> Result<Json<Comment>, MyError> {
-//   let conn = &mut *state.pool.get().await?;
-//   let comment = conn
-//     .transaction(|conn| {
-//       async move {
-//         // Step 1: Query for the comment
-//         let comment: Comment =
-// comments_dsl.filter(comments::id.eq(comment_id)).first(conn).await?;
-
-//         // todo: not sure what this is for, leave commented
-//         // let processed_text = comment_result.text.replace(/<[^>]+>/g, "");
+  todo!()
+}
 
 //         // Assuming `children` is a Vec<Comment> and needs processing based on your application
 //         // logic Placeholder for sorting logic, adapt as needed

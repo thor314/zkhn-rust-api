@@ -10,7 +10,7 @@ CREATE TABLE user_votes (
     parent_item_id UUID,
     upvote BOOLEAN NOT NULL,
     downvote BOOLEAN NOT NULL,
-    date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    date TIMESTAMP WITH TIME ZONE NOT NULL,
 
     CONSTRAINT pk_user_votes PRIMARY KEY (username, content_id, vote_type),
     CONSTRAINT fk_user_votes_users FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE,
