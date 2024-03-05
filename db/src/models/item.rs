@@ -86,8 +86,8 @@ pub enum ItemCategory {
 }
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-#[sqlx(type_name = "item_type")]
-#[serde(rename_all = "lowercase")]
+#[sqlx(type_name = "item_type", rename_all = "lowercase")]
+// #[serde(rename_all = "lowercase")]
 pub enum ItemType {
   News,
   Show,
