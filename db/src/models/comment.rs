@@ -1,6 +1,7 @@
 // use axum::{extract::State, response::IntoResponse};
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::{Decode, Encode};
 use uuid::Uuid;
 
 use crate::{
@@ -12,7 +13,7 @@ use crate::{
 const MIN_POINTS: i32 = -4;
 
 /// Comments on a post
-#[derive(sqlx::FromRow, Debug, Serialize)]
+#[derive(sqlx::FromRow, Debug, Serialize, Encode)]
 pub struct Comment {
   /// the unique identifier given to each comment in the form of a randomly generated string
   pub id:                Uuid, // Assuming UUIDs for unique identifiers, common in SQL databases
@@ -23,7 +24,7 @@ pub struct Comment {
   /// the title of the item the comment was placed on
   pub parent_item_title: String,
   /// body text for the comment
-  pub text:              String,
+  pub comment_text:              String,
   /// a boolean value that indicates whether or not the comment is a parent comment(not a child of
   /// any other comment)
   pub is_parent:         bool,
@@ -65,7 +66,7 @@ impl Comment {
       is_parent,
       root_comment_id,
       parent_comment_id,
-      text,
+      comment_text: text,
       children_count: 0,
       points: 1,
       created: now(),
@@ -73,7 +74,7 @@ impl Comment {
     }
   }
 
-  pub fn edit(&mut self, text: String) { self.text = text; }
+  pub fn edit(&mut self, text: String) { self.comment_text = text; }
 
   pub fn increment_point(&mut self) { self.points += 1; }
 

@@ -25,7 +25,7 @@
       },
       {
         "ordinal": 4,
-        "name": "text",
+        "name": "comment_text",
         "type_info": "Text"
       },
       {
