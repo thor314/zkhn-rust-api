@@ -103,6 +103,8 @@ pub async fn insert_comment(
     .execute(&mut *tx)
     .await?;
 
+  // todo: tell the search api about the new comment
+
   tx.commit().await?;
 
   Ok(())

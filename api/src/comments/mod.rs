@@ -1,4 +1,4 @@
-mod extractors;
+mod payload;
 mod routes;
 
 use axum::Router;

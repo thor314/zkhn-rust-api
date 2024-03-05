@@ -3,8 +3,9 @@ use axum::{
   http::StatusCode,
   Json, Router,
 };
+use db::models::comment::Comment;
 
-use super::extractors::CommentExtractor;
+use super::payload::CommentPayload;
 // use sqlx::types::Uuid;
 use crate::{
   auth::{assert_authenticated, AuthSession},
@@ -14,14 +15,16 @@ use crate::{
 
 pub async fn add_new_comment(
   State(pool): State<DbPool>,
-  Json(payload): Json<CommentExtractor>,
+  Json(payload): Json<CommentPayload>,
   auth_session: AuthSession,
 ) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
-  let item = db::get_item_by_id(&pool, payload.parent_item_id).await?;
+  let item =
+    db::get_item_by_id(&pool, payload.parent_item_id).await?.ok_or(RouteError::NotFound)?;
+  let new_comment: Comment = payload.try_into()?;
+  db::insert_comment(&pool, &new_comment).await?;
 
-    // let new_comment = Comment::from(payload);
-  todo!()
+  Ok(StatusCode::CREATED)
 }
 //   // transaction: all operations are atomic; fail or succeed together
 //   conn
