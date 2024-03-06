@@ -14,7 +14,7 @@ use error::DbError;
 use models::{item::Item, user::User, user_vote::UserVote};
 use uuid::Uuid;
 
-use crate::models::comment::Comment;
+use crate::{models::comment::Comment, utils::now};
 
 pub type DbPool = sqlx::postgres::PgPool;
 pub type DbResult<T> = Result<T, DbError>;
@@ -39,10 +39,7 @@ pub async fn get_user_by_username(pool: &DbPool, username: &str) -> DbResult<Opt
     .map_err(DbError::from)
 }
 
-pub async fn get_item_by_id(
-  pool: &DbPool,
-  item_id: Uuid,
-) -> DbResult<Option<Item>> {
+pub async fn get_item_by_id(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
   sqlx::query_as!(Item, "SELECT * FROM items WHERE id = $1", item_id)
     .fetch_optional(pool)
     .await
@@ -110,16 +107,64 @@ pub async fn insert_comment(
   Ok(())
 }
 
-pub async fn get_comment_by_id(  pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
-sqlx::query_as!(Comment, "SELECT * FROM comments WHERE id = $1", comment_id)
+pub async fn get_comment_by_id(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
+  sqlx::query_as!(Comment, "SELECT * FROM comments WHERE id = $1", comment_id)
     .fetch_optional(pool)
     .await
     .map_err(DbError::from)
 }
 
-pub async fn get_user_vote_by_content_id(pool: &DbPool, username: &str, content_id: Uuid) -> DbResult<Option<UserVote>>{
-sqlx::query_as!(UserVote, "SELECT * FROM user_votes WHERE content_id = $1 and username = $2", content_id, username)
-    .fetch_optional(pool)
-    .await
-    .map_err(DbError::from)
+pub async fn get_user_vote_by_content_id(
+  pool: &DbPool,
+  username: &str,
+  content_id: Uuid,
+) -> DbResult<Option<UserVote>> {
+  sqlx::query_as!(
+    UserVote,
+    "SELECT * FROM user_votes WHERE content_id = $1 and username = $2",
+    content_id,
+    username
+  )
+  .fetch_optional(pool)
+  .await
+  .map_err(DbError::from)
+}
+
+/// submit an upvote on a comment in the db. Assume the user has not already upvoted the comment
+/// (verified in API)
+pub async fn upvote_comment(
+  pool: &mut sqlx::Pool<sqlx::Postgres>,
+  comment_id: Uuid,
+  user_name: &str,
+  parent_item_id: Uuid,
+) -> DbResult<()> {
+  let mut tx = pool.begin().await?;
+  // Insert user vote
+  sqlx::query!(
+    "INSERT INTO user_votes (username, vote_type, content_id, parent_item_id, upvote, downvote, \
+     date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    user_name,
+    "comment",
+    comment_id,
+    parent_item_id,
+    true,
+    false,
+    now().0,
+  )
+  .execute(&mut *tx)
+  .await?;
+
+  // Update comment points (adjust query if points are stored differently)
+  sqlx::query!("UPDATE comments SET points = points + 1 WHERE id = $1", comment_id)
+    .execute(&mut *tx)
+    .await?;
+
+  // Update user karma (implement logic here, assuming a `users` table with `karma` field)
+  sqlx::query!("UPDATE users SET karma = karma + 1 WHERE username = $1", user_name,)
+    .execute(&mut *tx)
+    .await?;
+
+  tx.commit().await?;
+  Ok(())
 }

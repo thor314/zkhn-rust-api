@@ -33,6 +33,8 @@ pub enum RouteError {
   NotFound,
   #[status(StatusCode::UNAUTHORIZED)]
   Unauthorized,
+  #[status(StatusCode::BAD_REQUEST)]
+  BadRequest,
 }
 
 impl std::fmt::Display for RouteError {
@@ -40,6 +42,7 @@ impl std::fmt::Display for RouteError {
     match self {
       RouteError::NotFound => write!(f, "Not Found"),
       RouteError::Unauthorized => write!(f, "Unauthorized"),
+        RouteError::BadRequest => write!(f, "Bad Request"),
     }
   }
 }

@@ -3,7 +3,7 @@ use chrono::{DateTime, NaiveDate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::utils::Timestamp;
+use crate::utils::{now, Timestamp};
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 /// Represents a vote cast by a user on an item or comment.
@@ -25,11 +25,23 @@ pub struct UserVote {
   pub date:           Timestamp,
 }
 
-// /// Defines the type of content a vote is associated with.
-// // #[derive(Debug, Serialize, Deserialize)]
-// #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-// #[sqlx(type_name = "vote_type_type")]
-// pub enum VoteType {
-//   Item,
-//   Comment,
-// }
+impl UserVote {
+  pub fn new(
+    username: String,
+    vote_type: String,
+    content_id: Uuid,
+    parent_item_id: Option<Uuid>,
+    upvote: bool,
+    downvote: bool,
+  ) -> Self {
+    Self {
+      username,
+      vote_type,
+      content_id,
+      parent_item_id,
+      upvote,
+      downvote,
+      date: now(),
+    }
+  }
+}
