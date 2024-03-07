@@ -42,7 +42,7 @@ impl std::fmt::Display for RouteError {
     match self {
       RouteError::NotFound => write!(f, "Not Found"),
       RouteError::Unauthorized => write!(f, "Unauthorized"),
-        RouteError::BadRequest => write!(f, "Bad Request"),
+      RouteError::BadRequest => write!(f, "Bad Request"),
     }
   }
 }

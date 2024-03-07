@@ -24,7 +24,7 @@ pub struct Comment {
   /// the title of the item the comment was placed on
   pub parent_item_title: String,
   /// body text for the comment
-  pub comment_text:              String,
+  pub comment_text:      String,
   /// a boolean value that indicates whether or not the comment is a parent comment(not a child of
   /// any other comment)
   pub is_parent:         bool,

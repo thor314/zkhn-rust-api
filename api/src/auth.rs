@@ -44,7 +44,10 @@ use tower_sessions::{MemoryStore, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 use uuid::Uuid;
 
-use crate::{error::{ApiError, RouteError}, ApiResult, DbPool, SharedState};
+use crate::{
+  error::{ApiError, RouteError},
+  ApiResult, DbPool, SharedState,
+};
 
 /// Axum extractor for the current user session
 pub type AuthSession = axum_login::AuthSession<Backend>;

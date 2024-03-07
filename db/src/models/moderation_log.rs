@@ -13,7 +13,7 @@ pub struct ModerationLog {
   /// The username of the moderator who took the action.
   pub moderator_username: String,
   /// The type of action the moderator took. This will be one of several specified strings.
-  /// 
+  ///
   /// KillItem, UnkillItem, KillComment, UnkillComment, AddUserShadowBan, RemoveUserShadowBan,
   /// AddUserBan, RemoveUserBan,
   pub action_type:        String,

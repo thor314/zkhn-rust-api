@@ -34,14 +34,6 @@ impl UserVote {
     upvote: bool,
     downvote: bool,
   ) -> Self {
-    Self {
-      username,
-      vote_type,
-      content_id,
-      parent_item_id,
-      upvote,
-      downvote,
-      date: now(),
-    }
+    Self { username, vote_type, content_id, parent_item_id, upvote, downvote, date: now() }
   }
 }
