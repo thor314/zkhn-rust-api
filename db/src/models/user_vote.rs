@@ -37,7 +37,7 @@ impl UserVote {
 // use db::models::user_vote::UserVote;
 // use serde::Deserialize;
 
-#[derive(sqlx::Type, Serialize, Deserialize, Debug, Clone)]
+#[derive(sqlx::Type, PartialEq, Serialize, Deserialize, Debug, Clone)]
 #[sqlx(type_name = "vote_state")] // only for PostgreSQL to match a type definition
 #[sqlx(rename_all = "lowercase")]
 pub enum VoteState {
@@ -46,3 +46,13 @@ pub enum VoteState {
   None,
 }
 
+impl From<i8> for VoteState {
+  fn from(v: i8) -> Self {
+    match v {
+      1 => Self::Upvote,
+      0 => Self::None,
+      -1 => Self::Downvote,
+      _ => Self::None,
+    }
+  }
+}

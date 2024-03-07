@@ -8,7 +8,11 @@ use sqlx::PgConnection;
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
-use super::{user_favorite::UserFavorite, user_hidden::UserHidden, user_vote::{UserVote, VoteState}};
+use super::{
+  user_favorite::UserFavorite,
+  user_hidden::UserHidden,
+  user_vote::{UserVote, VoteState},
+};
 use crate::{
   error::{DbError, PasswordError},
   utils::now,

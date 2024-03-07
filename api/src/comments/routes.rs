@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Context;
 use axum::{
   extract::{Path, State},
@@ -5,14 +7,22 @@ use axum::{
   Json, Router,
 };
 use axum_login::AuthUser;
-use db::models::{comment::Comment, user_vote::UserVote};
+use db::{
+  error::DbError,
+  models::{
+    comment::{self, Comment},
+    user_vote::{self, UserVote, VoteState},
+  },
+};
+use futures::{select, FutureExt};
+use tokio::spawn;
 use uuid::Uuid;
 
 use super::payload::CommentPayload;
 use crate::{
   auth::{self, assert_authenticated, AuthSession},
   error::{ApiError, RouteError},
-  ApiResult, DbPool, SharedState, VoteState,
+  ApiResult, DbPool, SharedState,
 };
 
 /// Add a new comment to the database.
@@ -51,7 +61,7 @@ pub async fn get_comment_by_id(
       let user_vote = db::get_user_vote_by_content_id(&state.pool, user_name, comment_id)
         .await
         .context("no vote found")?;
-      let vote_state = user_vote.map(|v| VoteState::from(v));
+      let vote_state = user_vote.map(|v| v.vote_state);
       Ok((Json(comment), Json(vote_state)))
     },
     None => Ok((Json(comment), Json(None))),
@@ -74,31 +84,43 @@ pub async fn get_comment_by_id(
   // Ok((Json(comment), user_vote))
 }
 
-pub async fn upvote_comment(
+pub async fn update_comment_vote(
   State(mut state): State<SharedState>,
-  Path((comment_id, parent_item_id)): Path<(Uuid, Uuid)>,
+  Path((comment_id, parent_item_id, vote_state)): Path<(Uuid, Uuid, i8)>,
   auth_session: AuthSession,
 ) -> Result<StatusCode, ApiError> {
   assert_authenticated(&auth_session)?;
-  let user_name = &auth_session.user.as_ref().unwrap().0.username;
+  let user_name = &auth_session.user.unwrap().0.username;
 
-  let comment =
-    db::get_comment_by_id(&mut state.pool, comment_id).await?.ok_or(RouteError::NotFound)?;
+  let (comment, user_vote) = {
+    let name = user_name.clone();
+    let (pool_1, pool_2) = (state.pool.clone(), state.pool.clone());
+    let (comment_task, vote_task) = (
+      spawn(async move { db::get_comment_by_id(&pool_1, comment_id).await }),
+      spawn(async move {
+        db::get_user_vote_by_content_id(&pool_2, &name, comment_id)
+          .await
+          .context("Error querying user vote")
+      }),
+    );
+    let (comment_result, vote_result) = tokio::try_join!(comment_task, vote_task)?;
+    (
+      comment_result.context("failed to query db for comment")?.ok_or(RouteError::NotFound)?,
+      vote_result.context("failed to query db for vote")?,
+    )
+  };
 
-  // Query the database for a user vote with the given username and comment id.
-  let user_vote = db::get_user_vote_by_content_id(&mut state.pool, user_name, comment_id)
-    .await
-    .context("Error querying user vote")?;
-
-  // check that the user_vote is not an upvote
-  if let Some(vote) = user_vote {
-    if vote.upvote {
-      return Err(RouteError::BadRequest.into());
+  let vote_state = VoteState::from(vote_state);
+  if let Some(user_vote) = user_vote {
+    if user_vote.vote_state == vote_state {
+      // user submitted a vote, but it's the same as the current vote; no-op
+      return Ok(StatusCode::OK);
     }
   }
 
   // create a new UserVote and increment the comment author's karma
-  db::upvote_comment(&mut state.pool, comment_id, user_name, parent_item_id).await?;
+  db::submit_comment_vote(&mut state.pool, comment_id, user_name, parent_item_id, vote_state)
+    .await?;
 
   Ok(StatusCode::OK)
 }

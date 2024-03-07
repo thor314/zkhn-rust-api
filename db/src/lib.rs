@@ -153,7 +153,7 @@ mod comments {
 
   /// submit an upvote on a comment in the db. Assume the user has not already upvoted the comment
   /// (verified in API)
-  pub async fn vote_on_comment(
+  pub async fn submit_comment_vote(
     pool: &mut sqlx::Pool<sqlx::Postgres>,
     comment_id: Uuid,
     user_name: &str,
