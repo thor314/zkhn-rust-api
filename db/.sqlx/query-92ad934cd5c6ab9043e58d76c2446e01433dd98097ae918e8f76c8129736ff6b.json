@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM user_votes WHERE content_id = $1 and username = $2",
+  "query": "SELECT username, vote_type, content_id, parent_item_id, vote_state as \"vote_state: _\", created FROM user_votes WHERE content_id = $1 and username = $2",
   "describe": {
     "columns": [
       {
@@ -25,17 +25,23 @@
       },
       {
         "ordinal": 4,
-        "name": "upvote",
-        "type_info": "Bool"
+        "name": "vote_state: _",
+        "type_info": {
+          "Custom": {
+            "name": "vote_state",
+            "kind": {
+              "Enum": [
+                "upvote",
+                "downvote",
+                "none"
+              ]
+            }
+          }
+        }
       },
       {
         "ordinal": 5,
-        "name": "downvote",
-        "type_info": "Bool"
-      },
-      {
-        "ordinal": 6,
-        "name": "date",
+        "name": "created",
         "type_info": "Timestamptz"
       }
     ],
@@ -51,9 +57,8 @@
       false,
       true,
       false,
-      false,
       false
     ]
   },
-  "hash": "37e3fc88cfe2445bd22703890eb05f21562f723360e502888348ee88b45d32dc"
+  "hash": "92ad934cd5c6ab9043e58d76c2446e01433dd98097ae918e8f76c8129736ff6b"
 }

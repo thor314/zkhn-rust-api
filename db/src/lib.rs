@@ -70,7 +70,15 @@ mod items {
 mod comments {
   use uuid::Uuid;
 
-  use crate::{error::DbError, models::comment::Comment, utils::now, DbPool, DbResult};
+  use crate::{
+    error::DbError,
+    models::{
+      comment::Comment,
+      user_vote::{UserVote, VoteState},
+    },
+    utils::now,
+    DbPool, DbResult,
+  };
 
   /// Via the atomic sqlx transaction api:
   /// - insert new comment into db
@@ -145,24 +153,23 @@ mod comments {
 
   /// submit an upvote on a comment in the db. Assume the user has not already upvoted the comment
   /// (verified in API)
-  pub async fn upvote_comment(
+  pub async fn vote_on_comment(
     pool: &mut sqlx::Pool<sqlx::Postgres>,
     comment_id: Uuid,
     user_name: &str,
     parent_item_id: Uuid,
+    vote_state: VoteState,
   ) -> DbResult<()> {
     let mut tx = pool.begin().await?;
-    // Insert user vote
     sqlx::query!(
-      "INSERT INTO user_votes (username, vote_type, content_id, parent_item_id, upvote, downvote, \
-       date)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)",
+      "INSERT INTO user_votes (username, vote_type, content_id, parent_item_id, vote_state, \
+       created)
+         VALUES ($1, $2, $3, $4, $5, $6)",
       user_name,
       "comment",
       comment_id,
       parent_item_id,
-      true,
-      false,
+      VoteState::Upvote as _,
       now().0,
     )
     .execute(&mut *tx)
@@ -195,7 +202,8 @@ mod user_votes {
   ) -> DbResult<Option<UserVote>> {
     sqlx::query_as!(
       UserVote,
-      "SELECT * FROM user_votes WHERE content_id = $1 and username = $2",
+      "SELECT username, vote_type, content_id, parent_item_id, vote_state as \"vote_state: _\", \
+       created FROM user_votes WHERE content_id = $1 and username = $2",
       content_id,
       username
     )

@@ -17,12 +17,9 @@ pub struct UserVote {
   pub content_id:     Uuid,
   /// The ID of the parent item for votes on comments.
   pub parent_item_id: Option<Uuid>,
-  /// Indicates if the vote was an upvote.
-  pub upvote:         bool,
-  /// Indicates if the vote was a downvote (comments only).
-  pub downvote:       bool,
+  pub vote_state:     VoteState,
   /// When the vote was cast.
-  pub date:           Timestamp,
+  pub created:        Timestamp,
 }
 
 impl UserVote {
@@ -31,9 +28,21 @@ impl UserVote {
     vote_type: String,
     content_id: Uuid,
     parent_item_id: Option<Uuid>,
-    upvote: bool,
-    downvote: bool,
+    vote_state: VoteState,
   ) -> Self {
-    Self { username, vote_type, content_id, parent_item_id, upvote, downvote, date: now() }
+    Self { username, vote_type, content_id, parent_item_id, vote_state, created: now() }
   }
 }
+
+// use db::models::user_vote::UserVote;
+// use serde::Deserialize;
+
+#[derive(sqlx::Type, Serialize, Deserialize, Debug, Clone)]
+#[sqlx(type_name = "vote_state")] // only for PostgreSQL to match a type definition
+#[sqlx(rename_all = "lowercase")]
+pub enum VoteState {
+  Upvote,
+  Downvote,
+  None,
+}
+

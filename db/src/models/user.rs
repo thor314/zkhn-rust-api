@@ -8,7 +8,7 @@ use sqlx::PgConnection;
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
-use super::{user_favorite::UserFavorite, user_hidden::UserHidden, user_vote::UserVote};
+use super::{user_favorite::UserFavorite, user_hidden::UserHidden, user_vote::{UserVote, VoteState}};
 use crate::{
   error::{DbError, PasswordError},
   utils::now,
@@ -95,6 +95,7 @@ impl User {
     vote_type: String,
     content_id: Uuid,
     parent_item_id: Option<Uuid>,
+    vote_state: VoteState,
     upvote: bool,
   ) -> UserVote {
     let downvote = !upvote;
@@ -103,9 +104,8 @@ impl User {
       vote_type,
       content_id,
       parent_item_id,
-      upvote,
-      downvote,
-      date: now(),
+      vote_state,
+      created: now(),
     }
   }
 }
