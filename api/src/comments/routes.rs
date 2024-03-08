@@ -125,10 +125,10 @@ pub async fn update_comment_vote(
   Ok(StatusCode::OK)
 }
 
-/// favorite state: 0 to unfavorite, 1 to favorite
+/// favorite state: 1 to favorite, 0 to unfavorite
 pub async fn update_comment_favorite(
-  State(mut state): State<SharedState>,
-  Path((comment_id, parent_item_id, set_favorite_state)): Path<(Uuid, Uuid, i8)>,
+  State(state): State<SharedState>,
+  Path((comment_id, set_favorite_state)): Path<(Uuid, i8)>,
   auth_session: AuthSession,
 ) -> Result<StatusCode, ApiError> {
   assert_authenticated(&auth_session)?;
@@ -160,9 +160,11 @@ pub async fn update_comment_favorite(
   } else if set_favorite_state == 0 {
     // already not favorite, do nothing
     return Ok(StatusCode::OK);
+  } else {
+    return Err(RouteError::BadRequest);
   }
 
   // update favorite
-  // db::get_user_favorite_by_username_and_item_id(&state.pool, user_name, comment_id).await?
-  todo!()
+  db::insert_or_delete_user_favorite_for_comment(&state.pool, user_name, maybe_favorite, comment_id).await?
+  // todo!()
 }

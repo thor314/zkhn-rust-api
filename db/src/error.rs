@@ -19,6 +19,8 @@ pub enum DbError {
   Anyhow(#[from] anyhow::Error),
   #[error(transparent)]
   PwError(#[from] PasswordError),
+  #[error("Invalid favorite state encountered")]
+  InvalidFavoriteState,
 }
 
 #[derive(Debug, thiserror::Error)]

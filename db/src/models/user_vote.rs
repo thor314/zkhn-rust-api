@@ -34,9 +34,6 @@ impl UserVote {
   }
 }
 
-// use db::models::user_vote::UserVote;
-// use serde::Deserialize;
-
 #[derive(sqlx::Type, PartialEq, Serialize, Deserialize, Debug, Clone)]
 #[sqlx(type_name = "vote_state")] // only for PostgreSQL to match a type definition
 #[sqlx(rename_all = "lowercase")]
