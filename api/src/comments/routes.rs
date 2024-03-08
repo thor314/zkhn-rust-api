@@ -124,3 +124,45 @@ pub async fn update_comment_vote(
 
   Ok(StatusCode::OK)
 }
+
+/// favorite state: 0 to unfavorite, 1 to favorite
+pub async fn update_comment_favorite(
+  State(mut state): State<SharedState>,
+  Path((comment_id, parent_item_id, set_favorite_state)): Path<(Uuid, Uuid, i8)>,
+  auth_session: AuthSession,
+) -> Result<StatusCode, ApiError> {
+  assert_authenticated(&auth_session)?;
+  let user_name = &auth_session.user.unwrap().0.username;
+
+  let (comment, maybe_favorite) = {
+    let name = user_name.clone();
+    let (pool_1, pool_2) = (state.pool.clone(), state.pool.clone());
+    let (comment_task, favorite_task) = (
+      spawn(async move { db::get_comment_by_id(&pool_1, comment_id).await }),
+      spawn(async move {
+        db::get_user_favorite_by_username_and_item_id(&pool_2, &name, comment_id)
+          .await
+          .context("Error querying user vote")
+      }),
+    );
+    let (comment_result, favorite_result) = tokio::try_join!(comment_task, favorite_task)?;
+    (
+      comment_result.context("failed to query db for comment")?.ok_or(RouteError::NotFound)?,
+      favorite_result.context("failed to query db for favorite")?,
+    )
+  };
+
+  if let Some(favorite) = maybe_favorite {
+    if set_favorite_state == 1 {
+      // already favorite, do nothing
+      return Ok(StatusCode::OK);
+    }
+  } else if set_favorite_state == 0 {
+    // already not favorite, do nothing
+    return Ok(StatusCode::OK);
+  }
+
+  // update favorite
+  // db::get_user_favorite_by_username_and_item_id(&state.pool, user_name, comment_id).await?
+  todo!()
+}

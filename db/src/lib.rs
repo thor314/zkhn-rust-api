@@ -14,7 +14,10 @@ use error::DbError;
 use models::{item::Item, user::User, user_vote::UserVote};
 use uuid::Uuid;
 
-use crate::{models::comment::Comment, utils::now};
+use crate::{
+  models::{comment::Comment, user_favorite::UserFavorite},
+  utils::now,
+};
 
 pub type DbPool = sqlx::postgres::PgPool;
 pub type DbResult<T> = Result<T, DbError>;
@@ -188,6 +191,23 @@ mod comments {
     tx.commit().await?;
     Ok(())
   }
+}
+
+pub async fn get_user_favorite_by_username_and_item_id(
+  pool: &DbPool,
+  username: &str,
+  item_id: Uuid,
+) -> DbResult<Option<UserFavorite>> {
+  sqlx::query_as!(
+    UserFavorite,
+    "SELECT username, item_type, item_id, date
+       FROM user_favorites WHERE item_id = $1 and username = $2",
+    item_id,
+    username
+  )
+  .fetch_optional(pool)
+  .await
+  .map_err(DbError::from)
 }
 
 mod user_votes {
