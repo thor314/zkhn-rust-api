@@ -30,7 +30,7 @@ uuid={ version="1.7.0", features=["serde", "v4"] }
 url="2.5.0"
 axum-login = "0.13.1"
 tower = "0.4.13"
-tower-sessions = "0.10.4"
+tower-sessions = "0.11.0"
 tower-sessions-sqlx-store = { version = "0.10.0", features = ["postgres"] }
 axum-analytics = "1.1.3"
 
