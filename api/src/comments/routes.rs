@@ -1,3 +1,12 @@
+//! Provided methods:
+//! - `create_comment`
+//! - `get_comment`
+//! - `update_comment_vote`
+//! - `update_comment_favorite`
+//! - `update_comment_text`
+//! - `delete_comment`
+//!
+//! todo: more
 use std::sync::Arc;
 
 use anyhow::Context;
@@ -8,11 +17,11 @@ use axum::{
 };
 use axum_login::AuthUser;
 use db::{
-  error::DbError,
   models::{
     comment::{self, Comment},
     user_vote::{self, UserVote, VoteState},
   },
+  DbError,
 };
 use futures::{select, FutureExt};
 use tokio::spawn;
@@ -27,7 +36,7 @@ use crate::{
 
 /// Add a new comment to the database.
 /// Also update user karma, and item comment count, and tell the search-api.
-pub async fn add_new_comment(
+pub async fn create_comment(
   State(state): State<SharedState>,
   Json(payload): Json<CommentPayload>,
   auth_session: AuthSession,
@@ -49,7 +58,7 @@ pub async fn add_new_comment(
 /// If the comment exists, and the user is signed in, return the Ok((Comment, bool)), where bool
 /// indicates whether the user has voted.
 // todo: this method diverges significantly from the js api, including not taking page argument
-pub async fn get_comment_by_id(
+pub async fn get_comment(
   State(state): State<SharedState>,
   Path(comment_id): Path<Uuid>,
   auth_session: AuthSession,
@@ -158,7 +167,7 @@ pub async fn update_comment_favorite(
   todo!()
 }
 
-pub async fn edit_comment(
+pub async fn update_comment_text(
   State(state): State<SharedState>,
   auth_session: AuthSession,
   body: String,

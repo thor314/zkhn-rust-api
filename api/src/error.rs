@@ -2,7 +2,7 @@
 // https://docs.rs/thiserror/latest/thiserror/
 
 use axum::http::StatusCode;
-use db::error::DbError;
+use db::DbError;
 use thiserror::Error;
 use tokio::task;
 
