@@ -250,7 +250,7 @@ pub async fn insert_or_delete_user_favorite_for_comment(
       .execute(pool)
       .await?;
       Ok(())
-    }
+    },
     None => {
       sqlx::query!(
         "INSERT INTO user_favorites (username, item_type, item_id, date)
@@ -263,7 +263,7 @@ pub async fn insert_or_delete_user_favorite_for_comment(
       .execute(pool)
       .await?;
       Ok(())
-    }
+    },
   }
 }
 

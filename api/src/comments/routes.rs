@@ -33,6 +33,8 @@ pub async fn add_new_comment(
   auth_session: AuthSession,
 ) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
+  // todo: item is dead
+  // assert item exists?
   let item =
     db::get_item_by_id(&state.pool, payload.parent_item_id).await?.ok_or(RouteError::NotFound)?;
   let new_comment: Comment = payload.try_into()?;
@@ -93,21 +95,11 @@ pub async fn update_comment_vote(
   let user_name = &auth_session.user.unwrap().0.username;
 
   let (comment, user_vote) = {
-    let name = user_name.clone();
-    let (pool_1, pool_2) = (state.pool.clone(), state.pool.clone());
-    let (comment_task, vote_task) = (
-      spawn(async move { db::get_comment_by_id(&pool_1, comment_id).await }),
-      spawn(async move {
-        db::get_user_vote_by_content_id(&pool_2, &name, comment_id)
-          .await
-          .context("Error querying user vote")
-      }),
-    );
-    let (comment_result, vote_result) = tokio::try_join!(comment_task, vote_task)?;
-    (
-      comment_result.context("failed to query db for comment")?.ok_or(RouteError::NotFound)?,
-      vote_result.context("failed to query db for vote")?,
-    )
+    let comment_task = db::get_comment_by_id(&state.pool, comment_id);
+    let user_vote_task = db::get_user_vote_by_content_id(&state.pool, user_name, comment_id);
+    let (comment_result, maybe_user_vote) = tokio::try_join!(comment_task, user_vote_task)?;
+    let comment = comment_result.context("failed to query db for comment")?;
+    (comment, maybe_user_vote)
   };
 
   let vote_state = VoteState::from(vote_state);
@@ -135,24 +127,15 @@ pub async fn update_comment_favorite(
   let user_name = &auth_session.user.unwrap().0.username;
 
   let (comment, maybe_favorite) = {
-    let name = user_name.clone();
-    let (pool_1, pool_2) = (state.pool.clone(), state.pool.clone());
-    let (comment_task, favorite_task) = (
-      spawn(async move { db::get_comment_by_id(&pool_1, comment_id).await }),
-      spawn(async move {
-        db::get_user_favorite_by_username_and_item_id(&pool_2, &name, comment_id)
-          .await
-          .context("Error querying user vote")
-      }),
-    );
-    let (comment_result, favorite_result) = tokio::try_join!(comment_task, favorite_task)?;
-    (
-      comment_result.context("failed to query db for comment")?.ok_or(RouteError::NotFound)?,
-      favorite_result.context("failed to query db for favorite")?,
-    )
+    let comment_task = db::get_comment_by_id(&state.pool, comment_id);
+    let favorite_task =
+      db::get_user_favorite_by_username_and_item_id(&state.pool, user_name, comment_id);
+    let (comment_result, maybe_favorite) = tokio::try_join!(comment_task, favorite_task)?;
+    let comment = comment_result.context("failed to query db for comment")?;
+    (comment, maybe_favorite)
   };
 
-  if let Some(favorite) = maybe_favorite {
+  if let Some(ref favorite) = maybe_favorite {
     if set_favorite_state == 1 {
       // already favorite, do nothing
       return Ok(StatusCode::OK);
@@ -161,10 +144,43 @@ pub async fn update_comment_favorite(
     // already not favorite, do nothing
     return Ok(StatusCode::OK);
   } else {
-    return Err(RouteError::BadRequest);
+    return Err(RouteError::BadRequest.into());
   }
 
   // update favorite
-  db::insert_or_delete_user_favorite_for_comment(&state.pool, user_name, maybe_favorite, comment_id).await?
-  // todo!()
+  db::insert_or_delete_user_favorite_for_comment(
+    &state.pool,
+    user_name,
+    maybe_favorite,
+    comment_id,
+  )
+  .await?;
+  todo!()
 }
+
+pub async fn edit_comment(
+  State(state): State<SharedState>,
+  auth_session: AuthSession,
+  body: String,
+) -> Result<StatusCode, ApiError> {
+  assert_authenticated(&auth_session)?;
+  let user_name = &auth_session.user.unwrap().0.username;
+  todo!()
+}
+
+pub async fn delete_comment(
+  State(state): State<SharedState>,
+  auth_session: AuthSession,
+  Path(comment_id): Path<Uuid>,
+) -> Result<StatusCode, ApiError> {
+  assert_authenticated(&auth_session)?;
+  let user_name = &auth_session.user.unwrap().0.username;
+  todo!()
+}
+
+// get reply page data
+// get newest comments by page
+// get user comments by page
+// get user favorited comments by page
+// get user upvoted comments by page
+// update all comments to algolia
