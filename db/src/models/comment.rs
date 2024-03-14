@@ -18,7 +18,7 @@ pub struct Comment {
   /// the unique identifier given to each comment in the form of a randomly generated string
   pub id:                Uuid, // Assuming UUIDs for unique identifiers, common in SQL databases
   /// username of the user who created the comment
-  pub by:                String,
+  pub username:          String,
   /// the id of the item the comment was placed on
   pub parent_item_id:    Uuid,
   /// the title of the item the comment was placed on
@@ -45,7 +45,7 @@ pub struct Comment {
 
 impl Comment {
   pub fn new(
-    by: String,
+    username: String,
     parent_item_id: Uuid,
     parent_item_title: String,
     is_parent: bool,
@@ -60,7 +60,7 @@ impl Comment {
 
     Comment {
       id: Uuid::new_v4(),
-      by,
+      username,
       parent_item_id,
       parent_item_title,
       is_parent,
@@ -118,7 +118,7 @@ pub async fn child_comments(
 // corresponding to `add_new_comment` in API
 #[derive(Debug, Deserialize)]
 pub struct NewCommentPayload {
-  by:                String,
+  username:          String,
   parent_item_id:    Uuid,
   parent_item_title: String,
   is_parent:         bool,
@@ -131,7 +131,7 @@ pub struct NewCommentPayload {
 impl From<NewCommentPayload> for Comment {
   fn from(payload: NewCommentPayload) -> Self {
     Comment::new(
-      payload.by,
+      payload.username,
       payload.parent_item_id,
       payload.parent_item_title,
       payload.is_parent,

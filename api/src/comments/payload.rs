@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 #[derive(serde::Deserialize, Debug, Serialize, Clone)]
 pub struct CommentPayload {
-  pub by:                String,
+  pub username:          String,
   pub parent_item_id:    Uuid,
   pub parent_comment_id: Option<Uuid>,
   pub text:              String,

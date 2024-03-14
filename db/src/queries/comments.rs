@@ -28,7 +28,7 @@ pub async fn insert_comment(
     parent_comment_id,
     created,
     dead,
-    by,
+    username,
     parent_item_id,
     parent_item_title,
     children_count,
@@ -37,11 +37,11 @@ pub async fn insert_comment(
 
   sqlx::query!(
     "INSERT INTO comments 
-    (id, by, parent_item_id, comment_text, is_parent, root_comment_id, parent_comment_id, created, \
-     dead) 
+    (id, username, parent_item_id, comment_text, is_parent, root_comment_id, parent_comment_id, \
+     created, dead) 
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
     id,
-    by,
+    username,
     parent_item_id,
     comment_text,
     is_parent,
@@ -55,7 +55,7 @@ pub async fn insert_comment(
   .await?;
 
   // Increment user karma
-  sqlx::query!("UPDATE users SET karma = karma + 1 WHERE username = $1", by)
+  sqlx::query!("UPDATE users SET karma = karma + 1 WHERE username = $1", username)
     .execute(&mut *tx)
     .await?;
 

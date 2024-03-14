@@ -23,7 +23,7 @@ pub async fn delete_user(pool: &DbPool, username: &str) -> DbResult<()> {
 }
 
 pub async fn get_user_comments(pool: &DbPool, username: String) -> DbResult<Vec<Comment>> {
-  sqlx::query_as!(Comment, "SELECT * FROM comments WHERE by = $1", username)
+  sqlx::query_as!(Comment, "SELECT * FROM comments WHERE username = $1", username)
     .fetch_all(pool)
     .await
     .map_err(DbError::from)

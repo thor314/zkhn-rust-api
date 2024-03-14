@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM comments WHERE by = $1",
+  "query": "SELECT * FROM comments WHERE username = $1",
   "describe": {
     "columns": [
       {
@@ -10,7 +10,7 @@
       },
       {
         "ordinal": 1,
-        "name": "by",
+        "name": "username",
         "type_info": "Text"
       },
       {
@@ -84,5 +84,5 @@
       false
     ]
   },
-  "hash": "a0c97604d7cd6657cfd9cf62ff974c8f3f9d7a617a4cec69c6d213843c773b64"
+  "hash": "133999231759cd3ea7d6d9e0443035ef17aa7e5ff4d25f5a75a9dda780ac43c6"
 }

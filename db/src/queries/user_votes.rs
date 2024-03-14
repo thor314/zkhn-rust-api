@@ -29,7 +29,7 @@ pub async fn get_user_vote_by_content_id(
 pub async fn submit_comment_vote(
   pool: &mut sqlx::Pool<sqlx::Postgres>,
   comment_id: Uuid,
-  user_name: &str,
+  username: &str,
   parent_item_id: Uuid,
   vote_state: VoteState,
 ) -> DbResult<()> {
@@ -37,7 +37,7 @@ pub async fn submit_comment_vote(
   sqlx::query!(
     "INSERT INTO user_votes (username, vote_type, content_id, parent_item_id, vote_state, created)
          VALUES ($1, $2, $3, $4, $5, $6)",
-    user_name,
+    username,
     "comment",
     comment_id,
     parent_item_id,
@@ -53,7 +53,7 @@ pub async fn submit_comment_vote(
     .await?;
 
   // Update user karma (implement logic here, assuming a `users` table with `karma` field)
-  sqlx::query!("UPDATE users SET karma = karma + 1 WHERE username = $1", user_name,)
+  sqlx::query!("UPDATE users SET karma = karma + 1 WHERE username = $1", username,)
     .execute(&mut *tx)
     .await?;
 

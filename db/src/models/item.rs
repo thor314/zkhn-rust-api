@@ -15,7 +15,7 @@ use crate::{
 #[derive(sqlx::FromRow, Debug)]
 pub struct Item {
   pub id:            Uuid,
-  pub by:            String,
+  pub username:      String,
   pub title:         String,
   /// news, show ask
   pub item_type:     String,
@@ -35,7 +35,7 @@ pub struct Item {
 
 impl Item {
   pub fn new(
-    by: String,
+    username: String,
     title: String,
     item_type: String,
     is_text: bool,
@@ -52,7 +52,7 @@ impl Item {
 
     Item {
       id: Uuid::new_v4(),
-      by,
+      username,
       title,
       item_type,
       url,
@@ -67,8 +67,8 @@ impl Item {
     }
   }
 
-  pub fn create_comment(&self, by: String, text: String, dead: bool) -> Comment {
-    Comment::new(by, self.id, self.title.clone(), true, None, None, text, dead)
+  pub fn create_comment(&self, username: String, text: String, dead: bool) -> Comment {
+    Comment::new(username, self.id, self.title.clone(), true, None, None, text, dead)
   }
 
   pub fn kill(&mut self) { self.dead = true; }

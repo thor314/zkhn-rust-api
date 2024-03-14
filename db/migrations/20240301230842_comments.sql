@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS comments;
 
 CREATE TABLE comments (
     id UUID PRIMARY KEY,
-    by TEXT NOT NULL,
+    username TEXT NOT NULL,
     parent_item_id UUID NOT NULL,
     parent_item_title TEXT NOT NULL,
     comment_text TEXT NOT NULL,

@@ -10,7 +10,7 @@
       },
       {
         "ordinal": 1,
-        "name": "by",
+        "name": "username",
         "type_info": "Text"
       },
       {
