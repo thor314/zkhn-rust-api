@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM comments WHERE by = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "by",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "parent_item_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "parent_item_title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "comment_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_parent",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "root_comment_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "parent_comment_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "children_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "points",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "created",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "dead",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a0c97604d7cd6657cfd9cf62ff974c8f3f9d7a617a4cec69c6d213843c773b64"
+}

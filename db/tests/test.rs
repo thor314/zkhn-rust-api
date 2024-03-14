@@ -30,7 +30,7 @@ async fn integration_test(pool: PgPool) -> sqlx::Result<()> {
   assert!(user.is_none());
 
   let username = "testuser";
-  let user = get_user_by_username(&pool, username).await.unwrap();
+  let user = get_user(&pool, username).await.unwrap();
   assert!(user.is_none());
 
   Ok(())
