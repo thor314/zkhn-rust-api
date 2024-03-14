@@ -69,8 +69,8 @@ pub async fn get_comment(
 
   match auth_session.user {
     Some(user) => {
-      let user_name = &user.0.username;
-      let user_vote = queries::get_user_vote_by_content_id(&state.pool, user_name, comment_id)
+      let username = &user.0.username;
+      let user_vote = queries::get_user_vote_by_content_id(&state.pool, username, comment_id)
         .await
         .context("no vote found")?;
       let vote_state = user_vote.map(|v| v.vote_state);
@@ -102,11 +102,11 @@ pub async fn update_comment_vote(
   auth_session: AuthSession,
 ) -> Result<StatusCode, ApiError> {
   assert_authenticated(&auth_session)?;
-  let user_name = &auth_session.user.unwrap().0.username;
+  let username = &auth_session.user.unwrap().0.username;
 
   let (comment, user_vote) = {
     let comment_task = queries::get_comment_by_id(&state.pool, comment_id);
-    let user_vote_task = queries::get_user_vote_by_content_id(&state.pool, user_name, comment_id);
+    let user_vote_task = queries::get_user_vote_by_content_id(&state.pool, username, comment_id);
     let (comment_result, maybe_user_vote) = tokio::try_join!(comment_task, user_vote_task)?;
     let comment = comment_result.context("failed to query queries for comment")?;
     (comment, maybe_user_vote)
@@ -121,7 +121,7 @@ pub async fn update_comment_vote(
   }
 
   // create a new UserVote and increment the comment author's karma
-  queries::submit_comment_vote(&mut state.pool, comment_id, user_name, parent_item_id, vote_state)
+  queries::submit_comment_vote(&mut state.pool, comment_id, username, parent_item_id, vote_state)
     .await?;
 
   Ok(StatusCode::OK)
@@ -134,12 +134,12 @@ pub async fn update_comment_favorite(
   auth_session: AuthSession,
 ) -> Result<StatusCode, ApiError> {
   assert_authenticated(&auth_session)?;
-  let user_name = &auth_session.user.unwrap().0.username;
+  let username = &auth_session.user.unwrap().0.username;
 
   let (comment, maybe_favorite) = {
     let comment_task = queries::get_comment_by_id(&state.pool, comment_id);
     let favorite_task =
-      queries::get_user_favorite_by_username_and_item_id(&state.pool, user_name, comment_id);
+      queries::get_user_favorite_by_username_and_item_id(&state.pool, username, comment_id);
     let (comment_result, maybe_favorite) = tokio::try_join!(comment_task, favorite_task)?;
     let comment = comment_result.context("failed to query queries for comment")?;
     (comment, maybe_favorite)
@@ -160,7 +160,7 @@ pub async fn update_comment_favorite(
   // update favorite
   queries::insert_or_delete_user_favorite_for_comment(
     &state.pool,
-    user_name,
+    username,
     maybe_favorite,
     comment_id,
   )
@@ -174,7 +174,7 @@ pub async fn update_comment_text(
   body: String,
 ) -> Result<StatusCode, ApiError> {
   assert_authenticated(&auth_session)?;
-  let user_name = &auth_session.user.unwrap().0.username;
+  let username = &auth_session.user.unwrap().0.username;
   todo!()
 }
 
@@ -184,7 +184,7 @@ pub async fn delete_comment(
   Path(comment_id): Path<Uuid>,
 ) -> Result<StatusCode, ApiError> {
   assert_authenticated(&auth_session)?;
-  let user_name = &auth_session.user.unwrap().0.username;
+  let username = &auth_session.user.unwrap().0.username;
 
   queries::delete_comment(&state.pool, comment_id).await?;
   Ok(StatusCode::OK)

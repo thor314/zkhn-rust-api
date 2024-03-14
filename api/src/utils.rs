@@ -9,11 +9,6 @@ use tracing_subscriber::{
 };
 
 use crate::error::ApiError;
-/// Set up crate logging and environment variables.
-
-pub fn now() -> NaiveDateTime {
-  NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap()
-}
 
 // todo: test. Most of this should probably be done with a crate like ammonia, plus latex rendering?
 /// Sanitize text:

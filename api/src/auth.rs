@@ -83,9 +83,9 @@ impl From<User> for UserAuthWrapper {
 }
 
 impl AuthUser for UserAuthWrapper {
-  type Id = Uuid;
+  type Id = String;
 
-  fn id(&self) -> Self::Id { self.0.id }
+  fn id(&self) -> Self::Id { self.0.username.clone() }
 
   // todo: this should probably be a session cookie or something, not the password
   fn session_auth_hash(&self) -> &[u8] { self.0.password_hash.as_bytes() }
@@ -119,9 +119,8 @@ impl AuthnBackend for Backend {
     &self,
     credentials: Self::Credentials,
   ) -> Result<Option<Self::User>, Self::Error> {
-    let user = queries::get_user_by_username(&self.pool, &credentials.username)
-      .await?
-      .map(UserAuthWrapper::from);
+    let user =
+      queries::get_user(&self.pool, &credentials.username).await?.map(UserAuthWrapper::from);
 
     // Verifying the password is blocking and potentially slow, so use `spawn_blocking`.
     task::spawn_blocking(move || {
@@ -130,8 +129,8 @@ impl AuthnBackend for Backend {
     .await?
   }
 
-  async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    let user = queries::get_user_by_id(&self.pool, *user_id).await?.map(UserAuthWrapper::from);
+  async fn get_user(&self, username: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
+    let user = queries::get_user(&self.pool, username).await?.map(UserAuthWrapper::from);
     Ok(user)
   }
 }

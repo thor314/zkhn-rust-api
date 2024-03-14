@@ -19,15 +19,13 @@ use crate::{
   DbPool,
 };
 
-#[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone, Validate)]
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
 pub struct User {
-  pub id: Uuid,
-  #[validate(custom(function = crate::utils::validate_username))]
+  // #[validate(custom(function = crate::utils::validate_username))] // todo move to payload
   pub username: String,
   /// Hashed password
-  // todo: look for a password hash wrapper, this should be a hash
   pub password_hash: String,
-  // todo: auth
+  // todo: oauth
   /// Authentication token
   pub auth_token: Option<String>,
   /// Expiration of auth token
@@ -40,7 +38,6 @@ pub struct User {
   // todo: email wrapper
   pub email: String,
   /// Account creation timestamp
-  // pub created: crate::utils::Timestamp,
   pub created: crate::utils::Timestamp,
   /// User karma score
   pub karma: i32,
@@ -59,7 +56,6 @@ pub struct User {
 impl User {
   pub fn new(username: String, password: String, email: String, about: Option<String>) -> Self {
     User {
-      id: Uuid::new_v4(),
       username,
       password_hash: password,
       auth_token: None,

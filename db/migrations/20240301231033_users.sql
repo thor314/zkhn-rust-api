@@ -1,8 +1,7 @@
 -- Add migration script here
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
-    id UUID PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
+    username TEXT PRIMARY KEY,
     password_hash TEXT NOT NULL,
     auth_token TEXT,
     auth_token_expiration BIGINT,

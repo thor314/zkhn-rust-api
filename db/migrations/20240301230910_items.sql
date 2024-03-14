@@ -9,7 +9,7 @@
 DROP TABLE IF EXISTS items;
 CREATE TABLE items (
     id UUID PRIMARY KEY,
-    by TEXT NOT NULL,
+    username TEXT NOT NULL,
     title TEXT NOT NULL,
     item_type TEXT NOT NULL DEFAULT 'news',
     url TEXT,

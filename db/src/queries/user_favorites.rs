@@ -27,7 +27,7 @@ pub async fn get_user_favorite_by_username_and_item_id(
 /// Insert a new user favorite for comment
 pub async fn insert_or_delete_user_favorite_for_comment(
   pool: &sqlx::Pool<sqlx::Postgres>,
-  user_name: &str,
+  username: &str,
   maybe_favorite: Option<UserFavorite>,
   comment_id: Uuid,
 ) -> DbResult<()> {
@@ -46,7 +46,7 @@ pub async fn insert_or_delete_user_favorite_for_comment(
       sqlx::query!(
         "INSERT INTO user_favorites (username, item_type, item_id, date)
          VALUES ($1, $2, $3, $4)",
-        user_name,
+        username,
         "comment",
         comment_id,
         now().0,

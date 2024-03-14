@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM comments WHERE parent_comment_id = $1",
+  "query": "SELECT * FROM comments WHERE username = $1",
   "describe": {
     "columns": [
       {
@@ -66,7 +66,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -84,5 +84,5 @@
       false
     ]
   },
-  "hash": "fe5d3e78e79dd4fc3d5619afb6abadd2bbd37e6e7766aa1c88372032d6377777"
+  "hash": "133999231759cd3ea7d6d9e0443035ef17aa7e5ff4d25f5a75a9dda780ac43c6"
 }
