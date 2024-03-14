@@ -25,10 +25,29 @@ failed",
 }
 
 #[sqlx::test]
-async fn basic_test(pool: PgPool) -> sqlx::Result<()> {
-  let username = "testuser";
-  let user = get_user(&pool, username).await.unwrap();
-  assert!(user.is_none());
+async fn user_creation(pool: PgPool) -> sqlx::Result<()> {
+  let mut users = (1i32..).map(|i| {
+    User::new(format!("testuser{}", i), "testpassword".to_string(), "testemail".to_string(), None)
+  });
+  let user = users.next().unwrap();
+  insert_user(&pool, &user).await.unwrap();
+  let gotten_user = get_user(&pool, &user.username).await.unwrap().unwrap();
+  assert_eq!(user.username, gotten_user.username);
+
+  let about = "testabout".to_string();
+  update_user_about(&pool, &user.username, &about).await.unwrap();
+  let gotten_about = get_user(&pool, &user.username).await.unwrap().unwrap().about.unwrap();
+  assert_eq!(gotten_about, about);
+
+  let user_comments = get_user_comments(&pool, &user.username).await.unwrap();
+  assert!(user_comments.is_empty());
+  // todo: try to insert a comment
+
+  delete_user(&pool, &user.username).await.unwrap();
+  let gotten_user = get_user(&pool, &user.username).await.unwrap();
+  assert!(gotten_user.is_none());
+
+  // todo: test insert comment for user fails if user does not exist
 
   Ok(())
 }

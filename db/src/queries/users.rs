@@ -68,6 +68,8 @@ pub async fn insert_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   )
   .execute(&mut *tx)
   .await?;
+
+  tx.commit().await?;
   // todo
   Ok(())
 }
@@ -80,7 +82,7 @@ pub async fn delete_user(pool: &DbPool, username: &str) -> DbResult<()> {
     .map(|_| ())
 }
 
-pub async fn get_user_comments(pool: &DbPool, username: String) -> DbResult<Vec<Comment>> {
+pub async fn get_user_comments(pool: &DbPool, username: &str) -> DbResult<Vec<Comment>> {
   sqlx::query_as!(Comment, "SELECT * FROM comments WHERE username = $1", username)
     .fetch_all(pool)
     .await
