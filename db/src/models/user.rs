@@ -56,7 +56,6 @@ pub struct User {
 impl User {
   pub fn new(username: String, password: String, email: String, about: Option<String>) -> Self {
     User {
-      // id: Uuid::new_v4(),
       username,
       password_hash: password,
       auth_token: None,
