@@ -37,7 +37,7 @@ use axum_login::{
   tower_sessions::{session, SessionStore},
   AuthManagerLayerBuilder, AuthUser, AuthnBackend, AuthzBackend, UserId,
 };
-use db::models::user::User;
+use db::{models::user::User, queries};
 use serde::{Deserialize, Serialize};
 use tokio::task;
 use tower_sessions::{MemoryStore, SessionManagerLayer};
@@ -119,8 +119,9 @@ impl AuthnBackend for Backend {
     &self,
     credentials: Self::Credentials,
   ) -> Result<Option<Self::User>, Self::Error> {
-    let user =
-      db::get_user_by_username(&self.pool, &credentials.username).await?.map(UserAuthWrapper::from);
+    let user = queries::get_user_by_username(&self.pool, &credentials.username)
+      .await?
+      .map(UserAuthWrapper::from);
 
     // Verifying the password is blocking and potentially slow, so use `spawn_blocking`.
     task::spawn_blocking(move || {
@@ -130,7 +131,7 @@ impl AuthnBackend for Backend {
   }
 
   async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    let user = db::get_user_by_id(&self.pool, *user_id).await?.map(UserAuthWrapper::from);
+    let user = queries::get_user_by_id(&self.pool, *user_id).await?.map(UserAuthWrapper::from);
     Ok(user)
   }
 }

@@ -5,19 +5,15 @@
 #![allow(non_snake_case)]
 #![allow(clippy::clone_on_copy)]
 
-mod comments;
 mod error;
-mod items;
 pub mod models;
+pub mod queries;
 #[cfg(test)] mod tests;
-mod user_favorites;
-mod user_votes;
-mod users;
 mod utils;
 
 use uuid::Uuid;
 
-pub use crate::{comments::*, error::DbError, items::*, user_votes::*, users::*};
+pub use crate::error::DbError;
 use crate::{
   models::{
     comment::Comment, item::Item, user::User, user_favorite::UserFavorite, user_vote::UserVote,
