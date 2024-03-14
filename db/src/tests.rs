@@ -8,7 +8,7 @@ use sqlx::{PgConnection, PgPool, Row};
 use uuid::Uuid;
 
 use crate::{
-  models::{item::Item, user::User},
+  models::{comment::Comment, item::Item, user::User},
   queries::*,
 };
 
@@ -66,8 +66,26 @@ async fn user_creation(pool: PgPool) -> sqlx::Result<()> {
   assert_eq!(gotten_category, category);
 
   // todo: try to insert a comment
-  let user_comments = get_user_comments(&pool, &user.username).await.unwrap();
-  assert!(user_comments.is_empty());
+  let mut comments = (1i32..).map(|i| {
+    Comment::new(
+      user.username.clone(),
+      item.id,
+      item.title.clone(),
+      true,
+      None,
+      None,
+      format!("testcomment{}", i),
+      false,
+    )
+  });
+  let comment = comments.next().unwrap();
+  insert_comment(&pool, &comment).await.unwrap();
+  let comments_number = get_item(&pool, item.id).await.unwrap().unwrap().comment_count;
+  assert_eq!(1, comments_number);
+
+  delete_comment(&pool, comment.id, item.id).await.unwrap();
+  let comments_number = get_item(&pool, item.id).await.unwrap().unwrap().comment_count;
+  assert_eq!(0, comments_number);
 
   delete_item(&pool, item.id).await.unwrap();
   let gotten_item = get_item(&pool, item.id).await.unwrap();

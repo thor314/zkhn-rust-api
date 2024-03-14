@@ -66,14 +66,6 @@ impl Item {
       dead: false,
     }
   }
-
-  pub fn create_comment(&self, username: String, text: String, dead: bool) -> Comment {
-    Comment::new(username, self.id, self.title.clone(), true, None, None, text, dead)
-  }
-
-  pub fn kill(&mut self) { self.dead = true; }
-
-  pub fn unkill(&mut self) { self.dead = false; }
 }
 
 // // todo: add other types rest

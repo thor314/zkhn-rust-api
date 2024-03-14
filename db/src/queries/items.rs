@@ -98,3 +98,20 @@ pub async fn update_item_category(
 
   Ok(())
 }
+
+pub(crate) async fn decrement_item_comment_count_by(
+  pool: &sqlx::Pool<sqlx::Postgres>,
+  item_id: Uuid,
+  len: i32,
+) -> DbResult<()> {
+  sqlx::query!(
+    "UPDATE items
+    SET comment_count = comment_count - $1
+    WHERE id = $2",
+    len,
+    item_id
+  )
+  .execute(pool)
+  .await?;
+  Ok(())
+}
