@@ -1,9 +1,14 @@
+use std::collections::HashSet;
+
+use futures::future::join_all;
+use rayon::prelude::*;
+use sqlx::{Pool, Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::{
   error::DbError,
   models::{
-    comment::Comment,
+    comment::{self, Comment},
     user_vote::{UserVote, VoteState},
   },
   utils::now,
@@ -78,25 +83,36 @@ pub async fn get_comment_by_id(pool: &DbPool, comment_id: Uuid) -> DbResult<Opti
     .map_err(DbError::from)
 }
 
-pub async fn get_comment_children_of(pool: &DbPool, comment_id: Uuid) -> DbResult<Vec<Comment>> {
+pub async fn get_comment_children_layer(pool: &DbPool, comment_id: Uuid) -> DbResult<Vec<Comment>> {
   sqlx::query_as!(Comment, "SELECT * FROM comments WHERE parent_comment_id = $1", comment_id)
     .fetch_all(pool)
     .await
     .map_err(DbError::from)
 }
 
-/// recursively remove a comment from the database
-pub async fn delete_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<()> {
-  let comments: Vec<Comment> = get_comment_children_of(pool, comment_id).await?;
-  sqlx::query!("DELETE FROM comments WHERE id = $1", comment_id)
-    .execute(pool)
-    .await
-    .map_err(DbError::from)?;
+async fn get_comment_children_recursive(
+  pool: &Pool<Postgres>,
+  comment_id: Uuid,
+) -> DbResult<Vec<Uuid>> {
+  let children_ids = get_comment_children_layer(pool, comment_id).await?;
+  let children_futures =
+    children_ids.into_iter().map(|row| get_comment_children_recursive(pool, row.id));
 
-  for comment in comments {
-    // recursive async requires Box::pin
-    Box::pin(delete_comment(pool, comment.id)).await?;
+  let results: DbResult<Vec<_>> = join_all(children_futures).await.into_iter().collect();
+  let results = results?.into_iter().flatten().collect();
+  Ok(results)
+}
+
+/// recursively get all comment_id's to remove, then remove them in a single transaction
+pub async fn delete_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<()> {
+  let comments_to_delete = get_comment_children_recursive(pool, comment_id).await?;
+
+  // delete all comments in a transaction
+  let mut tx = pool.begin().await?;
+  for comment_id in comments_to_delete {
+    sqlx::query!("DELETE FROM comments WHERE id = $1", comment_id).execute(&mut *tx).await?;
   }
+  tx.commit().await?;
 
   // TODO(TK 2024-03-13): update item comment count
   // update user karma

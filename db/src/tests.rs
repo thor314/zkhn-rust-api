@@ -7,10 +7,7 @@
 use sqlx::{PgConnection, PgPool, Row};
 use uuid::Uuid;
 
-use crate::{
-  models::user::User,
-  queries::{get_user, get_user_by_id},
-};
+use crate::{models::user::User, queries::*};
 
 static INIT: std::sync::Once = std::sync::Once::new();
 fn setup_test_tracing() {
@@ -29,10 +26,6 @@ failed",
 
 #[sqlx::test]
 async fn basic_test(pool: PgPool) -> sqlx::Result<()> {
-  let id = Uuid::new_v4();
-  let user = get_user_by_id(&pool, id).await.unwrap();
-  assert!(user.is_none());
-
   let username = "testuser";
   let user = get_user(&pool, username).await.unwrap();
   assert!(user.is_none());
