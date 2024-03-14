@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::{
   error::DbError,
-  models::{comment::Comment, user::User},
+  models::{comment::Comment, item::Item, user::User},
   DbPool, DbResult,
 };
 
@@ -32,7 +32,7 @@ pub async fn insert_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     is_moderator,
     shadow_banned,
     banned,
-  } = new_user.clone();
+  } = new_user;
 
   sqlx::query!(
     "INSERT INTO users
@@ -53,14 +53,14 @@ pub async fn insert_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
     username,
     password_hash,
-    auth_token.unwrap_or("".to_string()),
+    auth_token.clone().unwrap_or("".to_string()),
     auth_token_expiration.unwrap_or(0),
-    reset_password_token.unwrap_or("".to_string()),
+    reset_password_token.clone().unwrap_or("".to_string()),
     reset_password_token_expiration.unwrap_or(0),
     email,
     created.0,
     karma,
-    about.unwrap_or("".to_string()),
+    about.clone().unwrap_or("".to_string()),
     show_dead,
     is_moderator,
     shadow_banned,
@@ -84,6 +84,13 @@ pub async fn delete_user(pool: &DbPool, username: &str) -> DbResult<()> {
 
 pub async fn get_user_comments(pool: &DbPool, username: &str) -> DbResult<Vec<Comment>> {
   sqlx::query_as!(Comment, "SELECT * FROM comments WHERE username = $1", username)
+    .fetch_all(pool)
+    .await
+    .map_err(DbError::from)
+}
+
+pub async fn get_user_items(pool: &DbPool, username: &str) -> DbResult<Vec<Item>> {
+  sqlx::query_as!(Item, "SELECT * FROM items WHERE username = $1", username)
     .fetch_all(pool)
     .await
     .map_err(DbError::from)

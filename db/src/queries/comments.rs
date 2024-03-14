@@ -16,6 +16,13 @@ use crate::{
   DbPool, DbResult,
 };
 
+pub async fn get_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
+  sqlx::query_as!(Comment, "SELECT * FROM comments WHERE id = $1", comment_id)
+    .fetch_optional(pool)
+    .await
+    .map_err(DbError::from)
+}
+
 /// Via the atomic sqlx transaction api:
 /// - insert new comment into db
 /// - increment user karma
@@ -89,13 +96,6 @@ pub async fn insert_comment(
   Ok(())
 }
 
-pub async fn get_comment_by_id(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
-  sqlx::query_as!(Comment, "SELECT * FROM comments WHERE id = $1", comment_id)
-    .fetch_optional(pool)
-    .await
-    .map_err(DbError::from)
-}
-
 pub async fn get_comment_children_layer(pool: &DbPool, comment_id: Uuid) -> DbResult<Vec<Comment>> {
   sqlx::query_as!(Comment, "SELECT * FROM comments WHERE parent_comment_id = $1", comment_id)
     .fetch_all(pool)
@@ -117,16 +117,20 @@ async fn get_comment_children_recursive(
 }
 
 /// recursively get all comment_id's to remove, then remove them in a single transaction
-pub async fn delete_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<()> {
-  let comments_to_delete = get_comment_children_recursive(pool, comment_id).await?;
+pub async fn delete_comment(pool: &DbPool, comment_id: Uuid, item_id: Uuid) -> DbResult<()> {
+  let mut comments_to_delete = get_comment_children_recursive(pool, comment_id).await?;
+  comments_to_delete.push(comment_id);
 
+  // todo: optimize. This should probably happen via postgres triggers instead.
   // delete all comments in a transaction
   let mut tx = pool.begin().await?;
-  for comment_id in comments_to_delete {
+  for comment_id in &comments_to_delete {
     sqlx::query!("DELETE FROM comments WHERE id = $1", comment_id).execute(&mut *tx).await?;
   }
   tx.commit().await?;
 
+  super::items::decrement_item_comment_count_by(pool, item_id, comments_to_delete.len() as i32)
+    .await?;
   // TODO(TK 2024-03-13): update item comment count
   // update user karma
   // update search api

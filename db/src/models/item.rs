@@ -17,7 +17,7 @@ pub struct Item {
   pub id:            Uuid,
   pub username:      String,
   pub title:         String,
-  /// news, show ask
+  /// news, show, ask
   pub item_type:     String,
   pub url:           Option<String>,
   pub domain:        Option<String>,
@@ -66,14 +66,6 @@ impl Item {
       dead: false,
     }
   }
-
-  pub fn create_comment(&self, username: String, text: String, dead: bool) -> Comment {
-    Comment::new(username, self.id, self.title.clone(), true, None, None, text, dead)
-  }
-
-  pub fn kill(&mut self) { self.dead = true; }
-
-  pub fn unkill(&mut self) { self.dead = false; }
 }
 
 // // todo: add other types rest

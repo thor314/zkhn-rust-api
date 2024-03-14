@@ -44,9 +44,8 @@ pub async fn create_comment(
   assert_authenticated(&auth_session)?;
   // todo: item is dead
   // assert item exists?
-  let item = queries::get_item_by_id(&state.pool, payload.parent_item_id)
-    .await?
-    .ok_or(RouteError::NotFound)?;
+  let item =
+    queries::get_item(&state.pool, payload.parent_item_id).await?.ok_or(RouteError::NotFound)?;
   let new_comment: Comment = payload.try_into()?;
   queries::insert_comment(&state.pool, &new_comment).await?;
 
@@ -64,8 +63,7 @@ pub async fn get_comment(
   Path(comment_id): Path<Uuid>,
   auth_session: AuthSession,
 ) -> ApiResult<(Json<Comment>, Json<Option<VoteState>>)> {
-  let comment =
-    queries::get_comment_by_id(&state.pool, comment_id).await?.ok_or(RouteError::NotFound)?;
+  let comment = queries::get_comment(&state.pool, comment_id).await?.ok_or(RouteError::NotFound)?;
 
   match auth_session.user {
     Some(user) => {
@@ -105,7 +103,7 @@ pub async fn update_comment_vote(
   let username = &auth_session.user.unwrap().0.username;
 
   let (comment, user_vote) = {
-    let comment_task = queries::get_comment_by_id(&state.pool, comment_id);
+    let comment_task = queries::get_comment(&state.pool, comment_id);
     let user_vote_task = queries::get_user_vote_by_content_id(&state.pool, username, comment_id);
     let (comment_result, maybe_user_vote) = tokio::try_join!(comment_task, user_vote_task)?;
     let comment = comment_result.context("failed to query queries for comment")?;
@@ -137,7 +135,7 @@ pub async fn update_comment_favorite(
   let username = &auth_session.user.unwrap().0.username;
 
   let (comment, maybe_favorite) = {
-    let comment_task = queries::get_comment_by_id(&state.pool, comment_id);
+    let comment_task = queries::get_comment(&state.pool, comment_id);
     let favorite_task =
       queries::get_user_favorite_by_username_and_item_id(&state.pool, username, comment_id);
     let (comment_result, maybe_favorite) = tokio::try_join!(comment_task, favorite_task)?;
@@ -186,7 +184,12 @@ pub async fn delete_comment(
   assert_authenticated(&auth_session)?;
   let username = &auth_session.user.unwrap().0.username;
 
-  queries::delete_comment(&state.pool, comment_id).await?;
+  let item_id = queries::get_comment(&state.pool, comment_id)
+    .await?
+    .ok_or(RouteError::NotFound)?
+    .parent_item_id;
+  queries::delete_comment(&state.pool, comment_id, item_id).await?;
+
   Ok(StatusCode::OK)
 }
 
