@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO comments \n    ( id, \n      username, \n      parent_item_id, \n      parent_item_title, \n      comment_text, \n      is_parent, \n      root_comment_id, \n      parent_comment_id, \n      children_count,\n      points,\n      created,\n      dead ) \n    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "Bool",
+        "Uuid",
+        "Uuid",
+        "Int4",
+        "Int4",
+        "Timestamptz",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9cc0ae52af3d2bbd4efcf4721e94d6ec0e660deae689ffbda8456074857e9ac7"
+}

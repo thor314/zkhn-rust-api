@@ -2,13 +2,14 @@ use std::collections::HashSet;
 
 use futures::future::join_all;
 use rayon::prelude::*;
-use sqlx::{Pool, Postgres, Transaction};
+use sqlx::{Pool, Postgres, QueryBuilder, Transaction};
 use uuid::Uuid;
 
 use crate::{
   error::DbError,
   models::{
     comment::{self, Comment},
+    item::Item,
     user_vote::{UserVote, VoteState},
   },
   utils::now,
@@ -27,32 +28,44 @@ pub async fn insert_comment(
 
   let Comment {
     id,
+    username,
+    parent_item_id,
+    parent_item_title,
     comment_text,
     is_parent,
     root_comment_id,
     parent_comment_id,
-    created,
-    dead,
-    username,
-    parent_item_id,
-    parent_item_title,
     children_count,
     points,
+    created,
+    dead,
   } = new_comment;
 
   sqlx::query!(
     "INSERT INTO comments 
-    (id, username, parent_item_id, comment_text, is_parent, root_comment_id, parent_comment_id, \
-     created, dead) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+    ( id, 
+      username, 
+      parent_item_id, 
+      parent_item_title, 
+      comment_text, 
+      is_parent, 
+      root_comment_id, 
+      parent_comment_id, 
+      children_count,
+      points,
+      created,
+      dead ) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
     id,
     username,
     parent_item_id,
+    parent_item_title,
     comment_text,
     is_parent,
     root_comment_id,
-    // parent_comment_id, // can't provide an Option<Uuid>, potential source of bugs
     parent_comment_id.map_or(Uuid::nil(), Uuid::from),
+    children_count,
+    points,
     created.0,
     dead
   )
