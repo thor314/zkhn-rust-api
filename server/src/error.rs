@@ -8,7 +8,7 @@ pub enum ServerError {
   #[error(transparent)]
   Anyhow(#[from] anyhow::Error),
   #[error(transparent)]
-  Db(#[from] db::error::DbError),
+  Db(#[from] db::DbError),
   #[error(transparent)]
   Api(#[from] api::error::ApiError),
 

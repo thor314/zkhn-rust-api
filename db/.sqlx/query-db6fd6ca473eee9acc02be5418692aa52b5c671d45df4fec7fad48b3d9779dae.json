@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM comments WHERE parent_comment_id = $1",
+  "query": "SELECT * FROM comments WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -84,5 +84,5 @@
       false
     ]
   },
-  "hash": "fe5d3e78e79dd4fc3d5619afb6abadd2bbd37e6e7766aa1c88372032d6377777"
+  "hash": "db6fd6ca473eee9acc02be5418692aa52b5c671d45df4fec7fad48b3d9779dae"
 }

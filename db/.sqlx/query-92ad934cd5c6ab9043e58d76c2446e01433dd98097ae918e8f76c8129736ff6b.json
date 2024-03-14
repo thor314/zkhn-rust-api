@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT username, vote_type, content_id, parent_item_id, vote_state as \"vote_state: _\", created FROM user_votes WHERE content_id = $1 and username = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "vote_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "content_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "parent_item_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "vote_state: _",
+        "type_info": {
+          "Custom": {
+            "name": "vote_state",
+            "kind": {
+              "Enum": [
+                "upvote",
+                "downvote",
+                "none"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "92ad934cd5c6ab9043e58d76c2446e01433dd98097ae918e8f76c8129736ff6b"
+}

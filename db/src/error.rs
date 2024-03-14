@@ -13,12 +13,16 @@ pub enum DbError {
   Sqlx(#[from] sqlx::Error),
   #[error(transparent)]
   SqlxMigrate(#[from] MigrateError),
+  #[error("Not found in database")]
+  NotFound,
   #[error(transparent)]
   Io(#[from] std::io::Error),
   #[error(transparent)]
   Anyhow(#[from] anyhow::Error),
   #[error(transparent)]
   PwError(#[from] PasswordError),
+  #[error("Invalid favorite state encountered")]
+  InvalidFavoriteState,
 }
 
 #[derive(Debug, thiserror::Error)]

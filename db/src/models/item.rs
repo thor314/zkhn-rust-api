@@ -17,8 +17,8 @@ pub struct Item {
   pub id:            Uuid,
   pub by:            String,
   pub title:         String,
-  /// news, show ask, etc.
-  pub item_type:     ItemType,
+  /// news, show ask
+  pub item_type:     String,
   pub url:           Option<String>,
   pub domain:        Option<String>,
   pub text:          Option<String>,
@@ -27,7 +27,8 @@ pub struct Item {
   /// internal algorithmic score to sort items on home page by popularity
   pub score:         i32, // todo: both points and score?
   pub comment_count: i32,
-  pub item_category: ItemCategory,
+  /// Tweet, Blog, Paper, Other
+  pub item_category: String,
   pub created:       Timestamp,
   pub dead:          bool,
 }
@@ -36,10 +37,10 @@ impl Item {
   pub fn new(
     by: String,
     title: String,
-    item_type: ItemType,
+    item_type: String,
     is_text: bool,
     text_or_url_content: String,
-    item_category: ItemCategory,
+    item_category: String,
   ) -> Self {
     let (url, domain, text) = if is_text {
       (None, None, Some(text_or_url_content.clone()))
@@ -75,24 +76,24 @@ impl Item {
   pub fn unkill(&mut self) { self.dead = false; }
 }
 
-// todo: add other types rest
-#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-#[sqlx(type_name = "item_category_enum")]
-pub enum ItemCategory {
-  Tweet,
-  Blog,
-  Paper,
-  Other,
-}
+// // todo: add other types rest
+// #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+// #[sqlx(type_name = "item_category_enum")]
+// pub enum ItemCategory {
+//   Tweet,
+//   Blog,
+//   Paper,
+//   Other,
+// }
 
-#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-#[sqlx(type_name = "item_type")]
-#[serde(rename_all = "lowercase")]
-pub enum ItemType {
-  News,
-  Show,
-  Ask,
-}
+// #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+// #[sqlx(type_name = "item_type", rename_all = "lowercase")]
+// // #[serde(rename_all = "lowercase")]
+// pub enum ItemType {
+//   News,
+//   Show,
+//   Ask,
+// }
 
 // todo: move
 pub(crate) async fn increment_comments(

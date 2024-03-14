@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM comments WHERE parent_comment_id = $1",
+  "query": "SELECT * FROM items WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -15,51 +15,56 @@
       },
       {
         "ordinal": 2,
-        "name": "parent_item_id",
-        "type_info": "Uuid"
+        "name": "title",
+        "type_info": "Text"
       },
       {
         "ordinal": 3,
-        "name": "parent_item_title",
+        "name": "item_type",
         "type_info": "Text"
       },
       {
         "ordinal": 4,
-        "name": "comment_text",
+        "name": "url",
         "type_info": "Text"
       },
       {
         "ordinal": 5,
-        "name": "is_parent",
-        "type_info": "Bool"
+        "name": "domain",
+        "type_info": "Text"
       },
       {
         "ordinal": 6,
-        "name": "root_comment_id",
-        "type_info": "Uuid"
+        "name": "text",
+        "type_info": "Text"
       },
       {
         "ordinal": 7,
-        "name": "parent_comment_id",
-        "type_info": "Uuid"
-      },
-      {
-        "ordinal": 8,
-        "name": "children_count",
-        "type_info": "Int4"
-      },
-      {
-        "ordinal": 9,
         "name": "points",
         "type_info": "Int4"
       },
       {
+        "ordinal": 8,
+        "name": "score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "comment_count",
+        "type_info": "Int4"
+      },
+      {
         "ordinal": 10,
+        "name": "item_category",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
         "name": "created",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "dead",
         "type_info": "Bool"
       }
@@ -74,15 +79,16 @@
       false,
       false,
       false,
-      false,
-      false,
-      false,
       true,
+      true,
+      true,
+      false,
+      false,
       false,
       false,
       false,
       false
     ]
   },
-  "hash": "fe5d3e78e79dd4fc3d5619afb6abadd2bbd37e6e7766aa1c88372032d6377777"
+  "hash": "1e9045f52c002a19b815351fee1c7ee7520478ff4f5886b4523fb0dc4df0e204"
 }

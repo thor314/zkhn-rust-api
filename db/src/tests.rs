@@ -7,7 +7,10 @@
 use sqlx::{PgConnection, PgPool, Row};
 use uuid::Uuid;
 
-use crate::{get_user_by_id, get_user_by_username, models::user::User};
+use crate::{
+  models::user::User,
+  queries::{get_user_by_id, get_user_by_username},
+};
 
 static INIT: std::sync::Once = std::sync::Once::new();
 fn setup_test_tracing() {

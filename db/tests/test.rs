@@ -4,7 +4,7 @@
 
 // use rstest::{fixture, rstest};
 
-use db::*;
+use db::queries::*;
 use sqlx::PgPool;
 use uuid::Uuid;
 

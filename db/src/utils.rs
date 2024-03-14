@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context};
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[0-9A-Za-z_]+$")
 /// A timestamp wrapper that we can use in our sqlx models.
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(transparent)]
-pub struct Timestamp(DateTime<Utc>);
+pub struct Timestamp(pub DateTime<Utc>);
 
 pub fn now() -> Timestamp { Utc::now().into() }
 

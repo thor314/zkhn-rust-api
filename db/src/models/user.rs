@@ -11,7 +11,7 @@ use validator::{Validate, ValidationError};
 use super::{
   user_favorite::UserFavorite,
   user_hidden::UserHidden,
-  user_vote::{UserVote, VoteType},
+  user_vote::{UserVote, VoteState},
 };
 use crate::{
   error::{DbError, PasswordError},
@@ -96,9 +96,10 @@ impl User {
 
   pub fn vote(
     &self,
-    vote_type: VoteType,
+    vote_type: String,
     content_id: Uuid,
     parent_item_id: Option<Uuid>,
+    vote_state: VoteState,
     upvote: bool,
   ) -> UserVote {
     let downvote = !upvote;
@@ -107,9 +108,8 @@ impl User {
       vote_type,
       content_id,
       parent_item_id,
-      upvote,
-      downvote,
-      date: now(),
+      vote_state,
+      created: now(),
     }
   }
 }
