@@ -17,7 +17,7 @@ pub struct Item {
   pub id:            Uuid,
   pub username:      String,
   pub title:         String,
-  /// news, show ask
+  /// news, show, ask
   pub item_type:     String,
   pub url:           Option<String>,
   pub domain:        Option<String>,

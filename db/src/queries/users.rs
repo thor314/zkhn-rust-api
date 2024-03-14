@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::{
   error::DbError,
-  models::{comment::Comment, user::User},
+  models::{comment::Comment, item::Item, user::User},
   DbPool, DbResult,
 };
 
@@ -84,6 +84,13 @@ pub async fn delete_user(pool: &DbPool, username: &str) -> DbResult<()> {
 
 pub async fn get_user_comments(pool: &DbPool, username: &str) -> DbResult<Vec<Comment>> {
   sqlx::query_as!(Comment, "SELECT * FROM comments WHERE username = $1", username)
+    .fetch_all(pool)
+    .await
+    .map_err(DbError::from)
+}
+
+pub async fn get_user_items(pool: &DbPool, username: &str) -> DbResult<Vec<Item>> {
+  sqlx::query_as!(Item, "SELECT * FROM items WHERE username = $1", username)
     .fetch_all(pool)
     .await
     .map_err(DbError::from)

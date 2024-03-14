@@ -7,7 +7,10 @@
 use sqlx::{PgConnection, PgPool, Row};
 use uuid::Uuid;
 
-use crate::{models::user::User, queries::*};
+use crate::{
+  models::{item::Item, user::User},
+  queries::*,
+};
 
 static INIT: std::sync::Once = std::sync::Once::new();
 fn setup_test_tracing() {
@@ -39,9 +42,36 @@ async fn user_creation(pool: PgPool) -> sqlx::Result<()> {
   let gotten_about = get_user(&pool, &user.username).await.unwrap().unwrap().about.unwrap();
   assert_eq!(gotten_about, about);
 
+  let user_items = get_user_items(&pool, &user.username).await.unwrap();
+  assert!(user_items.is_empty());
+
+  let mut items = (1i32..).map(|i| {
+    Item::new(
+      user.username.clone(),
+      format!("testtitle{}", i),
+      "news".to_string(),
+      true,
+      "text content".to_string(),
+      "other".to_string(),
+    )
+  });
+  let item = items.next().unwrap();
+  insert_item(&pool, &item).await.unwrap();
+  let gotten_category = get_item(&pool, item.id).await.unwrap().unwrap().item_category;
+  assert_eq!(gotten_category, "other".to_string());
+
+  let category = "paper".to_string();
+  update_item_category(&pool, item.id, &category).await.unwrap();
+  let gotten_category = get_item(&pool, item.id).await.unwrap().unwrap().item_category;
+  assert_eq!(gotten_category, category);
+
+  // todo: try to insert a comment
   let user_comments = get_user_comments(&pool, &user.username).await.unwrap();
   assert!(user_comments.is_empty());
-  // todo: try to insert a comment
+
+  delete_item(&pool, item.id).await.unwrap();
+  let gotten_item = get_item(&pool, item.id).await.unwrap();
+  assert!(gotten_item.is_none());
 
   delete_user(&pool, &user.username).await.unwrap();
   let gotten_user = get_user(&pool, &user.username).await.unwrap();

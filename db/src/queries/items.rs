@@ -83,7 +83,7 @@ pub async fn delete_item(pool: &DbPool, item_id: Uuid) -> DbResult<()> {
 pub async fn update_item_category(
   pool: &DbPool,
   item_id: Uuid,
-  item_category: String,
+  item_category: &str,
 ) -> DbResult<()> {
   sqlx::query!(
     "UPDATE items
