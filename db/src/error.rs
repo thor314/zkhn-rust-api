@@ -13,6 +13,8 @@ pub enum DbError {
   Sqlx(#[from] sqlx::Error),
   #[error(transparent)]
   SqlxMigrate(#[from] MigrateError),
+  #[error("Not found in database")]
+  NotFound,
   #[error(transparent)]
   Io(#[from] std::io::Error),
   #[error(transparent)]

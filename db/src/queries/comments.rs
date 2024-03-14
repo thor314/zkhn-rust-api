@@ -77,3 +77,30 @@ pub async fn get_comment_by_id(pool: &DbPool, comment_id: Uuid) -> DbResult<Opti
     .await
     .map_err(DbError::from)
 }
+
+pub async fn get_comment_children_of(pool: &DbPool, comment_id: Uuid) -> DbResult<Vec<Comment>> {
+  sqlx::query_as!(Comment, "SELECT * FROM comments WHERE parent_comment_id = $1", comment_id)
+    .fetch_all(pool)
+    .await
+    .map_err(DbError::from)
+}
+
+/// recursively remove a comment from the database
+pub async fn delete_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<()> {
+  let comments: Vec<Comment> = get_comment_children_of(pool, comment_id).await?;
+  sqlx::query!("DELETE FROM comments WHERE id = $1", comment_id)
+    .execute(pool)
+    .await
+    .map_err(DbError::from)?;
+
+  for comment in comments {
+    // recursive async requires Box::pin
+    Box::pin(delete_comment(pool, comment.id)).await?;
+  }
+
+  // TODO(TK 2024-03-13): update item comment count
+  // update user karma
+  // update search api
+
+  Ok(())
+}

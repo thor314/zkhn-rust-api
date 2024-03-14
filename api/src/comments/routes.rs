@@ -53,7 +53,7 @@ pub async fn create_comment(
   Ok(StatusCode::CREATED)
 }
 
-///  if user is signed in, check if the user has voted on this comment.
+/// if user is signed in, check if the user has voted on this comment.
 /// If no comment exists, return Not Found.
 /// If the comment exists, but the user is not signed in, return the Ok((Comment, None)).
 /// If the comment exists, and the user is signed in, return the Ok((Comment, bool)), where bool
@@ -185,7 +185,9 @@ pub async fn delete_comment(
 ) -> Result<StatusCode, ApiError> {
   assert_authenticated(&auth_session)?;
   let user_name = &auth_session.user.unwrap().0.username;
-  todo!()
+
+  queries::delete_comment(&state.pool, comment_id).await?;
+  Ok(StatusCode::OK)
 }
 
 // get reply page data
