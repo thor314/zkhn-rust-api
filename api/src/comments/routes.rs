@@ -44,9 +44,8 @@ pub async fn create_comment(
   assert_authenticated(&auth_session)?;
   // todo: item is dead
   // assert item exists?
-  let item = queries::get_item_by_id(&state.pool, payload.parent_item_id)
-    .await?
-    .ok_or(RouteError::NotFound)?;
+  let item =
+    queries::get_item(&state.pool, payload.parent_item_id).await?.ok_or(RouteError::NotFound)?;
   let new_comment: Comment = payload.try_into()?;
   queries::insert_comment(&state.pool, &new_comment).await?;
 
