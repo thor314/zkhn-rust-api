@@ -33,7 +33,7 @@ async fn user_creation(pool: PgPool) -> sqlx::Result<()> {
     User::new(format!("testuser{}", i), "testpassword".to_string(), "testemail".to_string(), None)
   });
   let user = users.next().unwrap();
-  insert_user(&pool, &user).await.unwrap();
+  create_user(&pool, &user).await.unwrap();
   let gotten_user = get_user(&pool, &user.username).await.unwrap().unwrap();
   assert_eq!(user.username, gotten_user.username);
 

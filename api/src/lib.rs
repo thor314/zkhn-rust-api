@@ -12,6 +12,7 @@ pub mod error;
 mod session;
 #[cfg(test)] mod tests;
 mod user_votes;
+mod users;
 mod utils;
 
 use anyhow::Context;

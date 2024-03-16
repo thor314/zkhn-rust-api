@@ -3,10 +3,9 @@
 
 use axum::http::StatusCode;
 use db::DbError;
-use thiserror::Error;
 use tokio::task;
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum ApiError {
   #[error(transparent)]
   TaskJoin(#[from] task::JoinError),
@@ -21,13 +20,15 @@ pub enum ApiError {
   #[error(transparent)]
   Session(#[from] tower_sessions::session_store::Error),
   #[error(transparent)]
+  Payload(#[from] PayloadError),
+  #[error(transparent)]
   Route(#[from] RouteError),
   #[allow(dead_code)]
   #[error("an unhandled error")]
   Unhandled,
 }
 
-#[derive(Error, axum_derive_error::ErrorResponse)]
+#[derive(thiserror::Error, axum_derive_error::ErrorResponse)]
 pub enum RouteError {
   #[status(StatusCode::NOT_FOUND)]
   NotFound,
@@ -51,4 +52,10 @@ impl std::fmt::Display for RouteError {
 pub enum PasswordError {
   #[error("scrypt error: {0}")]
   ScryptPwHashError(#[from] scrypt::password_hash::Error),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum PayloadError {
+  #[error("error converting payload to user: {0}")]
+  UserTryFromError(#[from] anyhow::Error),
 }

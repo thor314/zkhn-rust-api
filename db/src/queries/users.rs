@@ -14,7 +14,7 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
     .map_err(DbError::from)
 }
 
-pub async fn insert_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
+pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   let mut tx = pool.begin().await?;
 
   let User {
