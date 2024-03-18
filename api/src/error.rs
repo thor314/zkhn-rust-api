@@ -1,31 +1,56 @@
 //! zkhn-rust-api error types
 // https://docs.rs/thiserror/latest/thiserror/
 
-use axum::http::StatusCode;
+use axum::{
+  http::{status, StatusCode},
+  response::IntoResponse,
+};
 use db::DbError;
 use tokio::task;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(thiserror::Error, axum_derive_error::ErrorResponse)]
 pub enum ApiError {
-  #[error(transparent)]
+  // #[error(transparent)]
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   TaskJoin(#[from] task::JoinError),
-  #[error(transparent)]
-  Io(#[from] std::io::Error),
-  #[error(transparent)]
+  // #[error(transparent)]
+  // #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
+  // Io(std::io::Error),
+  // #[error(transparent)]
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   Anyhow(#[from] anyhow::Error),
-  #[error(transparent)]
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
+  // #[error(transparent)]
   PwError(#[from] PasswordError),
-  #[error(transparent)]
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
+  // #[error(transparent)]
   DbError(#[from] DbError),
-  #[error(transparent)]
-  Session(#[from] tower_sessions::session_store::Error),
-  #[error(transparent)]
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
+  // #[error(transparent)]
+  Session(tower_sessions::session_store::Error),
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
+  // #[error(transparent)]
   Payload(#[from] PayloadError),
-  #[error(transparent)]
+  // #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
+  // #[error(transparent)]
   Route(#[from] RouteError),
-  #[allow(dead_code)]
-  #[error("an unhandled error")]
-  Unhandled,
+  // #[allow(dead_code)]
+  // #[error("an unhandled error")]
+  // Unhandled,
+}
+
+impl std::fmt::Display for ApiError {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      ApiError::TaskJoin(_) => todo!(),
+      ApiError::Anyhow(_) => todo!(),
+      ApiError::PwError(_) => todo!(),
+      ApiError::DbError(_) => todo!(),
+      ApiError::Session(_) => todo!(),
+      ApiError::Payload(_) => todo!(),
+      ApiError::Route(_) => todo!(),
+    }
+  }
 }
 
 #[derive(thiserror::Error, axum_derive_error::ErrorResponse)]

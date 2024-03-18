@@ -32,8 +32,7 @@ async fn main(
 
   tracing::info!("Building middleware layers...");
   let analytics_key = secret_store.get("ANALYTICS_API_KEY");
-  let router =
-    api::api_router(&pool, analytics_key).await.context("failed to build router").unwrap();
+  let router = api::router(&pool, analytics_key).await.context("failed to build router").unwrap();
 
   tracing::info!("🚀🚀🚀");
   Ok(router.into())

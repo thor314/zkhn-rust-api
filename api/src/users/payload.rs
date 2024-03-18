@@ -1,8 +1,10 @@
 use db::models::user::User;
+use serde::{Deserialize, Serialize};
 
 use crate::error::{ApiError, PayloadError};
 
 // todo: sanitize and validate me here
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPayload {
   pub username: String,
   pub password: String,

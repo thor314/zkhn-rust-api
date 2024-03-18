@@ -16,6 +16,7 @@ mod users;
 mod utils;
 
 use anyhow::Context;
+use api::router_internal;
 use axum::{
   extract::Request,
   http::StatusCode,
@@ -32,6 +33,7 @@ use axum_login::{
 use comments::comment_router;
 use db::DbPool;
 use error::ApiError;
+use sessions::get_session_layer;
 use tower_sessions::{ExpiredDeletion, Expiry};
 use tower_sessions_sqlx_store::PostgresStore;
 use tracing::info;
@@ -58,12 +60,12 @@ impl SharedState {
 /// - Session management
 /// - Authentication
 /// - State
-pub async fn api_router(pool: &DbPool, analytics_key: Option<String>) -> ApiResult<Router> {
+pub async fn router(pool: &DbPool, analytics_key: Option<String>) -> ApiResult<Router> {
   let state = SharedState::new(pool.clone());
   let session_layer = get_session_layer(pool).await?;
 
   let router = Router::new()
-    .merge(standard_router(state)) // 
+    .merge(router_internal(state)) // 
     .layer(session_layer.clone()) // must precede auth router
     .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth router
     .merge(auth_router(pool, &session_layer)) // all routes above this may have auth middleware applied
@@ -72,33 +74,35 @@ pub async fn api_router(pool: &DbPool, analytics_key: Option<String>) -> ApiResu
   Ok(router)
 }
 
-// todo: might have to move state into here
-fn standard_router(state: SharedState) -> Router {
-  Router::new().with_state(state).nest("/comments", comment_router())
-  // .nest("/users", user_router())
-}
+mod sessions {
+  use db::DbPool;
+  use tower_sessions::{Expiry, SessionManagerLayer};
+  use tower_sessions_sqlx_store::PostgresStore;
 
-// ref: https://github.com/maxcountryman/tower-sessions-stores/blob/main/sqlx-store/examples/postgres.rs
-/// Get the `tower-sessions` Manager Layer,
-async fn get_session_layer(
-  pool: &DbPool,
-) -> ApiResult<tower_sessions::SessionManagerLayer<PostgresStore>> {
-  let session_store = PostgresStore::new(pool.clone());
+  use crate::ApiResult;
 
-  // TODO: bug, leave minor optimization commented for now
-  // delete expired connections continuously
-  // let deletion_task = tokio::task::spawn(
-  //   session_store.clone().continuously_delete_expired(tokio::time::Duration::from_secs(60)),
-  // );
-  // deletion_task
-  //   .await
-  //   .map_err(ApiError::from)
-  //   .context("bad delete")?
-  //   .map_err(ApiError::from)
-  //   .context("bad join")?;
+  // ref: https://github.com/maxcountryman/tower-sessions-stores/blob/main/sqlx-store/examples/postgres.rs
+  /// Get the `tower-sessions` Manager Layer
+  pub(crate) async fn get_session_layer(
+    pool: &DbPool,
+  ) -> ApiResult<tower_sessions::SessionManagerLayer<PostgresStore>> {
+    let session_store = PostgresStore::new(pool.clone());
 
-  let manager = SessionManagerLayer::new(session_store)
+    // TODO: bug, leave minor optimization commented for now
+    // delete expired connections continuously
+    // let deletion_task = tokio::task::spawn(
+    //   session_store.clone().continuously_delete_expired(tokio::time::Duration::from_secs(60)),
+    // );
+    // deletion_task
+    //   .await
+    //   .map_err(ApiError::from)
+    //   .context("bad delete")?
+    //   .map_err(ApiError::from)
+    //   .context("bad join")?;
+
+    let manager = SessionManagerLayer::new(session_store)
     .with_secure(false) // todo
     .with_expiry(Expiry::OnInactivity(tower_sessions::cookie::time::Duration::seconds(10)));
-  Ok(manager)
+    Ok(manager)
+  }
 }

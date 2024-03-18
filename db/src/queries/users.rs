@@ -54,6 +54,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     username,
     password_hash,
     auth_token.clone().unwrap_or("".to_string()),
+    // auth_token,
     auth_token_expiration.unwrap_or(0),
     reset_password_token.clone().unwrap_or("".to_string()),
     reset_password_token_expiration.unwrap_or(0),
