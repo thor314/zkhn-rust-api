@@ -21,7 +21,7 @@ pub type ServerResult<T> = Result<T, ServerError>;
 
 #[shuttle_runtime::main]
 async fn main(
-  #[shuttle_secrets::Secrets] secret_store: shuttle_secrets::SecretStore,
+  #[shuttle_runtime::Secrets] secret_store: shuttle_runtime::SecretStore,
   #[shuttle_shared_db::Postgres] pool: PgPool,
 ) -> shuttle_axum::ShuttleAxum {
   tracing::info!("Starting server...");

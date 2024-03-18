@@ -37,10 +37,7 @@ async fn test_create_user(pool: PgPool) {
   let user_payload = serde_json::to_value(user_payload).unwrap();
   println!("user_payload: {:?}", user_payload);
 
-  let put_request = Request::builder()
-    .uri("/users")
-    .method("PUT")
-    .json(user_payload);
+  let put_request = Request::builder().uri("/users").method("PUT").json(user_payload);
 
   let response = app.oneshot(put_request).await.unwrap();
   println!("response: {:?}", response);
