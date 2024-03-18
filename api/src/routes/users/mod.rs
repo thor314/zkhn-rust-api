@@ -1,3 +1,5 @@
+pub mod payload;
+
 use axum::{
   debug_handler,
   extract::{Path, State},
@@ -5,12 +7,11 @@ use axum::{
   routing, Json, Router,
 };
 use db::models::user::User;
+use payload::UserPayload;
 
-// use sqlx::types::Uuid;
 use crate::{
   auth::{self, assert_authenticated},
   error::{ApiError, RouteError},
-  users::payload::UserPayload,
   ApiResult, AuthSession, SharedState,
 };
 
@@ -24,7 +25,6 @@ pub fn users_router(state: SharedState) -> Router {
 }
 
 pub mod get {
-
   use super::*;
 
   pub async fn get_user(

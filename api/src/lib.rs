@@ -5,43 +5,23 @@
 #![allow(non_snake_case)]
 #![allow(clippy::clone_on_copy)]
 
-mod api;
 mod auth;
-mod comments;
 pub mod error;
+mod routes;
 mod sessions;
 #[cfg(test)] mod tests;
-mod user_votes;
-mod users;
 mod utils;
 
 use anyhow::Context;
-use api::router_internal;
-use axum::{
-  extract::Request,
-  http::StatusCode,
-  response::IntoResponse,
-  routing::{get, post},
-  Router,
-};
+use axum::Router;
 use axum_analytics::Analytics;
-use axum_login::{
-  login_required,
-  tower_sessions::{MemoryStore, SessionManagerLayer},
-  AuthManagerLayerBuilder,
-};
-use comments::comment_router;
 use db::DbPool;
 use error::ApiError;
+use routes::router_internal;
 use sessions::get_session_layer;
-use tower_sessions::{ExpiredDeletion, Expiry};
-use tower_sessions_sqlx_store::PostgresStore;
 use tracing::info;
 
-pub use crate::{
-  auth::{auth_router, AuthSession},
-  user_votes::payload::*,
-};
+pub use crate::auth::{auth_router, AuthSession};
 
 pub type ApiResult<T> = Result<T, ApiError>;
 
@@ -73,4 +53,3 @@ pub async fn router(pool: &DbPool, analytics_key: Option<String>) -> ApiResult<R
 
   Ok(router)
 }
-

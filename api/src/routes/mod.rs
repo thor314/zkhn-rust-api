@@ -1,9 +1,10 @@
 use axum::Router;
 
 use self::users::users_router;
+// use self::users::users_router;
 use crate::SharedState;
 
-pub mod items;
+// pub mod items;
 pub mod users;
 
 // todo: might have to move state into here
