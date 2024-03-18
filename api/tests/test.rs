@@ -10,18 +10,27 @@ use std::borrow::{Borrow, BorrowMut};
 
 use axum::{
   body::Body,
-  http::{Request, StatusCode},
+  extract::connect_info::MockConnectInfo,
+  http::{self, Request, StatusCode},
 };
 use common::*;
+use http_body_util::BodyExt; // for `collect`
 use serde::Serialize;
 use serde_json::json;
 use sqlx::PgPool;
 use tower::ServiceExt;
-use tracing::info;
+use tracing::info; 
 
 #[sqlx::test]
 async fn simple_test_demo(pool: PgPool) {
   let app = api::router(&pool, None).await.expect("failed to build router");
+
+  let get_request = Request::builder().uri("/health").body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(get_request).await.unwrap();
+  println!("response: {:?}", response);
+  assert!(response.status().is_success());
+  let response_body = response.into_body().collect().await.unwrap().to_bytes();
+  assert_eq!(b"ok", &*response_body);
 
   let get_request = Request::builder().uri("/users/username/alice").body(Body::empty()).unwrap();
   let response = app.oneshot(get_request).await.unwrap();
