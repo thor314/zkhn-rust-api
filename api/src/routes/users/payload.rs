@@ -1,7 +1,7 @@
 use db::models::user::User;
 use serde::{Deserialize, Serialize};
 
-use crate::error::{ApiError, PayloadError};
+use crate::error::ApiError;
 
 // todo: sanitize and validate me here
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -13,7 +13,7 @@ pub struct UserPayload {
 }
 
 impl TryFrom<UserPayload> for User {
-  type Error = PayloadError;
+  type Error = ApiError;
 
   fn try_from(value: UserPayload) -> Result<Self, Self::Error> {
     let UserPayload { username, password, email, about } = value;

@@ -44,10 +44,7 @@ use tower_sessions::{MemoryStore, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 use uuid::Uuid;
 
-use crate::{
-  error::{ApiError, RouteError},
-  ApiResult, DbPool, SharedState,
-};
+use crate::{error::ApiError, ApiResult, DbPool, SharedState};
 
 /// Axum extractor for the current user session
 pub type AuthSession = axum_login::AuthSession<Backend>;
@@ -69,7 +66,7 @@ pub fn auth_router(pool: &DbPool, session_layer: &SessionManagerLayer<PostgresSt
 /// Raise an error if user is not logged in
 pub fn assert_authenticated(auth_session: &AuthSession) -> ApiResult<()> {
   if auth_session.user.is_none() {
-    return Err(RouteError::Unauthorized.into());
+    return Err(ApiError::Unauthorized);
   }
   Ok(())
 }

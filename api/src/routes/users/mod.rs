@@ -12,7 +12,7 @@ use tracing::info;
 
 use crate::{
   auth::{self, assert_authenticated},
-  error::{ApiError, RouteError},
+  error::ApiError,
   ApiResult, AuthSession, SharedState,
 };
 
@@ -26,6 +26,8 @@ pub fn users_router(state: SharedState) -> Router {
 }
 
 pub mod get {
+  use anyhow::anyhow;
+
   use super::*;
 
   pub async fn get_user(
@@ -34,8 +36,10 @@ pub mod get {
     // auth_session: AuthSession, // keep commented to denote that no auth required
   ) -> ApiResult<Json<User>> {
     let pool = &state.pool;
-    let user = db::queries::users::get_user(pool, &username).await?.ok_or(RouteError::NotFound)?;
-    info!("user: {user:?}");
+    // let user = db::queries::users::get_user(pool, &username).await?.ok_or(RouteError::NotFound)?;
+    let user = db::queries::users::get_user(pool, &username)
+      .await?
+      .ok_or(ApiError::Anyhow(anyhow!("any")))?;
     Ok(Json(user))
   }
 }

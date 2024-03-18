@@ -21,13 +21,14 @@ use sqlx::PgPool;
 use tower::ServiceExt;
 use tracing::info; 
 
-#[sqlx::test]
+// #[sqlx::test]
+#[sqlx::test(migrations = "../db/migrations")]
 async fn simple_test_demo(pool: PgPool) {
   let app = api::router(&pool, None).await.expect("failed to build router");
 
   let get_request = Request::builder().uri("/health").body(Body::empty()).unwrap();
   let response = app.clone().oneshot(get_request).await.unwrap();
-  println!("response: {:?}", response);
+  // println!("response: {:?}", response);
   assert!(response.status().is_success());
   let response_body = response.into_body().collect().await.unwrap().to_bytes();
   assert_eq!(b"ok", &*response_body);
@@ -36,6 +37,7 @@ async fn simple_test_demo(pool: PgPool) {
   let response = app.oneshot(get_request).await.unwrap();
   println!("response: {:?}", response);
   assert!(response.status().is_server_error());
+  assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
 
 #[sqlx::test]
