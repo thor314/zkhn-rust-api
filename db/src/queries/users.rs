@@ -1,3 +1,4 @@
+use futures::TryFutureExt;
 use sqlx::postgres::PgQueryResult;
 use uuid::Uuid;
 
@@ -97,6 +98,7 @@ pub async fn get_user_items(pool: &DbPool, username: &str) -> DbResult<Vec<Item>
     .map_err(DbError::from)
 }
 
+// todo: make generic to update other user fields
 pub async fn update_user_about(
   pool: &DbPool,
   username: &str,

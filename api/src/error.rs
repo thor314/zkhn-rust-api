@@ -21,11 +21,9 @@ pub enum ApiError {
   Session(tower_sessions::session_store::Error),
   // 400s
   #[status(StatusCode::NOT_FOUND)]
-  NotFound,
+  DbEntryNotFound(String),
   #[status(StatusCode::UNAUTHORIZED)]
-  Unauthorized,
-  // #[status(StatusCode::BAD_REQUEST)]
-  // BadRequest,
+  Unauthorized(String),
   #[status(StatusCode::BAD_REQUEST)]
   Payload(String),
   #[status(StatusCode::UNAUTHORIZED)]
@@ -41,8 +39,8 @@ impl std::fmt::Display for ApiError {
       ApiError::DbError(e) => write!(f, "DbError: {0}", e),
       ApiError::Session(e) => write!(f, "Session: {0}", e),
       ApiError::Payload(e) => write!(f, "Payload {0}", e),
-      ApiError::NotFound => write!(f, "NotFound"),
-      ApiError::Unauthorized => write!(f, "Unauthorized"),
+      ApiError::DbEntryNotFound(e) => write!(f, "NotFound: {0}", e),
+      ApiError::Unauthorized(e) => write!(f, "Unauthorized: {0}", e),
     }
   }
 }

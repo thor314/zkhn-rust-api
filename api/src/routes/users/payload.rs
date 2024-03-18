@@ -34,3 +34,29 @@ impl UserPayload {
     }
   }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserUpdatePayload {
+  pub username: String,
+  pub password: Option<String>,
+  pub email:    Option<String>,
+  pub about:    Option<String>,
+}
+
+impl UserUpdatePayload {
+  pub fn new(
+    username: &str,
+    password: Option<&str>,
+    email: Option<&str>,
+    about: Option<&str>,
+  ) -> Self {
+    {
+      Self {
+        username: username.to_string(),
+        password: password.map(|s| s.to_string()),
+        email:    email.map(|s| s.to_string()),
+        about:    about.map(|s| s.to_string()),
+      }
+    }
+  }
+}

@@ -23,7 +23,7 @@ use tracing::info;
 
 pub use crate::{
   auth::{auth_router, AuthSession},
-  routes::users::payload::UserPayload, // todo: this seems weird
+  routes::users::payload::*,
 };
 
 pub type ApiResult<T> = Result<T, ApiError>;

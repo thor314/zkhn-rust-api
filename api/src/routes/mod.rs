@@ -6,9 +6,7 @@ use crate::SharedState;
 // pub mod items;
 pub mod users;
 
-pub async fn health() -> &'static str {
-  "ok"
-}
+pub async fn health() -> &'static str { "ok" }
 
 // todo: might have to move state into here
 pub(crate) fn router_internal(state: SharedState) -> Router {

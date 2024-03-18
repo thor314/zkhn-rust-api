@@ -66,7 +66,7 @@ pub fn auth_router(pool: &DbPool, session_layer: &SessionManagerLayer<PostgresSt
 /// Raise an error if user is not logged in
 pub fn assert_authenticated(auth_session: &AuthSession) -> ApiResult<()> {
   if auth_session.user.is_none() {
-    return Err(ApiError::Unauthorized);
+    return Err(ApiError::Unauthorized("user is not logged in".to_string()));
   }
   Ok(())
 }
