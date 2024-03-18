@@ -10,45 +10,31 @@ use tokio::task;
 
 #[derive(thiserror::Error, axum_derive_error::ErrorResponse)]
 pub enum ApiError {
-  // #[error(transparent)]
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   TaskJoin(#[from] task::JoinError),
-  // #[error(transparent)]
-  // #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
-  // Io(std::io::Error),
-  // #[error(transparent)]
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   Anyhow(#[from] anyhow::Error),
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
-  // #[error(transparent)]
   PwError(#[from] PasswordError),
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
-  // #[error(transparent)]
   DbError(#[from] DbError),
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
-  // #[error(transparent)]
   Session(tower_sessions::session_store::Error),
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
-  // #[error(transparent)]
   Payload(#[from] PayloadError),
-  // #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
-  // #[error(transparent)]
   Route(#[from] RouteError),
-  // #[allow(dead_code)]
-  // #[error("an unhandled error")]
-  // Unhandled,
 }
 
 impl std::fmt::Display for ApiError {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
-      ApiError::TaskJoin(_) => todo!(),
-      ApiError::Anyhow(_) => todo!(),
-      ApiError::PwError(_) => todo!(),
-      ApiError::DbError(_) => todo!(),
-      ApiError::Session(_) => todo!(),
-      ApiError::Payload(_) => todo!(),
-      ApiError::Route(_) => todo!(),
+      ApiError::TaskJoin(e) => write!(f, "TaskJoin: {0}", e),
+      ApiError::Anyhow(e) => write!(f, "Anyhow: {0}", e),
+      ApiError::PwError(e) => write!(f, "PwError: {0}", e),
+      ApiError::DbError(e) => write!(f, "DbError: {0}", e),
+      ApiError::Session(e) => write!(f, "Session: {0}", e),
+      ApiError::Payload(e) => write!(f, "Payload: {0}", e),
+      ApiError::Route(e) => write!(f, "Route: {0}", e),
     }
   }
 }

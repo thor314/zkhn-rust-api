@@ -8,6 +8,7 @@ use axum::{
 };
 use db::models::user::User;
 use payload::UserPayload;
+use tracing::info;
 
 use crate::{
   auth::{self, assert_authenticated},
@@ -17,7 +18,7 @@ use crate::{
 
 pub fn users_router(state: SharedState) -> Router {
   Router::new()
-    .route("/username", routing::get(get::get_user))
+    .route("/username/:username", routing::get(get::get_user))
     .route("/", routing::put(put::create_user))
     .route("/username/about", routing::post(post::update_user_about))
     .route("/username", routing::delete(delete::delete_user))
@@ -34,6 +35,7 @@ pub mod get {
   ) -> ApiResult<Json<User>> {
     let pool = &state.pool;
     let user = db::queries::users::get_user(pool, &username).await?.ok_or(RouteError::NotFound)?;
+    info!("user: {user:?}");
     Ok(Json(user))
   }
 }

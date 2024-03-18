@@ -13,3 +13,7 @@ members = [
     "db", 
     "server",
 ]
+
+# unoptimized macro compilation for faster dev builds
+[profile.dev.package.sqlx-macros]
+opt-level = 3

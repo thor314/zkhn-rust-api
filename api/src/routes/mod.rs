@@ -1,7 +1,6 @@
 use axum::Router;
 
 use self::users::users_router;
-// use self::users::users_router;
 use crate::SharedState;
 
 // pub mod items;

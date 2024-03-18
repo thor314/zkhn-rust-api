@@ -21,3 +21,16 @@ impl TryFrom<UserPayload> for User {
     Ok(User::new(username, password, email, about))
   }
 }
+
+impl UserPayload {
+  pub fn new(username: &str, password: &str, email: &str, about: Option<&str>) -> Self {
+    {
+      Self {
+        username: username.to_string(),
+        password: password.to_string(),
+        email:    email.to_string(),
+        about:    about.map(|s| s.to_string()),
+      }
+    }
+  }
+}

@@ -21,7 +21,10 @@ use routes::router_internal;
 use sessions::get_session_layer;
 use tracing::info;
 
-pub use crate::auth::{auth_router, AuthSession};
+pub use crate::{
+  auth::{auth_router, AuthSession},
+  routes::users::payload::UserPayload, // todo: this seems weird
+};
 
 pub type ApiResult<T> = Result<T, ApiError>;
 
