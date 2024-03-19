@@ -15,6 +15,8 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # If you have not updated rust recently, you may need to run: 
 rustup update
 # we use the nightly toolchain, specified in rust-toolchain.toml. You should not need to change anything here.
+## May need to run
+rustup default nightly
 
 ### Install cargo-shuttle:
 cargo install cargo-binstall # fast-installer for rust binaries
@@ -33,7 +35,7 @@ If `systemctl status postgresql` does not show active, follow steps 1 and 2:
    `sudo -i -u postgres`
 
 macOS:
-If `brew servicus info postgresql` does not show active, follow steps 1 and 2:
+If `brew services info postgresql` does not show active, follow steps 1 and 2:
 1. Install PostgreSQL
    - Download and install the PostgreSQL installer from https://www.postgresql.org/download/macosx/
    - Or, if you have Homebrew, run `brew install postgresql`
@@ -61,6 +63,8 @@ This step sets up the database.
 cd db
 # if migrating the db for the first time:
 sqlx migrate run
+# May need to do instead:
+sqlx migrate run --database-url postgres://postgres:postgres@localhost:5432/tk-shuttle-zkhn-rust-api
 # if reseting the database:
 sqlx database reset
 cd ..
@@ -75,6 +79,8 @@ cargo shuttle run
 curl 127.0.0.1:8000/health
 # see: ok
 ```
+
+If `cargo shuttle run` gives an error about docker on MacOS, run `brew install --cask docker`, open Docker (GUI) in /Applications, check that docker is running via `docker info`.
 
 See `api/tests` for usage.
 
