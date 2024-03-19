@@ -5,7 +5,7 @@
 <!-- [![Documentation](https://docs.rs/zkhn-rust-api/badge.svg)](https://docs.rs/zkhn-rust-api) -->
 
 ## Run locally
-You will need Rust, `cargo-shuttle`, `sqlx-cli` installed, and to install and configure postgres.
+You will need Rust, `cargo-shuttle`, `sqlx-cli`, Docker, and postgres installed.
 
 ### install
 ```sh
@@ -64,8 +64,6 @@ This step sets up the database.
 cd db
 # if migrating the db for the first time:
 sqlx migrate run
-# May need to do instead:
-sqlx migrate run --database-url postgres://postgres:postgres@localhost:5432/tk-shuttle-zkhn-rust-api
 # if reseting the database:
 sqlx database reset
 cd ..

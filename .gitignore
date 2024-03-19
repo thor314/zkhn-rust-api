@@ -5,7 +5,7 @@ cgt* # ignore instatiations of my test template
 Secrets.toml
 
 # don't leak secret env vars
-.env  
+# .env  
 
 # exclude compiled files and binaries
 debug/
