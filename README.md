@@ -46,6 +46,7 @@ If `brew services info postgresql` does not show active, follow steps 1 and 2:
    `sudo -u postgres psql`
 
 Common steps for both platforms:
+
 4. Create a new PostgreSQL user (optional)
    `createuser --interactive --pwprompt`
 5. Create a new database
