@@ -5,37 +5,81 @@
 <!-- [![Documentation](https://docs.rs/zkhn-rust-api/badge.svg)](https://docs.rs/zkhn-rust-api) -->
 
 ## Run locally
-You will need Rust and `cargo-shuttle` installed.
+You will need Rust, `cargo-shuttle`, `sqlx-cli` installed, and to install and configure postgres.
 
 ### install
 ```sh
+### Rust:
+# If you do not have rust installed:
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# If you have not updated rust recently, you may need to run: 
+rustup update
+# we use the nightly toolchain, specified in rust-toolchain.toml. You should not need to change anything here.
+
+### Install cargo-shuttle:
 cargo install cargo-binstall # fast-installer for rust binaries
-cargo-binstall -y cargo-shuttle 
+cargo binstall -y cargo-shuttle 
+cargo binstall -y sqlx-cli
+```
+
+### Postgres installation and setup
+Debian:
+If `systemctl status postgresql` does not show active, follow steps 1 and 2:
+1. Install PostgreSQL
+   `sudo apt-get install postgresql`
+2. Start the PostgreSQL service
+   `sudo service postgresql start`
+3. Switch to the PostgreSQL user
+   `sudo -i -u postgres`
+
+macOS:
+If `brew servicus info postgresql` does not show active, follow steps 1 and 2:
+1. Install PostgreSQL
+   - Download and install the PostgreSQL installer from https://www.postgresql.org/download/macosx/
+   - Or, if you have Homebrew, run `brew install postgresql`
+2. Start the PostgreSQL service
+   `brew services start postgresql` (if installed via Homebrew)
+   Or, start the service manually if installed via the installer
+3. Switch to the PostgreSQL user
+   `sudo -u postgres psql`
+
+Common steps for both platforms:
+4. Create a new PostgreSQL user (optional)
+   `createuser --interactive --pwprompt`
+5. Create a new database
+   `createdb tk-shuttle-zkhn-rust-api`
+6. Grant privileges to your user, replacing `$YOUR_USER`
+   ```
+   psql tk-shuttle-zkhn-rust-api
+   GRANT ALL PRIVILEGES ON DATABASE tk-shuttle-zkhn-rust-api TO $YOUR_USER;
+   ```
+7. Exit the PostgreSQL prompt `quit` or `ctrl/cmd-d`
+
+### Migrate the db
+This step sets up the database.
+```sh
+cd db
+# if migrating the db for the first time:
+sqlx migrate run
+# if reseting the database:
+sqlx database reset
+cd ..
 ```
 
 ### run the server
+We should now be able to run the server (yay!)
+
 ```sh
-# ensure the database is correctly set up
-sudo -u postgres psql postgres://postgres:postgres@localhost:17360
-
-# from the psql prompt
-> CREATE DATABASE "tk-shuttle-zkhn-rust-api";
-> exit;
-
 cargo shuttle run
 # in another terminal:
 curl 127.0.0.1:8000/health
 # see: ok
 ```
 
-See `api/tests` for examples.
+See `api/tests` for usage.
 
 ## Deploy to Shuttle
 ```sh
-# run locally
-cargo shuttle run
-# deploy
 cargo shuttle project start # only needed the first time
 cargo shuttle deploy
 ```
