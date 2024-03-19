@@ -1,3 +1,4 @@
+use futures::TryFutureExt;
 use sqlx::postgres::PgQueryResult;
 use uuid::Uuid;
 
@@ -14,7 +15,7 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
     .map_err(DbError::from)
 }
 
-pub async fn insert_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
+pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   let mut tx = pool.begin().await?;
 
   let User {
@@ -54,6 +55,7 @@ pub async fn insert_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     username,
     password_hash,
     auth_token.clone().unwrap_or("".to_string()),
+    // auth_token,
     auth_token_expiration.unwrap_or(0),
     reset_password_token.clone().unwrap_or("".to_string()),
     reset_password_token_expiration.unwrap_or(0),
@@ -96,6 +98,7 @@ pub async fn get_user_items(pool: &DbPool, username: &str) -> DbResult<Vec<Item>
     .map_err(DbError::from)
 }
 
+// todo: make generic to update other user fields
 pub async fn update_user_about(
   pool: &DbPool,
   username: &str,

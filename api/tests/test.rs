@@ -1,29 +1,87 @@
+//! documentation for testing with sqlx: https://github.com/launchbadge/sqlx/blob/main/examples/postgres/axum-social-with-tests/tests/user.rs
+//! documentation for testing with axum: https://github.com/tokio-rs/axum/blob/main/examples/testing/src/main.rs
 #![allow(unused_imports)]
 #![allow(dead_code)]
+#![allow(unused_variables)]
+
 mod common;
 
-use std::borrow::BorrowMut;
+use std::borrow::{Borrow, BorrowMut};
 
-use axum::http::{Request, StatusCode};
+use api::UserUpdatePayload;
+use axum::{
+  body::Body,
+  extract::connect_info::MockConnectInfo,
+  http::{self, Request, StatusCode},
+};
 use common::*;
+use db::models::user::User;
+use http_body_util::BodyExt; // for `collect`
+use serde::Serialize;
 use serde_json::json;
 use sqlx::PgPool;
 use tower::ServiceExt;
+use tracing::info;
 
-#[sqlx::test]
-// https://github.com/launchbadge/sqlx/blob/main/examples/postgres/axum-social-with-tests/tests/user.rs
-async fn test_create_user(pool: PgPool) {
-  let mut app = api::api_router(&pool, None).await.expect("failed to build router");
+#[sqlx::test(migrations = "../db/migrations")]
+async fn simple_test_demo(pool: PgPool) {
+  let app = api::router(&pool, None).await.expect("failed to build router");
 
-  let resp1 = app
-      .borrow_mut()
-      // We handle JSON objects directly to sanity check the serialization and deserialization
-      .oneshot(Request::post("/v1/user").json(json! {{
-          "username": "alice",
-          "password": "rustacean since 2015"
-      }}))
-      .await
-      .unwrap();
+  let get_request = Request::builder().uri("/health").body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(get_request).await.unwrap();
+  // println!("response: {:?}", response);
+  assert!(response.status().is_success());
+  let response_body = response.into_body().collect().await.unwrap().to_bytes();
+  assert_eq!(b"ok", &*response_body);
 
-  assert_eq!(resp1.status(), StatusCode::NOT_FOUND);
+  let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
+  let response = app.oneshot(get_request).await.unwrap();
+  println!("response: {:?}", response);
+  assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[sqlx::test(migrations = "../db/migrations")]
+async fn test_user_crud_cycle(pool: PgPool) {
+  let app = api::router(&pool, None).await.expect("failed to build router");
+
+  let user_payload = api::UserPayload::new("alice", "password", "email", None);
+
+  let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
+  let response = app.clone().oneshot(post_request).await.unwrap();
+  // println!("response: {:?}", response);
+  assert_eq!(response.status(), StatusCode::CREATED);
+
+  let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(get_request).await.unwrap();
+  // println!("response: {:?}", response);
+  assert_eq!(response.status(), StatusCode::OK);
+  let user = response.into_body().collect().await.unwrap().to_bytes();
+  let user: User = serde_json::from_slice(&user).unwrap();
+  // println!("user: {:?}", user.about);
+  assert!(user.about.is_none() || user.about.as_ref().unwrap().is_empty());
+
+  let update_payload =
+    UserUpdatePayload::new("alice", Some("password"), Some("email"), Some("about"));
+  let patch = Request::builder().uri("/users").method("PATCH").json(json!(update_payload));
+  let response = app.clone().oneshot(patch).await.unwrap();
+  assert_eq!(response.status(), StatusCode::OK);
+
+  let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(get_request).await.unwrap();
+  // println!("response: {:?}", response);
+  assert_eq!(response.status(), StatusCode::OK);
+  let user = response.into_body().collect().await.unwrap().to_bytes();
+  let user: User = serde_json::from_slice(&user).unwrap();
+  println!("user: {:?}", user.about);
+  assert!(user.about.as_ref().unwrap() == "about");
+
+  let delete = Request::builder().uri("/users/alice").method("DELETE").body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(delete).await.unwrap();
+  // println!("response: {:?}", response);
+  assert_eq!(response.status(), StatusCode::OK);
+
+  let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(get_request).await.unwrap();
+  // println!("response: {:?}", response);
+  assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }

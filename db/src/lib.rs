@@ -14,12 +14,6 @@ mod utils;
 use uuid::Uuid;
 
 pub use crate::error::DbError;
-// use crate::{
-//   models::{
-//     comment::Comment, item::Item, user::User, user_favorite::UserFavorite, user_vote::UserVote,
-//   },
-//   utils::now,
-// };
 
 pub type DbPool = sqlx::postgres::PgPool;
 pub type DbResult<T> = Result<T, DbError>;

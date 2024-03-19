@@ -1,54 +1,46 @@
 //! zkhn-rust-api error types
 // https://docs.rs/thiserror/latest/thiserror/
 
-use axum::http::StatusCode;
+use axum::{
+  http::{status, StatusCode},
+  response::IntoResponse,
+};
 use db::DbError;
-use thiserror::Error;
 use tokio::task;
 
-#[derive(Debug, Error)]
+#[derive(thiserror::Error, axum_derive_error::ErrorResponse)]
 pub enum ApiError {
-  #[error(transparent)]
+  // 500s
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   TaskJoin(#[from] task::JoinError),
-  #[error(transparent)]
-  Io(#[from] std::io::Error),
-  #[error(transparent)]
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   Anyhow(#[from] anyhow::Error),
-  #[error(transparent)]
-  PwError(#[from] PasswordError),
-  #[error(transparent)]
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   DbError(#[from] DbError),
-  #[error(transparent)]
-  Session(#[from] tower_sessions::session_store::Error),
-  #[error(transparent)]
-  Route(#[from] RouteError),
-  #[allow(dead_code)]
-  #[error("an unhandled error")]
-  Unhandled,
-}
-
-#[derive(Error, axum_derive_error::ErrorResponse)]
-pub enum RouteError {
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
+  Session(tower_sessions::session_store::Error),
+  // 400s
   #[status(StatusCode::NOT_FOUND)]
-  NotFound,
+  DbEntryNotFound(String),
   #[status(StatusCode::UNAUTHORIZED)]
-  Unauthorized,
+  Unauthorized(String),
   #[status(StatusCode::BAD_REQUEST)]
-  BadRequest,
+  Payload(String),
+  #[status(StatusCode::UNAUTHORIZED)]
+  PwError(String),
 }
 
-impl std::fmt::Display for RouteError {
+impl std::fmt::Display for ApiError {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
-      RouteError::NotFound => write!(f, "Not Found"),
-      RouteError::Unauthorized => write!(f, "Unauthorized"),
-      RouteError::BadRequest => write!(f, "Bad Request"),
+      ApiError::TaskJoin(e) => write!(f, "TaskJoin: {0}", e),
+      ApiError::Anyhow(e) => write!(f, "Anyhow: {0}", e),
+      ApiError::PwError(e) => write!(f, "PwError: {0}", e),
+      ApiError::DbError(e) => write!(f, "DbError: {0}", e),
+      ApiError::Session(e) => write!(f, "Session: {0}", e),
+      ApiError::Payload(e) => write!(f, "Payload {0}", e),
+      ApiError::DbEntryNotFound(e) => write!(f, "NotFound: {0}", e),
+      ApiError::Unauthorized(e) => write!(f, "Unauthorized: {0}", e),
     }
   }
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum PasswordError {
-  #[error("scrypt error: {0}")]
-  ScryptPwHashError(#[from] scrypt::password_hash::Error),
 }

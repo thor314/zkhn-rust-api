@@ -21,7 +21,7 @@ pub type ServerResult<T> = Result<T, ServerError>;
 
 #[shuttle_runtime::main]
 async fn main(
-  #[shuttle_secrets::Secrets] secret_store: shuttle_secrets::SecretStore,
+  #[shuttle_runtime::Secrets] secret_store: shuttle_runtime::SecretStore,
   #[shuttle_shared_db::Postgres] pool: PgPool,
 ) -> shuttle_axum::ShuttleAxum {
   tracing::info!("Starting server...");
@@ -32,8 +32,7 @@ async fn main(
 
   tracing::info!("Building middleware layers...");
   let analytics_key = secret_store.get("ANALYTICS_API_KEY");
-  let router =
-    api::api_router(&pool, analytics_key).await.context("failed to build router").unwrap();
+  let router = api::router(&pool, analytics_key).await.context("failed to build router").unwrap();
 
   tracing::info!("🚀🚀🚀");
   Ok(router.into())
