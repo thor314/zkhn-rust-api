@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{
   error::DbError,
   models::{comment::Comment, item::Item, user::User},
-  About, DbPool, DbResult,
+  About, DbPool, DbResult, Email,
 };
 
 pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
@@ -17,7 +17,7 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
             auth_token_expiration, 
             reset_password_token, 
             reset_password_token_expiration, 
-            email, 
+            email as \"email: Email\", 
             created, 
             karma, 
             about as \"about: About\", 
@@ -76,10 +76,10 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     auth_token_expiration,
     reset_password_token,
     reset_password_token_expiration,
-    email,
+    email.map(|s| s.0),
     created.0,
     karma,
-    about.map(|a| a.0),
+    about.map(|s| s.0),
     show_dead,
     is_moderator,
     shadow_banned,

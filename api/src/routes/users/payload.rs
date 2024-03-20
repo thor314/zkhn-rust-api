@@ -1,4 +1,4 @@
-use db::models::user::User;
+use db::{models::user::User, About, Email, Username};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 
@@ -17,32 +17,17 @@ pub struct UserPayload {
   pub about:    Option<About>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
-#[garde(transparent)]
-pub struct About(#[garde(ascii, length(min = 0, max = 400))] pub String);
-
+// todo: move somewhere
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 #[garde(transparent)]
 pub struct Password(#[garde(ascii, length(min = 8, max = 25))] pub String);
-
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
-#[garde(transparent)]
-pub struct Username(#[garde(ascii, length(min = 3, max = 25))] pub String);
-
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
-#[garde(transparent)]
-pub struct Email(#[garde(email)] pub String);
-
-impl std::fmt::Display for Email {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "{}", self.0) }
-}
 
 impl TryFrom<UserPayload> for User {
   type Error = ApiError;
 
   fn try_from(value: UserPayload) -> Result<Self, Self::Error> {
     let UserPayload { username, password, email, about } = value;
-    Ok(User::new(username.0, password.0, email.map(|s| s.0), about.map(|s| s.0)))
+    Ok(User::new(username.0, password.0, email, about))
   }
 }
 

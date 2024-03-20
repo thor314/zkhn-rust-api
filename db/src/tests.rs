@@ -10,6 +10,7 @@ use uuid::Uuid;
 use crate::{
   models::{comment::Comment, item::Item, user::User},
   queries::*,
+  Email,
 };
 
 static INIT: std::sync::Once = std::sync::Once::new();
@@ -33,7 +34,7 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
     User::new(
       format!("testuser{}", i),
       "testpassword".to_string(),
-      Some("testemail".to_string()),
+      Some(Email("testemail".to_string())),
       None,
     )
   });

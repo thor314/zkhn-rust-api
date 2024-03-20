@@ -15,7 +15,7 @@ use super::{
 use crate::{
   error::{DbError, PasswordError},
   utils::now,
-  About, DbPool,
+  About, DbPool, Email, Username,
 };
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
@@ -33,8 +33,7 @@ pub struct User {
   /// Expiration of reset password token
   pub reset_password_token_expiration: Option<i64>,
   /// User email
-  // todo: email wrapper
-  pub email: Option<String>,
+  pub email: Option<Email>,
   /// Account creation timestamp
   pub created: crate::utils::Timestamp,
   /// User karma score
@@ -54,14 +53,13 @@ pub struct User {
 impl User {
   pub fn new(
     username: String,
-    password: String,
-    email: Option<String>,
-    about: Option<String>,
+    password_hash: String,
+    email: Option<Email>,
+    about: Option<About>,
   ) -> Self {
-    let about = about.map(About); // todo: move to payload
     User {
       username,
-      password_hash: password,
+      password_hash, // todo: hash password
       auth_token: None,
       auth_token_expiration: None,
       reset_password_token: None,
