@@ -1,6 +1,6 @@
 use futures::TryFutureExt;
 use sqlx::postgres::PgQueryResult;
-use tracing::instrument;
+use tracing::{info, instrument, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -9,8 +9,8 @@ use crate::{
   About, DbPool, DbResult, Email, Username,
 };
 
-#[instrument]
 pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
+  info!("get_user function called w username: {username}");
   sqlx::query_as!(
     User,
     "SELECT username, 
@@ -35,8 +35,8 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
   .map_err(DbError::from)
 }
 
-#[instrument]
 pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
+  info!("create_user with: {new_user:?}");
   let mut tx = pool.begin().await?;
 
   let User {
@@ -91,29 +91,31 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   .execute(&mut *tx)
   .await;
 
-  if let Err(e) = result {
+  if let Err(e) = &result {
     // unwrap is safe; error is always db error kinded
     if e.as_database_error().expect("expected db error").is_unique_violation() {
       tx.rollback().await?;
-      eprintln!("user already exists");
+      warn!("user already exists");
       return Ok(());
+    } else {
+      tracing::error!("error creating user: {e}");
     }
   }
+  let _ = result?;
 
   tx.commit().await?;
   // todo
   Ok(())
 }
 
-#[instrument]
 pub async fn delete_user(pool: &DbPool, username: &str) -> DbResult<()> {
   let result =
     sqlx::query!("DELETE FROM users WHERE username = $1", username).execute(pool).await?;
 
   if result.rows_affected() == 0 {
-    eprintln!("user does not exist");
+    warn!("user {username} does not exist");
   } else {
-    println!("user deleted");
+    info!("user {username} deleted");
   }
 
   Ok(())
