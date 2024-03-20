@@ -26,6 +26,8 @@ pub enum ApiError {
   Unauthorized(String),
   #[status(StatusCode::BAD_REQUEST)]
   Payload(String),
+  #[status(StatusCode::BAD_REQUEST)]
+  GardePayload(#[from] garde::Report),
   #[status(StatusCode::UNAUTHORIZED)]
   PwError(String),
 }
@@ -41,6 +43,7 @@ impl std::fmt::Display for ApiError {
       ApiError::Payload(e) => write!(f, "Payload {0}", e),
       ApiError::DbEntryNotFound(e) => write!(f, "NotFound: {0}", e),
       ApiError::Unauthorized(e) => write!(f, "Unauthorized: {0}", e),
+      ApiError::GardePayload(e) => write!(f, "GardePayload: {0}", e),
     }
   }
 }

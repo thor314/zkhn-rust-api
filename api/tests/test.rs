@@ -44,7 +44,8 @@ async fn simple_test_demo(pool: PgPool) {
 async fn test_user_crud_cycle(pool: PgPool) {
   let app = api::router(&pool, None).await.expect("failed to build router");
 
-  let user_payload = api::UserPayload::new("alice", "password", Some("email"), None);
+  let user_payload =
+    api::UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
 
   let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
   let response = app.clone().oneshot(post_request).await.unwrap();
