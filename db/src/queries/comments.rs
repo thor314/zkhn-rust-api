@@ -46,7 +46,7 @@ pub async fn insert_comment(
     points,
     created,
     dead,
-  } = new_comment;
+  } = new_comment.clone();
 
   sqlx::query!(
     "INSERT INTO comments 
@@ -70,7 +70,7 @@ pub async fn insert_comment(
     comment_text,
     is_parent,
     root_comment_id,
-    parent_comment_id.map_or(Uuid::nil(), Uuid::from),
+    parent_comment_id,
     children_count,
     points,
     created.0,

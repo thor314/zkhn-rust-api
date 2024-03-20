@@ -30,7 +30,12 @@ failed",
 #[sqlx::test]
 async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   let mut users = (1i32..).map(|i| {
-    User::new(format!("testuser{}", i), "testpassword".to_string(), "testemail".to_string(), None)
+    User::new(
+      format!("testuser{}", i),
+      "testpassword".to_string(),
+      Some("testemail".to_string()),
+      None,
+    )
   });
   let user = users.next().unwrap();
   create_user(&pool, &user).await.unwrap();

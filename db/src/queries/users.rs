@@ -33,7 +33,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     is_moderator,
     shadow_banned,
     banned,
-  } = new_user;
+  } = new_user.clone();
 
   sqlx::query!(
     "INSERT INTO users
@@ -54,15 +54,14 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
     username,
     password_hash,
-    auth_token.clone().unwrap_or("".to_string()),
-    // auth_token,
-    auth_token_expiration.unwrap_or(0),
-    reset_password_token.clone().unwrap_or("".to_string()),
-    reset_password_token_expiration.unwrap_or(0),
+    auth_token,
+    auth_token_expiration,
+    reset_password_token,
+    reset_password_token_expiration,
     email,
     created.0,
     karma,
-    about.clone().unwrap_or("".to_string()),
+    about,
     show_dead,
     is_moderator,
     shadow_banned,

@@ -8,7 +8,7 @@ use crate::error::ApiError;
 pub struct UserPayload {
   pub username: String,
   pub password: String,
-  pub email:    String,
+  pub email:    Option<String>,
   pub about:    Option<String>,
 }
 
@@ -23,14 +23,12 @@ impl TryFrom<UserPayload> for User {
 }
 
 impl UserPayload {
-  pub fn new(username: &str, password: &str, email: &str, about: Option<&str>) -> Self {
-    {
-      Self {
-        username: username.to_string(),
-        password: password.to_string(),
-        email:    email.to_string(),
-        about:    about.map(|s| s.to_string()),
-      }
+  pub fn new(username: &str, password: &str, email: Option<&str>, about: Option<&str>) -> Self {
+    Self {
+      username: username.to_string(),
+      password: password.to_string(),
+      email:    email.map(|s| s.to_string()),
+      about:    about.map(|s| s.to_string()),
     }
   }
 }

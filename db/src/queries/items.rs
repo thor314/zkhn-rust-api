@@ -30,7 +30,7 @@ pub async fn insert_item(pool: &DbPool, new_item: &Item) -> DbResult<()> {
     item_category,
     created,
     dead,
-  } = new_item;
+  } = new_item.clone();
 
   sqlx::query!(
     "INSERT INTO items
@@ -52,9 +52,9 @@ pub async fn insert_item(pool: &DbPool, new_item: &Item) -> DbResult<()> {
     username,
     title,
     item_type,
-    url.clone().unwrap_or("".to_string()),
-    domain.clone().unwrap_or("".to_string()),
-    text.clone().unwrap_or("".to_string()),
+    url,
+    domain,
+    text,
     points,
     score,
     comment_count,

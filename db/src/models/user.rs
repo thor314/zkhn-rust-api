@@ -36,7 +36,7 @@ pub struct User {
   pub reset_password_token_expiration: Option<i64>,
   /// User email
   // todo: email wrapper
-  pub email: String,
+  pub email: Option<String>,
   /// Account creation timestamp
   pub created: crate::utils::Timestamp,
   /// User karma score
@@ -54,7 +54,12 @@ pub struct User {
 }
 
 impl User {
-  pub fn new(username: String, password: String, email: String, about: Option<String>) -> Self {
+  pub fn new(
+    username: String,
+    password: String,
+    email: Option<String>,
+    about: Option<String>,
+  ) -> Self {
     User {
       username,
       password_hash: password,

@@ -1,5 +1,17 @@
+//! Routes:
+//! - create-new-user
+//! - login-user
+//! - authenticate-user
+//! - logout-user
+//! - logout-user-clear-cookies
+//! - reset-user-password
+//! - get-user-profile-data
+//! - update-user-profile-data
+//! - change-user-password (todo: diff reset password?)
+
 pub mod payload;
 
+use anyhow::anyhow;
 use axum::{
   debug_handler,
   extract::{Path, State},
@@ -26,8 +38,6 @@ pub fn users_router(state: SharedState) -> Router {
 }
 
 pub mod get {
-  use anyhow::anyhow;
-
   use super::*;
 
   /// If `username` exists, return the User. Otherwise, return NotFound.

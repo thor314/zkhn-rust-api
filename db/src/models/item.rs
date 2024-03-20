@@ -12,7 +12,7 @@ use crate::{
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
 /// Comments on a post
-#[derive(sqlx::FromRow, Debug)]
+#[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Item {
   pub id:            Uuid,
   pub username:      String,

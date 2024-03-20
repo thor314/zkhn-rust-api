@@ -58,25 +58,33 @@ Common steps for both platforms:
    ```
 7. Exit the PostgreSQL prompt `quit` or `ctrl/cmd-d`
 
-### Migrate the db
-This step sets up the database.
-```sh
-cd db
-# if migrating the db for the first time:
-sqlx migrate run
-# if reseting the database:
-sqlx database reset
-cd ..
-```
 
 ### run the server
 We should now be able to run the server (yay!)
 
 ```sh
 cargo shuttle run
+
 # in another terminal:
 curl 127.0.0.1:8000/health
-# see: ok
+# expect: ok
+
+# verify that we can create a user:
+curl -X POST \
+     -H "Content-Type: application/json" \
+     -d '{
+           "username": "alice",
+           "password": "bob_is_lame",
+           "email": "alice@example.com",
+           "about": "This is an about string" 
+         }' \
+     http://localhost:8000/users
+
+# now get the user:
+curl -X GET http://localhost:8000/users/alice
+
+# expect:
+# {"username":"alice", ... }
 ```
 
 If `cargo shuttle run` gives an error about docker on MacOS, run `brew install --cask docker`, open Docker (GUI) in /Applications, check that docker is running via `docker info`.

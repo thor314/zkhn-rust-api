@@ -13,7 +13,7 @@ use crate::{
 const MIN_POINTS: i32 = -4;
 
 /// Comments on a post
-#[derive(sqlx::FromRow, Debug, Serialize, Encode)]
+#[derive(sqlx::FromRow, Debug, Serialize, Encode, Clone)]
 pub struct Comment {
   /// the unique identifier given to each comment in the form of a randomly generated string
   pub id:                Uuid, // Assuming UUIDs for unique identifiers, common in SQL databases
