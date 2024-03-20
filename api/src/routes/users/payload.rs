@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error::ApiError, ApiResult};
 
-// todo: sanitize and validate me here
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct UserPayload {
   #[garde(dive)]
@@ -17,15 +16,11 @@ pub struct UserPayload {
   pub about:    Option<About>,
 }
 
-// todo: move somewhere
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
-#[garde(transparent)]
-pub struct Password(#[garde(ascii, length(min = 8, max = 25))] pub String);
-
 impl TryFrom<UserPayload> for User {
   type Error = ApiError;
 
   fn try_from(value: UserPayload) -> Result<Self, Self::Error> {
+    value.validate(&())?;
     let UserPayload { username, password, email, about } = value;
     Ok(User::new(username.0, password.0, email, about))
   }
@@ -39,24 +34,25 @@ impl UserPayload {
     about: Option<&str>,
   ) -> ApiResult<Self> {
     let username = Username(username.to_string());
-    username.validate(&())?;
     let password = Password(password.to_string());
-    password.validate(&())?;
     let email = email.map(|s| Email(s.to_string()));
-    email.validate(&())?;
     let about = about.map(|s| About(s.to_string()));
-    about.validate(&())?;
-
-    Ok(Self { username, password, email, about })
+    let payload = Self { username, password, email, about };
+    payload.validate(&())?;
+    Ok(payload)
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct UserUpdatePayload {
-  pub username: String,
-  pub password: Option<String>,
-  pub email:    Option<String>,
-  pub about:    Option<String>,
+  #[garde(dive)]
+  pub username: Username,
+  #[garde(dive)]
+  pub password: Option<Password>,
+  #[garde(dive)]
+  pub email:    Option<Email>,
+  #[garde(dive)]
+  pub about:    Option<About>,
 }
 
 impl UserUpdatePayload {
@@ -65,14 +61,18 @@ impl UserUpdatePayload {
     password: Option<&str>,
     email: Option<&str>,
     about: Option<&str>,
-  ) -> Self {
-    {
-      Self {
-        username: username.to_string(),
-        password: password.map(|s| s.to_string()),
-        email:    email.map(|s| s.to_string()),
-        about:    about.map(|s| s.to_string()),
-      }
-    }
+  ) -> ApiResult<Self> {
+    let username = Username(username.to_string());
+    let password = password.map(|s| Password(s.to_string()));
+    let email = email.map(|s| Email(s.to_string()));
+    let about = about.map(|s| About(s.to_string()));
+    let payload = Self { username, password, email, about };
+    payload.validate(&())?;
+
+    Ok(payload)
   }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[garde(transparent)]
+pub struct Password(#[garde(ascii, length(min = 8, max = 25))] pub String);

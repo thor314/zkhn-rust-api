@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{
   error::DbError,
   models::{comment::Comment, item::Item, user::User},
-  About, DbPool, DbResult, Email,
+  About, DbPool, DbResult, Email, Username,
 };
 
 pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
@@ -118,10 +118,10 @@ pub async fn get_user_items(pool: &DbPool, username: &str) -> DbResult<Vec<Item>
 // todo: make generic to update other user fields
 pub async fn update_user_about(
   pool: &DbPool,
-  username: &str,
-  about: &str,
+  username: &Username,
+  about: &About,
 ) -> DbResult<PgQueryResult> {
-  sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about, username)
+  sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about.0, username.0)
     .execute(pool)
     .await
     .map_err(DbError::from)

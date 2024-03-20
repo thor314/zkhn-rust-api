@@ -82,7 +82,7 @@ pub mod patch {
     // auth_session: AuthSession,
     Json(payload): Json<UserUpdatePayload>,
   ) -> ApiResult<StatusCode> {
-    println!("username: {}", payload.username);
+    println!("username: {:?}", payload.username);
     // assert_authenticated(&auth_session)?;
 
     // todo: validate input

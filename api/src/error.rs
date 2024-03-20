@@ -6,6 +6,7 @@ use axum::{
   response::IntoResponse,
 };
 use db::DbError;
+use serde::Serialize;
 use tokio::task;
 
 #[derive(thiserror::Error, axum_derive_error::ErrorResponse)]

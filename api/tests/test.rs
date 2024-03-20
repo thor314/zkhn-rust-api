@@ -62,7 +62,8 @@ async fn test_user_crud_cycle(pool: PgPool) {
   assert!(user.about.is_none() || user.about.as_ref().unwrap().0.is_empty());
 
   let update_payload =
-    UserUpdatePayload::new("alice", Some("password"), Some("email"), Some("about"));
+    UserUpdatePayload::new("alice", Some("password"), Some("email@email.com"), Some("about"))
+      .unwrap();
   let patch = Request::builder().uri("/users").method("PATCH").json(json!(update_payload));
   let response = app.clone().oneshot(patch).await.unwrap();
   assert_eq!(response.status(), StatusCode::OK);

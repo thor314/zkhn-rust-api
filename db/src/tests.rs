@@ -10,7 +10,7 @@ use uuid::Uuid;
 use crate::{
   models::{comment::Comment, item::Item, user::User},
   queries::*,
-  Email,
+  About, Email, Username,
 };
 
 static INIT: std::sync::Once = std::sync::Once::new();
@@ -43,10 +43,10 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   let gotten_user = get_user(&pool, &user.username).await.unwrap().unwrap();
   assert_eq!(user.username, gotten_user.username);
 
-  let about = "testabout".to_string();
-  update_user_about(&pool, &user.username, &about).await.unwrap();
+  let about = About("testabout".to_string());
+  update_user_about(&pool, &Username(user.username.clone()), &about).await.unwrap();
   let gotten_about = get_user(&pool, &user.username).await.unwrap().unwrap().about.unwrap();
-  assert_eq!(gotten_about.0, about);
+  assert_eq!(gotten_about.0, about.0);
 
   let user_items = get_user_items(&pool, &user.username).await.unwrap();
   assert!(user_items.is_empty());
