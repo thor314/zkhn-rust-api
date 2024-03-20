@@ -53,7 +53,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     banned,
   } = new_user.clone();
 
-  sqlx::query!(
+  let result = sqlx::query!(
     "INSERT INTO users
     ( username,
     password_hash,
@@ -86,7 +86,16 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     banned,
   )
   .execute(&mut *tx)
-  .await?;
+  .await;
+
+  if let Err(e) = result {
+    // unwrap is safe; error is always db error kinded
+    if e.as_database_error().expect("expected db error").is_unique_violation() {
+      tx.rollback().await?;
+      eprintln!("user already exists");
+      return Ok(());
+    }
+  }
 
   tx.commit().await?;
   // todo
