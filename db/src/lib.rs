@@ -11,6 +11,8 @@ pub mod queries;
 #[cfg(test)] mod tests;
 mod utils;
 
+use std::fmt;
+
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 use sqlx::{prelude::Type, Decode, Encode};
@@ -35,6 +37,10 @@ pub struct About(#[garde(ascii, length(min = 0, max = 400))] pub String);
 #[garde(transparent)]
 #[repr(transparent)]
 pub struct Username(#[garde(ascii, length(min = 3, max = 25))] pub String);
+
+impl fmt::Display for Username {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", self.0) }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
 #[garde(transparent)]

@@ -16,7 +16,7 @@ use crate::{error::DbError, utils::now, About, DbPool, Email, Username};
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
 pub struct User {
-  pub username: String,
+  pub username: Username,
   /// Hashed password
   pub password_hash: String,
   // todo: oauth
@@ -48,7 +48,7 @@ pub struct User {
 
 impl User {
   pub fn new(
-    username: String,
+    username: Username,
     password_hash: String,
     email: Option<Email>,
     about: Option<About>,

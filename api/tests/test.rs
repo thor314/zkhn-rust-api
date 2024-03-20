@@ -111,5 +111,4 @@ async fn test_user_login_logout(pool: PgPool) {
   //   .uri("/users/logout")
   //   .method("POST")
   //   .json(json!({"username": "alice"}));
-
 }

@@ -4,7 +4,7 @@ use crate::{
   error::DbError,
   models::{user_favorite::UserFavorite, user_vote::UserVote},
   utils::now,
-  DbPool, DbResult,
+  DbPool, DbResult, Username,
 };
 
 pub async fn get_user_favorite_by_username_and_item_id(
@@ -14,7 +14,7 @@ pub async fn get_user_favorite_by_username_and_item_id(
 ) -> DbResult<Option<UserFavorite>> {
   sqlx::query_as!(
     UserFavorite,
-    "SELECT username, item_type, item_id, date
+    "SELECT username as \"username: Username\", item_type, item_id, date
        FROM user_favorites WHERE item_id = $1 and username = $2",
     item_id,
     username

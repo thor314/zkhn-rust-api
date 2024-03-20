@@ -82,7 +82,7 @@ impl From<User> for UserAuthWrapper {
 impl AuthUser for UserAuthWrapper {
   type Id = String;
 
-  fn id(&self) -> Self::Id { self.0.username.clone() }
+  fn id(&self) -> Self::Id { self.0.username.0.clone() }
 
   // todo: this should probably be a session cookie or something, not the password
   fn session_auth_hash(&self) -> &[u8] { self.0.password_hash.as_bytes() }

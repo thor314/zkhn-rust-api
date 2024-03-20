@@ -32,7 +32,7 @@ failed",
 async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   let mut users = (1i32..).map(|i| {
     User::new(
-      format!("testuser{}", i),
+      Username(format!("testuser{}", i)),
       "testpassword".to_string(),
       Some(Email("testemail".to_string())),
       None,
@@ -40,20 +40,20 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   });
   let user = users.next().unwrap();
   create_user(&pool, &user).await.unwrap();
-  let gotten_user = get_user(&pool, &user.username).await.unwrap().unwrap();
+  let gotten_user = get_user(&pool, &user.username.0).await.unwrap().unwrap();
   assert_eq!(user.username, gotten_user.username);
 
   let about = About("testabout".to_string());
-  update_user_about(&pool, &Username(user.username.clone()), &about).await.unwrap();
-  let gotten_about = get_user(&pool, &user.username).await.unwrap().unwrap().about.unwrap();
+  update_user_about(&pool, &user.username.0.clone(), &about.0).await.unwrap();
+  let gotten_about = get_user(&pool, &user.username.0).await.unwrap().unwrap().about.unwrap();
   assert_eq!(gotten_about.0, about.0);
 
-  let user_items = get_user_items(&pool, &user.username).await.unwrap();
+  let user_items = get_user_items(&pool, &user.username.0).await.unwrap();
   assert!(user_items.is_empty());
 
   let mut items = (1i32..).map(|i| {
     Item::new(
-      user.username.clone(),
+      user.username.0.clone(),
       format!("testtitle{}", i),
       "news".to_string(),
       true,
@@ -74,7 +74,7 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   // todo: try to insert a comment
   let mut comments = (1i32..).map(|i| {
     Comment::new(
-      user.username.clone(),
+      user.username.0.clone(),
       item.id,
       item.title.clone(),
       true,
@@ -97,8 +97,8 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   let gotten_item = get_item(&pool, item.id).await.unwrap();
   assert!(gotten_item.is_none());
 
-  delete_user(&pool, &user.username).await.unwrap();
-  let gotten_user = get_user(&pool, &user.username).await.unwrap();
+  delete_user(&pool, &user.username.0).await.unwrap();
+  let gotten_user = get_user(&pool, &user.username.0).await.unwrap();
   assert!(gotten_user.is_none());
 
   // todo: test insert comment for user fails if user does not exist

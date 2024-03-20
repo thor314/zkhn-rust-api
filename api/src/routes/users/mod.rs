@@ -120,7 +120,7 @@ pub mod post {
     // user.auth_token = None;
     // user.auth_token_expiration = None;
     // todo update the user in the db
-    db::queries::logout_user(&state.pool, &Username(user.username)).await?;
+    db::queries::logout_user(&state.pool, &user.username.0).await?;
     Ok(())
   }
 }
@@ -140,8 +140,12 @@ mod put {
     // assert_authenticated(&auth_session)?;
 
     // todo: validate input
-    db::queries::users::update_user_about(&state.pool, &payload.username, &payload.about.unwrap())
-      .await?;
+    db::queries::users::update_user_about(
+      &state.pool,
+      &payload.username.0,
+      &payload.about.map(|s| s.0).unwrap(),
+    )
+    .await?;
     Ok(StatusCode::OK)
   }
 }

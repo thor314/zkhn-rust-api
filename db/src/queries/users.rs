@@ -13,7 +13,7 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
   info!("get_user function called w username: {username}");
   sqlx::query_as!(
     User,
-    "SELECT username, 
+    "SELECT username as \"username: Username\", 
             password_hash, 
             auth_token, 
             auth_token_expiration, 
@@ -75,7 +75,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     shadow_banned,
     banned
   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
-    username,
+    username.0,
     password_hash,
     auth_token,
     auth_token_expiration,
@@ -140,22 +140,31 @@ pub async fn get_user_items(pool: &DbPool, username: &str) -> DbResult<Vec<Item>
 // todo: make generic to update other user fields
 pub async fn update_user_about(
   pool: &DbPool,
-  username: &Username,
-  about: &About,
+  username: &str,
+  about: &str,
 ) -> DbResult<PgQueryResult> {
-  sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about.0, username.0)
+  sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about, username)
     .execute(pool)
     .await
     .map_err(DbError::from)
 }
 
+// todo
+pub async fn login_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResult> {
+  // sqlx::query!("UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE username =
+  // $1", username.0)   .execute(pool)
+  //   .await
+  //   .map_err(DbError::from)
+  todo!()
+}
+
 /// Set the user's auth token and expiration in the database to `None`.
-pub async fn logout_user(
-  pool: &DbPool,
-  username: &Username,
-) -> DbResult<PgQueryResult> {
-  sqlx::query!("UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE username = $1", username.0)
-    .execute(pool)
-    .await
-    .map_err(DbError::from)
+pub async fn logout_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResult> {
+  sqlx::query!(
+    "UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE username = $1",
+    username
+  )
+  .execute(pool)
+  .await
+  .map_err(DbError::from)
 }
