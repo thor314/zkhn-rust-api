@@ -11,6 +11,9 @@ pub mod queries;
 #[cfg(test)] mod tests;
 mod utils;
 
+use garde::Validate;
+use serde::{Deserialize, Serialize};
+use sqlx::{prelude::Type, Decode, Encode};
 use uuid::Uuid;
 
 pub use crate::error::DbError;
@@ -21,4 +24,29 @@ pub type DbResult<T> = Result<T, DbError>;
 pub async fn migrate(pool: &DbPool) -> Result<(), DbError> {
   sqlx::migrate!("../db/migrations").run(pool).await?;
   Ok(())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, sqlx::Type)]
+#[garde(transparent)]
+#[repr(transparent)]
+pub struct About(#[garde(ascii, length(min = 0, max = 400))] pub String);
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, sqlx::Type)]
+#[garde(transparent)]
+#[repr(transparent)]
+pub struct Password(#[garde(ascii, length(min = 8, max = 25))] pub String);
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, PartialEq, Type)]
+#[garde(transparent)]
+#[repr(transparent)]
+// #[sqlx(type_name = "username")]
+pub struct Username(#[garde(ascii, length(min = 3, max = 25))] pub String);
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, sqlx::Type)]
+#[garde(transparent)]
+#[repr(transparent)]
+pub struct Email(#[garde(email)] pub String);
+
+impl std::fmt::Display for Email {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "{}", self.0) }
 }

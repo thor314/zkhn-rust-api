@@ -6,7 +6,6 @@ use scrypt::{
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
 use uuid::Uuid;
-use validator::{Validate, ValidationError};
 
 use super::{
   user_favorite::UserFavorite,
@@ -16,12 +15,11 @@ use super::{
 use crate::{
   error::{DbError, PasswordError},
   utils::now,
-  DbPool,
+  About, DbPool,
 };
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
 pub struct User {
-  // #[validate(custom(function = crate::utils::validate_username))] // todo move to payload
   pub username: String,
   /// Hashed password
   pub password_hash: String,
@@ -42,7 +40,7 @@ pub struct User {
   /// User karma score
   pub karma: i32,
   /// User biography
-  pub about: Option<String>,
+  pub about: Option<About>,
   /// Flag to show dead posts
   pub show_dead: bool,
   /// Is user a moderator
@@ -60,6 +58,7 @@ impl User {
     email: Option<String>,
     about: Option<String>,
   ) -> Self {
+    let about = about.map(About); // todo: move to payload
     User {
       username,
       password_hash: password,

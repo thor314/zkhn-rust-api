@@ -5,14 +5,32 @@ use uuid::Uuid;
 use crate::{
   error::DbError,
   models::{comment::Comment, item::Item, user::User},
-  DbPool, DbResult,
+  About, DbPool, DbResult,
 };
 
 pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
-  sqlx::query_as!(User, "SELECT * FROM users WHERE username = $1", username)
-    .fetch_optional(pool)
-    .await
-    .map_err(DbError::from)
+  sqlx::query_as!(
+    User,
+    "SELECT username, 
+            password_hash, 
+            auth_token, 
+            auth_token_expiration, 
+            reset_password_token, 
+            reset_password_token_expiration, 
+            email, 
+            created, 
+            karma, 
+            about as \"about: About\", 
+            show_dead, 
+            is_moderator, 
+            shadow_banned, 
+            banned 
+     FROM users WHERE username = $1",
+    username
+  )
+  .fetch_optional(pool)
+  .await
+  .map_err(DbError::from)
 }
 
 pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
@@ -61,7 +79,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     email,
     created.0,
     karma,
-    about,
+    about.map(|a| a.0),
     show_dead,
     is_moderator,
     shadow_banned,

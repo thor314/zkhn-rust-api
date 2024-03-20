@@ -59,7 +59,7 @@ async fn test_user_crud_cycle(pool: PgPool) {
   let user = response.into_body().collect().await.unwrap().to_bytes();
   let user: User = serde_json::from_slice(&user).unwrap();
   // println!("user: {:?}", user.about);
-  assert!(user.about.is_none() || user.about.as_ref().unwrap().is_empty());
+  assert!(user.about.is_none() || user.about.as_ref().unwrap().0.is_empty());
 
   let update_payload =
     UserUpdatePayload::new("alice", Some("password"), Some("email"), Some("about"));
@@ -74,7 +74,7 @@ async fn test_user_crud_cycle(pool: PgPool) {
   let user = response.into_body().collect().await.unwrap().to_bytes();
   let user: User = serde_json::from_slice(&user).unwrap();
   println!("user: {:?}", user.about);
-  assert!(user.about.as_ref().unwrap() == "about");
+  assert!(user.about.as_ref().unwrap().0 == "about");
 
   let delete = Request::builder().uri("/users/alice").method("DELETE").body(Body::empty()).unwrap();
   let response = app.clone().oneshot(delete).await.unwrap();
