@@ -1,5 +1,6 @@
 use futures::TryFutureExt;
 use sqlx::postgres::PgQueryResult;
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
@@ -8,6 +9,7 @@ use crate::{
   About, DbPool, DbResult, Email, Username,
 };
 
+#[instrument]
 pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
   sqlx::query_as!(
     User,
@@ -33,6 +35,7 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
   .map_err(DbError::from)
 }
 
+#[instrument]
 pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   let mut tx = pool.begin().await?;
 
@@ -102,12 +105,18 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   Ok(())
 }
 
+#[instrument]
 pub async fn delete_user(pool: &DbPool, username: &str) -> DbResult<()> {
-  sqlx::query!("DELETE FROM users WHERE username = $1", username)
-    .execute(pool)
-    .await
-    .map_err(DbError::from)
-    .map(|_| ())
+  let result =
+    sqlx::query!("DELETE FROM users WHERE username = $1", username).execute(pool).await?;
+
+  if result.rows_affected() == 0 {
+    eprintln!("user does not exist");
+  } else {
+    println!("user deleted");
+  }
+
+  Ok(())
 }
 
 pub async fn get_user_comments(pool: &DbPool, username: &str) -> DbResult<Vec<Comment>> {
