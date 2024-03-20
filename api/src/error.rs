@@ -23,6 +23,8 @@ pub enum ApiError {
   // 400s
   #[status(StatusCode::NOT_FOUND)]
   DbEntryNotFound(String),
+  #[status(StatusCode::CONFLICT)]
+  DbEntryAlreadyExists(String),
   #[status(StatusCode::UNAUTHORIZED)]
   Unauthorized(String),
   #[status(StatusCode::BAD_REQUEST)]
@@ -45,6 +47,7 @@ impl std::fmt::Display for ApiError {
       ApiError::DbEntryNotFound(e) => write!(f, "NotFound: {0}", e),
       ApiError::Unauthorized(e) => write!(f, "Unauthorized: {0}", e),
       ApiError::GardePayload(e) => write!(f, "GardePayload: {0}", e),
+      ApiError::DbEntryAlreadyExists(e) => write!(f, "DbEntryAlreadyExists: {0}", e),
     }
   }
 }

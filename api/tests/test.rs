@@ -64,8 +64,8 @@ async fn test_user_crud_cycle(pool: PgPool) {
   let update_payload =
     UserUpdatePayload::new("alice", Some("password"), Some("email@email.com"), Some("about"))
       .unwrap();
-  let patch = Request::builder().uri("/users").method("PATCH").json(json!(update_payload));
-  let response = app.clone().oneshot(patch).await.unwrap();
+  let put = Request::builder().uri("/users").method("PUT").json(json!(update_payload));
+  let response = app.clone().oneshot(put).await.unwrap();
   assert_eq!(response.status(), StatusCode::OK);
 
   let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
@@ -86,4 +86,30 @@ async fn test_user_crud_cycle(pool: PgPool) {
   let response = app.clone().oneshot(get_request).await.unwrap();
   // println!("response: {:?}", response);
   assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[sqlx::test(migrations = "../db/migrations")]
+async fn test_user_login_logout(pool: PgPool) {
+  let app = api::router(&pool, None).await.expect("failed to build router");
+  let user_payload =
+    api::UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
+
+  let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
+  let response = app.clone().oneshot(post_request).await.unwrap();
+  // println!("response: {:?}", response);
+  assert_eq!(response.status(), StatusCode::CREATED);
+
+  let login = Request::builder()
+    .uri("/users/login")
+    .method("POST")
+    .json(json!({"username": "alice", "password": "password"}));
+  let response = app.clone().oneshot(login).await.unwrap();
+  assert_eq!(response.status(), StatusCode::OK);
+
+  // todo
+  // let logout = Request::builder()
+  //   .uri("/users/logout")
+  //   .method("POST")
+  //   .json(json!({"username": "alice"}));
+
 }

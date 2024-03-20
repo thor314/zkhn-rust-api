@@ -12,11 +12,7 @@ use super::{
   user_hidden::UserHidden,
   user_vote::{UserVote, VoteState},
 };
-use crate::{
-  error::{DbError, PasswordError},
-  utils::now,
-  About, DbPool, Email, Username,
-};
+use crate::{error::DbError, utils::now, About, DbPool, Email, Username};
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
 pub struct User {
@@ -75,8 +71,9 @@ impl User {
     }
   }
 
+  // todo move?
   /// verify the provided password against the user's stored password hash
-  pub fn verify_password(&self, other_password: &str) -> Result<bool, PasswordError> {
+  pub fn verify_password(&self, other_password: &str) -> Result<bool, DbError> {
     let parsed_hash = PasswordHash::new(&self.password_hash)?;
     match Scrypt.verify_password(other_password.as_bytes(), &parsed_hash) {
       Ok(_) => Ok(true),
@@ -112,25 +109,10 @@ impl User {
   }
 }
 
-// todo: move this somewhere else?
-/// Hashes the user's password before saving if it is modified or new.
-pub fn hash_password(password: &str) -> Result<String, PasswordError> {
-  let salt = SaltString::generate(&mut OsRng);
-  let pw_hash: PasswordHash = Scrypt.hash_password(password.as_bytes(), &salt)?;
-  Ok(pw_hash.to_string())
-}
-
-pub async fn increment_karma(conn: &mut PgConnection, username: &str) -> Result<(), DbError> {
-  sqlx::query!(
-    r#"
-      UPDATE users
-      SET karma = karma + 1
-      WHERE username = $1
-    "#,
-    username
-  )
-  .execute(conn)
-  .await?;
-
-  Ok(())
-}
+// // todo: move this somewhere else?
+// /// Hashes the user's password before saving if it is modified or new.
+// pub fn hash_password(password: &str) -> Result<String, PasswordError> {
+//   let salt = SaltString::generate(&mut OsRng);
+//   let pw_hash: PasswordHash = Scrypt.hash_password(password.as_bytes(), &salt)?;
+//   Ok(pw_hash.to_string())
+// }

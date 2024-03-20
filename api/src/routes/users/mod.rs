@@ -18,7 +18,7 @@ use axum::{
   http::StatusCode,
   routing, Json, Router,
 };
-use db::models::user::User;
+use db::{models::user::User, DbError, Username};
 use payload::UserPayload;
 use tracing::info;
 
@@ -31,9 +31,11 @@ use crate::{
 pub fn users_router(state: SharedState) -> Router {
   Router::new()
     .route("/:username", routing::get(get::get_user))
-    .route("/", routing::post(post::create_user))
-    .route("/", routing::patch(patch::update_user))
+    .route("/", routing::put(put::update_user))
     .route("/:username", routing::delete(delete::delete_user))
+    .route("/", routing::post(post::create_user))
+    .route("/login", routing::post(post::login_user))
+    .route("/logout", routing::post(post::logout_user))
     .with_state(state)
 }
 
@@ -58,22 +60,74 @@ pub mod get {
 pub mod post {
   use super::*;
 
-  // todo: how to spam prevention?
+  /// Create a new user:
+  ///
+  /// - validate and create a new user from the payload
+  /// - attempt to insert the new user into the db
+  ///   - if the user already exists, return a 409
+  /// todo: tell the Algolia about the new user
+  /// todo: spam prevention?
   pub async fn create_user(
     State(state): State<SharedState>,
     // auth_session: AuthSession, // keep commented to denote that no auth required
     Json(user_payload): Json<UserPayload>,
   ) -> ApiResult<StatusCode> {
     let user: User = user_payload.try_into()?;
-    db::queries::users::create_user(&state.pool, &user).await?;
+    let result = db::queries::users::create_user(&state.pool, &user).await;
+
+    if let Err(DbError::Recoverable(e)) = result {
+      return Err(ApiError::DbEntryAlreadyExists("user already exists".to_string()));
+    }
+    result?;
 
     Ok(StatusCode::CREATED)
   }
-}
 
-pub mod patch {
   use self::payload::UserUpdatePayload;
   use super::*;
+  /// Log the user in, verify their password, and return their auth session info:
+  /// - If the user does not exist, return NotFound.
+  /// - If the user exists, but the password is incorrect, return Unauthorized.
+  /// - Otherwise, create the user auth session and provide the new user auth token.
+  pub async fn login_user(
+    State(state): State<SharedState>,
+    // only need username and password
+    Json(user_payload): Json<UserPayload>,
+    // ) -> ApiResult<AuthSession> {
+  ) -> ApiResult<()> {
+    let UserPayload { username, password, .. } = user_payload;
+
+    let user = db::queries::users::get_user(&state.pool, &username.0)
+      .await?
+      .ok_or(ApiError::DbEntryNotFound("user not found".to_string()))?;
+
+    if !user.verify_password(&password.0)? {
+      return Err(ApiError::Unauthorized("invalid password".to_string()));
+    }
+
+    // todo create auth session, renew the user token
+    // return Ok(auth_session);
+    todo!()
+  }
+
+  /// todo
+  pub async fn logout_user(
+    State(state): State<SharedState>,
+    auth_session: AuthSession,
+  ) -> ApiResult<()> {
+    assert_authenticated(&auth_session)?;
+    let user = auth_session.user.unwrap().0;
+    // user.auth_token = None;
+    // user.auth_token_expiration = None;
+    // todo update the user in the db
+    db::queries::logout_user(&state.pool, &Username(user.username)).await?;
+    Ok(())
+  }
+}
+
+mod put {
+  use super::*;
+  use crate::UserUpdatePayload;
 
   // todo: this is a crap way to do an api, do it better, probably define an update payload or
   // something

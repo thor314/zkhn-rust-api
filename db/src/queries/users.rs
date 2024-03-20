@@ -4,7 +4,7 @@ use tracing::{info, instrument, warn};
 use uuid::Uuid;
 
 use crate::{
-  error::DbError,
+  error::{DbError, RecoverableDbError},
   models::{comment::Comment, item::Item, user::User},
   About, DbPool, DbResult, Email, Username,
 };
@@ -35,6 +35,8 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
   .map_err(DbError::from)
 }
 
+/// Create a new user in the database.
+/// If the username already exists, return Recoverable::DbEntryAlreadyExists.
 pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   info!("create_user with: {new_user:?}");
   let mut tx = pool.begin().await?;
@@ -96,7 +98,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     if e.as_database_error().expect("expected db error").is_unique_violation() {
       tx.rollback().await?;
       warn!("user already exists");
-      return Ok(());
+      return Err(RecoverableDbError::DbEntryAlreadyExists.into());
     } else {
       tracing::error!("error creating user: {e}");
     }
@@ -142,6 +144,17 @@ pub async fn update_user_about(
   about: &About,
 ) -> DbResult<PgQueryResult> {
   sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about.0, username.0)
+    .execute(pool)
+    .await
+    .map_err(DbError::from)
+}
+
+/// Set the user's auth token and expiration in the database to `None`.
+pub async fn logout_user(
+  pool: &DbPool,
+  username: &Username,
+) -> DbResult<PgQueryResult> {
+  sqlx::query!("UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE username = $1", username.0)
     .execute(pool)
     .await
     .map_err(DbError::from)

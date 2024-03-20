@@ -43,6 +43,7 @@ impl UserPayload {
   }
 }
 
+/// Update user details.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct UserUpdatePayload {
   #[garde(dive)]
@@ -63,10 +64,15 @@ impl UserUpdatePayload {
     about: Option<&str>,
   ) -> ApiResult<Self> {
     let username = Username(username.to_string());
-    let password = password.map(|s| Password(s.to_string()));
+    let password= password.map(|s| Password(s.to_string()));
     let email = email.map(|s| Email(s.to_string()));
     let about = about.map(|s| About(s.to_string()));
-    let payload = Self { username, password, email, about };
+    let payload = Self {
+        username,
+        password,
+        email,
+        about,
+    };
     payload.validate(&())?;
 
     Ok(payload)
