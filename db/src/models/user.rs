@@ -1,6 +1,6 @@
 use axum::{extract::State, response::IntoResponse};
 use scrypt::{
-  password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+  password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
   Scrypt,
 };
 use serde::{Deserialize, Serialize};
@@ -12,13 +12,13 @@ use super::{
   user_hidden::UserHidden,
   user_vote::{UserVote, VoteState},
 };
-use crate::{error::DbError, utils::now, About, DbPool, Email, Username};
+use crate::{error::DbError, utils::now, About, DbPool, Email, Password, PasswordHash, Username};
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
 pub struct User {
   pub username: Username,
   /// Hashed password
-  pub password_hash: String,
+  pub password_hash: PasswordHash,
   // todo: oauth
   /// Authentication token
   pub auth_token: Option<String>,
@@ -49,13 +49,13 @@ pub struct User {
 impl User {
   pub fn new(
     username: Username,
-    password_hash: String,
+    password_hash: PasswordHash,
     email: Option<Email>,
     about: Option<About>,
   ) -> Self {
     User {
       username,
-      password_hash, // todo: hash password
+      password_hash,
       auth_token: None,
       auth_token_expiration: None,
       reset_password_token: None,
@@ -71,24 +71,17 @@ impl User {
     }
   }
 
-  // todo move?
-  /// verify the provided password against the user's stored password hash
-  pub fn verify_password(&self, other_password: &str) -> Result<bool, DbError> {
-    let parsed_hash = PasswordHash::new(&self.password_hash)?;
-    match Scrypt.verify_password(other_password.as_bytes(), &parsed_hash) {
-      Ok(_) => Ok(true),
-      Err(_) => Ok(false),
-    }
-  }
-
+  // todo: probably move
   pub fn favorite(&self, item_type: String, item_id: Uuid) -> UserFavorite {
     UserFavorite { username: self.username.clone(), item_type, item_id, date: now() }
   }
 
+  // todo: probably move
   pub fn hide(&self, item_id: Uuid, item_creation_date: crate::utils::Timestamp) -> UserHidden {
     UserHidden { username: self.username.clone(), item_id, date: now(), item_creation_date }
   }
 
+  // todo: probably move
   pub fn vote(
     &self,
     vote_type: String,
@@ -108,11 +101,3 @@ impl User {
     }
   }
 }
-
-// // todo: move this somewhere else?
-// /// Hashes the user's password before saving if it is modified or new.
-// pub fn hash_password(password: &str) -> Result<String, PasswordError> {
-//   let salt = SaltString::generate(&mut OsRng);
-//   let pw_hash: PasswordHash = Scrypt.hash_password(password.as_bytes(), &salt)?;
-//   Ok(pw_hash.to_string())
-// }

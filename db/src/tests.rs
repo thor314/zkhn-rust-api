@@ -9,8 +9,9 @@ use uuid::Uuid;
 
 use crate::{
   models::{comment::Comment, item::Item, user::User},
+  password::hash_password,
   queries::*,
-  About, Email, Username,
+  About, Email, Password, Username,
 };
 
 static INIT: std::sync::Once = std::sync::Once::new();
@@ -31,9 +32,11 @@ failed",
 #[sqlx::test]
 async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   let mut users = (1i32..).map(|i| {
+    let password = Password("testpassword".to_string());
+    let password_hash = hash_password(&password).unwrap();
     User::new(
       Username(format!("testuser{}", i)),
-      "testpassword".to_string(),
+      password_hash,
       Some(Email("testemail".to_string())),
       None,
     )

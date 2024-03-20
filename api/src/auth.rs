@@ -37,7 +37,7 @@ use axum_login::{
   tower_sessions::{session, SessionStore},
   AuthManagerLayerBuilder, AuthUser, AuthnBackend, AuthzBackend, UserId,
 };
-use db::{models::user::User, queries};
+use db::{models::user::User, password::verify_user_password, queries, Password, Username};
 use serde::{Deserialize, Serialize};
 use tokio::task;
 use tower_sessions::{MemoryStore, SessionManagerLayer};
@@ -80,19 +80,19 @@ impl From<User> for UserAuthWrapper {
 }
 
 impl AuthUser for UserAuthWrapper {
-  type Id = String;
+  type Id = Username;
 
-  fn id(&self) -> Self::Id { self.0.username.0.clone() }
+  fn id(&self) -> Self::Id { self.0.username.clone() }
 
   // todo: this should probably be a session cookie or something, not the password
-  fn session_auth_hash(&self) -> &[u8] { self.0.password_hash.as_bytes() }
+  fn session_auth_hash(&self) -> &[u8] { self.0.password_hash.0.as_bytes() }
 }
 
 /// Form extractor for authentication fields.
 #[derive(Debug, Clone, Deserialize)]
 pub struct Credentials {
-  pub username:     String,
-  pub password:     String,
+  pub username:     Username,
+  pub password:     Password,
   /// where to redirect the user after login; i.e. the page they were trying to access
   pub redirect_url: Option<String>,
 }
@@ -117,17 +117,17 @@ impl AuthnBackend for Backend {
     credentials: Self::Credentials,
   ) -> Result<Option<Self::User>, Self::Error> {
     let user =
-      queries::get_user(&self.pool, &credentials.username).await?.map(UserAuthWrapper::from);
+      queries::get_user(&self.pool, &credentials.username.0).await?.map(UserAuthWrapper::from);
 
     // Verifying the password is blocking and potentially slow, so use `spawn_blocking`.
     task::spawn_blocking(move || {
-      Ok(user.filter(|user| user.0.verify_password(&credentials.password).is_ok()))
+      Ok(user.filter(|user| verify_user_password(&user.0, &credentials.password).is_ok()))
     })
     .await?
   }
 
   async fn get_user(&self, username: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    let user = queries::get_user(&self.pool, username).await?.map(UserAuthWrapper::from);
+    let user = queries::get_user(&self.pool, &username.0).await?.map(UserAuthWrapper::from);
     Ok(user)
   }
 }

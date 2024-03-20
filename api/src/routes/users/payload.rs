@@ -1,4 +1,4 @@
-use db::{models::user::User, About, Email, Username};
+use db::{models::user::User, About, Email, Password, Username};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,8 @@ impl TryFrom<UserPayload> for User {
   fn try_from(value: UserPayload) -> Result<Self, Self::Error> {
     value.validate(&())?;
     let UserPayload { username, password, email, about } = value;
-    Ok(User::new(username, password.0, email, about))
+    let password_hash = password.hash()?;
+    Ok(User::new(username, password_hash, email, about))
   }
 }
 
@@ -73,7 +74,3 @@ impl UserUpdatePayload {
     Ok(payload)
   }
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
-#[garde(transparent)]
-pub struct Password(#[garde(ascii, length(min = 8, max = 25))] pub String);

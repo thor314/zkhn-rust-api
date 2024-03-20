@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::{
   error::{DbError, RecoverableDbError},
   models::{comment::Comment, item::Item, user::User},
-  About, DbPool, DbResult, Email, Username,
+  About, DbPool, DbResult, Email, PasswordHash, Username,
 };
 
 pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
@@ -14,7 +14,7 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
   sqlx::query_as!(
     User,
     "SELECT username as \"username: Username\", 
-            password_hash, 
+            password_hash as \"password_hash: PasswordHash\", 
             auth_token, 
             auth_token_expiration, 
             reset_password_token, 
@@ -76,7 +76,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     banned
   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
     username.0,
-    password_hash,
+    password_hash.0,
     auth_token,
     auth_token_expiration,
     reset_password_token,

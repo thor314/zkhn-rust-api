@@ -58,6 +58,8 @@ pub mod get {
 
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
 pub mod post {
+  use db::password::verify_user_password;
+
   use super::*;
 
   /// Create a new user:
@@ -101,7 +103,7 @@ pub mod post {
       .await?
       .ok_or(ApiError::DbEntryNotFound("user not found".to_string()))?;
 
-    if !user.verify_password(&password.0)? {
+    if !verify_user_password(&user, &password)? {
       return Err(ApiError::Unauthorized("invalid password".to_string()));
     }
 
