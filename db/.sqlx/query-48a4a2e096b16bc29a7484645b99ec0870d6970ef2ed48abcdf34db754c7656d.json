@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM comments WHERE id = $1",
+  "query": "SELECT \n    id,\n    username as \"username: Username\",\n    parent_item_id,\n    parent_item_title as \"parent_item_title: Title\",\n    comment_text as \"comment_text: CommentText\",\n    is_parent,\n    root_comment_id,\n    parent_comment_id,\n    children_count,\n    points,\n    created,\n    dead\n   FROM comments WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -10,7 +10,7 @@
       },
       {
         "ordinal": 1,
-        "name": "username",
+        "name": "username: Username",
         "type_info": "Text"
       },
       {
@@ -20,12 +20,12 @@
       },
       {
         "ordinal": 3,
-        "name": "parent_item_title",
+        "name": "parent_item_title: Title",
         "type_info": "Text"
       },
       {
         "ordinal": 4,
-        "name": "comment_text",
+        "name": "comment_text: CommentText",
         "type_info": "Text"
       },
       {
@@ -84,5 +84,5 @@
       false
     ]
   },
-  "hash": "db6fd6ca473eee9acc02be5418692aa52b5c671d45df4fec7fad48b3d9779dae"
+  "hash": "48a4a2e096b16bc29a7484645b99ec0870d6970ef2ed48abcdf34db754c7656d"
 }

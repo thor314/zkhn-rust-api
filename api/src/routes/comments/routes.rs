@@ -15,6 +15,7 @@ use axum::{
   http::StatusCode,
   Json, Router,
 };
+use axum_garde::WithValidation;
 use axum_login::AuthUser;
 use db::{
   models::{
@@ -30,7 +31,7 @@ use uuid::Uuid;
 use super::payload::CommentPayload;
 use crate::{
   auth::{self, assert_authenticated, AuthSession},
-  error::{ApiError, RouteError},
+  error::ApiError,
   ApiResult, DbPool, SharedState,
 };
 
@@ -45,12 +46,14 @@ pub async fn get_comment(
   Path(comment_id): Path<Uuid>,
   auth_session: AuthSession,
 ) -> ApiResult<(Json<Comment>, Json<Option<VoteState>>)> {
-  let comment = queries::get_comment(&state.pool, comment_id).await?.ok_or(RouteError::NotFound)?;
+  let comment = queries::get_comment(&state.pool, comment_id)
+    .await?
+    .ok_or(ApiError::DbEntryNotFound("comment not found in db".into()))?;
 
   match auth_session.user {
     Some(user) => {
       let username = &user.0.username;
-      let user_vote = queries::get_user_vote_by_content_id(&state.pool, username, comment_id)
+      let user_vote = queries::get_user_vote_by_content_id(&state.pool, &username.0, comment_id)
         .await
         .context("no vote found")?;
       let vote_state = user_vote.map(|v| v.vote_state);
@@ -80,15 +83,16 @@ pub async fn get_comment(
 /// Also update user karma, and item comment count, and tell the search-api.
 pub async fn create_comment(
   State(state): State<SharedState>,
-  Json(payload): Json<CommentPayload>,
+  WithValidation(payload): WithValidation<Json<CommentPayload>>,
   auth_session: AuthSession,
 ) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
   // todo: item is dead
   // assert item exists?
-  let item =
-    queries::get_item(&state.pool, payload.parent_item_id).await?.ok_or(RouteError::NotFound)?;
-  let new_comment: Comment = payload.try_into()?;
+  let item = queries::get_item(&state.pool, payload.parent_item_id)
+    .await?
+    .ok_or(ApiError::DbEntryNotFound("comment not found in db".into()))?;
+  let new_comment: Comment = payload.into_inner().try_into()?;
   queries::insert_comment(&state.pool, &new_comment).await?;
 
   Ok(StatusCode::CREATED)
@@ -98,13 +102,13 @@ pub async fn update_comment_vote(
   State(mut state): State<SharedState>,
   Path((comment_id, parent_item_id, vote_state)): Path<(Uuid, Uuid, i8)>,
   auth_session: AuthSession,
-) -> Result<StatusCode, ApiError> {
+) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
   let username = &auth_session.user.unwrap().0.username;
 
   let (comment, user_vote) = {
     let comment_task = queries::get_comment(&state.pool, comment_id);
-    let user_vote_task = queries::get_user_vote_by_content_id(&state.pool, username, comment_id);
+    let user_vote_task = queries::get_user_vote_by_content_id(&state.pool, &username.0, comment_id);
     let (comment_result, maybe_user_vote) = tokio::try_join!(comment_task, user_vote_task)?;
     let comment = comment_result.context("failed to query queries for comment")?;
     (comment, maybe_user_vote)
@@ -119,8 +123,14 @@ pub async fn update_comment_vote(
   }
 
   // create a new UserVote and increment the comment author's karma
-  queries::submit_comment_vote(&mut state.pool, comment_id, username, parent_item_id, vote_state)
-    .await?;
+  queries::submit_comment_vote(
+    &mut state.pool,
+    comment_id,
+    &username.0,
+    parent_item_id,
+    vote_state,
+  )
+  .await?;
 
   Ok(StatusCode::OK)
 }
@@ -130,14 +140,14 @@ pub async fn update_comment_favorite(
   State(state): State<SharedState>,
   Path((comment_id, set_favorite_state)): Path<(Uuid, i8)>,
   auth_session: AuthSession,
-) -> Result<StatusCode, ApiError> {
+) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
   let username = &auth_session.user.unwrap().0.username;
 
   let (comment, maybe_favorite) = {
     let comment_task = queries::get_comment(&state.pool, comment_id);
     let favorite_task =
-      queries::get_user_favorite_by_username_and_item_id(&state.pool, username, comment_id);
+      queries::get_user_favorite_by_username_and_item_id(&state.pool, &username.0, comment_id);
     let (comment_result, maybe_favorite) = tokio::try_join!(comment_task, favorite_task)?;
     let comment = comment_result.context("failed to query queries for comment")?;
     (comment, maybe_favorite)
@@ -152,13 +162,13 @@ pub async fn update_comment_favorite(
     // already not favorite, do nothing
     return Ok(StatusCode::OK);
   } else {
-    return Err(RouteError::BadRequest.into());
+    return Err(ApiError::DoublySubmittedChange("favorite already submitted".into()));
   }
 
   // update favorite
   queries::insert_or_delete_user_favorite_for_comment(
     &state.pool,
-    username,
+    &username.0,
     maybe_favorite,
     comment_id,
   )
@@ -170,7 +180,7 @@ pub async fn update_comment_text(
   State(state): State<SharedState>,
   auth_session: AuthSession,
   body: String,
-) -> Result<StatusCode, ApiError> {
+) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
   let username = &auth_session.user.unwrap().0.username;
   todo!()
@@ -180,13 +190,13 @@ pub async fn delete_comment(
   State(state): State<SharedState>,
   auth_session: AuthSession,
   Path(comment_id): Path<Uuid>,
-) -> Result<StatusCode, ApiError> {
+) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
   let username = &auth_session.user.unwrap().0.username;
 
   let item_id = queries::get_comment(&state.pool, comment_id)
     .await?
-    .ok_or(RouteError::NotFound)?
+    .ok_or(ApiError::DbEntryNotFound("comment not found in db".into()))?
     .parent_item_id;
   queries::delete_comment(&state.pool, comment_id, item_id).await?;
 

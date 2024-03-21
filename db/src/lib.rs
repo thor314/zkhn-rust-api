@@ -7,13 +7,13 @@
 
 mod error;
 pub mod models;
+pub mod password;
 pub mod queries;
 #[cfg(test)] mod tests;
+mod types;
 mod utils;
 
-use uuid::Uuid;
-
-pub use crate::error::DbError;
+pub use crate::{error::DbError, types::*};
 
 pub type DbPool = sqlx::postgres::PgPool;
 pub type DbResult<T> = Result<T, DbError>;

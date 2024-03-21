@@ -3,7 +3,8 @@ use axum::{routing, Router};
 use self::users::users_router;
 use crate::SharedState;
 
-// pub mod items;
+pub mod comments;
+pub mod items;
 pub mod users;
 
 pub async fn health() -> &'static str { "ok" }

@@ -19,14 +19,19 @@ pub enum DbError {
   Io(#[from] std::io::Error),
   #[error(transparent)]
   Anyhow(#[from] anyhow::Error),
-  #[error(transparent)]
-  PwError(#[from] PasswordError),
+  // todo remove pw error  move to api
   #[error("Invalid favorite state encountered")]
   InvalidFavoriteState,
+  #[error(transparent)]
+  PwError(#[from] scrypt::password_hash::Error),
+  #[error(transparent)]
+  GardePayload(#[from] garde::Report),
+  #[error(transparent)]
+  Recoverable(#[from] RecoverableDbError),
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum PasswordError {
-  #[error(transparent)]
-  ScryptPwHashError(#[from] scrypt::password_hash::Error),
+#[derive(Debug, Error)]
+pub enum RecoverableDbError {
+  #[error("Entry already exists")]
+  DbEntryAlreadyExists,
 }

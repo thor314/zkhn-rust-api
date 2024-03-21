@@ -7,36 +7,37 @@ use super::comment::Comment;
 use crate::{
   error::DbError,
   utils::{now, Timestamp},
+  Title, Username,
 };
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
 /// Comments on a post
-#[derive(sqlx::FromRow, Debug)]
+#[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Item {
   pub id:            Uuid,
-  pub username:      String,
-  pub title:         String,
+  pub username:      Username,
+  pub title:         Title,
   /// news, show, ask
   pub item_type:     String,
-  pub url:           Option<String>,
+  pub url:           Option<String>, // validate
   pub domain:        Option<String>,
-  pub text:          Option<String>,
+  pub text:          Option<String>, // validate
   /// karma for the item
   pub points:        i32,
   /// internal algorithmic score to sort items on home page by popularity
   pub score:         i32, // todo: both points and score?
   pub comment_count: i32,
   /// Tweet, Blog, Paper, Other
-  pub item_category: String,
+  pub item_category: String, // validate
   pub created:       Timestamp,
   pub dead:          bool,
 }
 
 impl Item {
   pub fn new(
-    username: String,
-    title: String,
+    username: Username,
+    title: Title,
     item_type: String,
     is_text: bool,
     text_or_url_content: String,

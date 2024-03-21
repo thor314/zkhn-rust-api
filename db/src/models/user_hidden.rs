@@ -3,12 +3,12 @@ use chrono::{DateTime, NaiveDate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::utils::Timestamp;
+use crate::{utils::Timestamp, Username};
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct UserHidden {
   /// The username of the user who chose to hide this item.
-  pub username:           String,
+  pub username:           Username,
   /// The ID of the hidden item.
   pub item_id:            Uuid,
   /// A UNIX timestamp representing when the user set this item to be hidden.

@@ -13,14 +13,31 @@ use crate::{
     user_vote::{UserVote, VoteState},
   },
   utils::now,
-  DbPool, DbResult,
+  CommentText, DbPool, DbResult, Title, Username,
 };
 
 pub async fn get_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
-  sqlx::query_as!(Comment, "SELECT * FROM comments WHERE id = $1", comment_id)
-    .fetch_optional(pool)
-    .await
-    .map_err(DbError::from)
+  sqlx::query_as!(
+    Comment,
+    "SELECT 
+    id,
+    username as \"username: Username\",
+    parent_item_id,
+    parent_item_title as \"parent_item_title: Title\",
+    comment_text as \"comment_text: CommentText\",
+    is_parent,
+    root_comment_id,
+    parent_comment_id,
+    children_count,
+    points,
+    created,
+    dead
+   FROM comments WHERE id = $1",
+    comment_id
+  )
+  .fetch_optional(pool)
+  .await
+  .map_err(DbError::from)
 }
 
 /// Via the atomic sqlx transaction api:
@@ -46,7 +63,7 @@ pub async fn insert_comment(
     points,
     created,
     dead,
-  } = new_comment;
+  } = new_comment.clone();
 
   sqlx::query!(
     "INSERT INTO comments 
@@ -64,13 +81,13 @@ pub async fn insert_comment(
       dead ) 
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
     id,
-    username,
+    username.0,
     parent_item_id,
-    parent_item_title,
-    comment_text,
+    parent_item_title.0,
+    comment_text.0,
     is_parent,
     root_comment_id,
-    parent_comment_id.map_or(Uuid::nil(), Uuid::from),
+    parent_comment_id,
     children_count,
     points,
     created.0,
@@ -80,7 +97,7 @@ pub async fn insert_comment(
   .await?;
 
   // Increment user karma
-  sqlx::query!("UPDATE users SET karma = karma + 1 WHERE username = $1", username)
+  sqlx::query!("UPDATE users SET karma = karma + 1 WHERE username = $1", username.0)
     .execute(&mut *tx)
     .await?;
 
@@ -97,16 +114,30 @@ pub async fn insert_comment(
 }
 
 pub async fn get_comment_children_layer(pool: &DbPool, comment_id: Uuid) -> DbResult<Vec<Comment>> {
-  sqlx::query_as!(Comment, "SELECT * FROM comments WHERE parent_comment_id = $1", comment_id)
-    .fetch_all(pool)
-    .await
-    .map_err(DbError::from)
+  sqlx::query_as!(
+    Comment,
+    "SELECT 
+    id,
+    username as \"username: Username\",
+    parent_item_id,
+    parent_item_title as \"parent_item_title: Title\",
+    comment_text as \"comment_text: CommentText\",
+    is_parent,
+    root_comment_id,
+    parent_comment_id,
+    children_count,
+    points,
+    created,
+    dead
+  FROM comments WHERE parent_comment_id = $1",
+    comment_id
+  )
+  .fetch_all(pool)
+  .await
+  .map_err(DbError::from)
 }
 
-async fn get_comment_children_recursive(
-  pool: &Pool<Postgres>,
-  comment_id: Uuid,
-) -> DbResult<Vec<Uuid>> {
+async fn get_comment_children_recursive(pool: &DbPool, comment_id: Uuid) -> DbResult<Vec<Uuid>> {
   let children_ids = get_comment_children_layer(pool, comment_id).await?;
   let children_futures =
     children_ids.into_iter().map(|row| get_comment_children_recursive(pool, row.id));
@@ -137,3 +168,32 @@ pub async fn delete_comment(pool: &DbPool, comment_id: Uuid, item_id: Uuid) -> D
 
   Ok(())
 }
+
+// pub async fn child_comments(
+//   mut conn: &DbPool,
+//   id: Uuid,
+//   show_dead_comments: bool,
+// ) -> DbResult<Vec<Comment>> {
+//   let comments: Vec<Comment> = sqlx::query_as!(
+//     Comment,
+//     "SELECT
+//       id,
+//       username as \"username: Username\",
+//       parent_item_id,
+//       parent_item_title as \"parent_item_title: Title\",
+//       comment_text as \"comment_text: CommentText\",
+//       is_parent,
+//       root_comment_id,
+//       parent_comment_id,
+//       children_count,
+//       points,
+//       created,
+//       dead
+//     FROM comments WHERE parent_comment_id = $1",
+//     id
+//   )
+//   .fetch_all(&mut conn)
+//   .await?;
+
+//   Ok(comments)
+// }

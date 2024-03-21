@@ -1,62 +1,87 @@
-use db::models::user::User;
+use db::{models::user::User, About, Email, Password, Username};
+use garde::Validate;
 use serde::{Deserialize, Serialize};
 
-use crate::error::ApiError;
+use crate::{error::ApiError, ApiResult};
 
-// todo: sanitize and validate me here
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct UserPayload {
-  pub username: String,
-  pub password: String,
-  pub email:    String,
-  pub about:    Option<String>,
+  #[garde(dive)]
+  pub username: Username,
+  #[garde(dive)]
+  pub password: Password,
+  #[garde(dive)]
+  pub email:    Option<Email>,
+  #[garde(dive)]
+  pub about:    Option<About>,
 }
 
 impl TryFrom<UserPayload> for User {
   type Error = ApiError;
 
+  /// Validate the payload and convert it into a User.
   fn try_from(value: UserPayload) -> Result<Self, Self::Error> {
+    value.validate(&())?;
     let UserPayload { username, password, email, about } = value;
-    // todo: sanitize and validate me
-    Ok(User::new(username, password, email, about))
+    let password_hash = password.hash()?;
+    Ok(User::new(username, password_hash, email, about))
   }
 }
 
 impl UserPayload {
-  pub fn new(username: &str, password: &str, email: &str, about: Option<&str>) -> Self {
-    {
-      Self {
-        username: username.to_string(),
-        password: password.to_string(),
-        email:    email.to_string(),
-        about:    about.map(|s| s.to_string()),
-      }
-    }
+  /// Assume Comment Payload has already been validated.
+  pub fn into_user(self) -> User {
+    let password_hash = self.password.hash().unwrap();
+    User::new(self.username, password_hash, self.email, self.about)
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+impl UserPayload {
+  /// convenience method for testing
+  pub fn new(
+    username: &str,
+    password: &str,
+    email: Option<&str>,
+    about: Option<&str>,
+  ) -> ApiResult<Self> {
+    let username = Username(username.to_string());
+    let password = Password(password.to_string());
+    let email = email.map(|s| Email(s.to_string()));
+    let about = about.map(|s| About(s.to_string()));
+    let payload = Self { username, password, email, about };
+    payload.validate(&())?;
+    Ok(payload)
+  }
+}
+
+/// Update user details.
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct UserUpdatePayload {
-  pub username: String,
-  pub password: Option<String>,
-  pub email:    Option<String>,
-  pub about:    Option<String>,
+  #[garde(dive)]
+  pub username: Username,
+  #[garde(dive)]
+  pub password: Option<Password>,
+  #[garde(dive)]
+  pub email:    Option<Email>,
+  #[garde(dive)]
+  pub about:    Option<About>,
 }
 
 impl UserUpdatePayload {
+  /// convenience method for testing
   pub fn new(
     username: &str,
     password: Option<&str>,
     email: Option<&str>,
     about: Option<&str>,
-  ) -> Self {
-    {
-      Self {
-        username: username.to_string(),
-        password: password.map(|s| s.to_string()),
-        email:    email.map(|s| s.to_string()),
-        about:    about.map(|s| s.to_string()),
-      }
-    }
+  ) -> ApiResult<Self> {
+    let username = Username(username.to_string());
+    let password = password.map(|s| Password(s.to_string()));
+    let email = email.map(|s| Email(s.to_string()));
+    let about = about.map(|s| About(s.to_string()));
+    let payload = Self { username, password, email, about };
+    payload.validate(&())?;
+
+    Ok(payload)
   }
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM items WHERE id = $1",
+  "query": "SELECT \n    id,\n    username as \"username: Username\",\n    parent_item_id,\n    parent_item_title as \"parent_item_title: Title\",\n    comment_text as \"comment_text: CommentText\",\n    is_parent,\n    root_comment_id,\n    parent_comment_id,\n    children_count,\n    points,\n    created,\n    dead\n   FROM comments WHERE username = $1",
   "describe": {
     "columns": [
       {
@@ -10,68 +10,63 @@
       },
       {
         "ordinal": 1,
-        "name": "username",
+        "name": "username: Username",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "title",
-        "type_info": "Text"
+        "name": "parent_item_id",
+        "type_info": "Uuid"
       },
       {
         "ordinal": 3,
-        "name": "item_type",
+        "name": "parent_item_title: Title",
         "type_info": "Text"
       },
       {
         "ordinal": 4,
-        "name": "url",
+        "name": "comment_text: CommentText",
         "type_info": "Text"
       },
       {
         "ordinal": 5,
-        "name": "domain",
-        "type_info": "Text"
+        "name": "is_parent",
+        "type_info": "Bool"
       },
       {
         "ordinal": 6,
-        "name": "text",
-        "type_info": "Text"
+        "name": "root_comment_id",
+        "type_info": "Uuid"
       },
       {
         "ordinal": 7,
-        "name": "points",
-        "type_info": "Int4"
+        "name": "parent_comment_id",
+        "type_info": "Uuid"
       },
       {
         "ordinal": 8,
-        "name": "score",
+        "name": "children_count",
         "type_info": "Int4"
       },
       {
         "ordinal": 9,
-        "name": "comment_count",
+        "name": "points",
         "type_info": "Int4"
       },
       {
         "ordinal": 10,
-        "name": "item_category",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 11,
         "name": "created",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 12,
+        "ordinal": 11,
         "name": "dead",
         "type_info": "Bool"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -79,16 +74,15 @@
       false,
       false,
       false,
-      true,
-      true,
-      true,
       false,
       false,
+      false,
+      true,
       false,
       false,
       false,
       false
     ]
   },
-  "hash": "1e9045f52c002a19b815351fee1c7ee7520478ff4f5886b4523fb0dc4df0e204"
+  "hash": "6cf9108dfaf3073f5ea0a0e8f0f04cdacb7bb297f006481fd4788b56d670272a"
 }

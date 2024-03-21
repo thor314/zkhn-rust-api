@@ -6,6 +6,13 @@ use axum::{
   response::IntoResponse,
 };
 use db::DbError;
+use oauth2::{
+  basic::{BasicClient, BasicRequestTokenError},
+  reqwest::{async_http_client, AsyncHttpClientError},
+  url::Url,
+  AuthorizationCode, CsrfToken, TokenResponse,
+};
+use serde::Serialize;
 use tokio::task;
 
 #[derive(thiserror::Error, axum_derive_error::ErrorResponse)]
@@ -19,15 +26,28 @@ pub enum ApiError {
   DbError(#[from] DbError),
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   Session(tower_sessions::session_store::Error),
+  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
+  AuthenticationError(String),
   // 400s
   #[status(StatusCode::NOT_FOUND)]
   DbEntryNotFound(String),
+  #[status(StatusCode::CONFLICT)]
+  DbEntryAlreadyExists(String),
   #[status(StatusCode::UNAUTHORIZED)]
   Unauthorized(String),
+  /// for when e.g. an upvote or favorite is doubly submitted
+  #[status(StatusCode::BAD_REQUEST)]
+  DoublySubmittedChange(String),
   #[status(StatusCode::BAD_REQUEST)]
   Payload(String),
+  #[status(StatusCode::BAD_REQUEST)]
+  GardePayload(#[from] garde::Report),
   #[status(StatusCode::UNAUTHORIZED)]
   PwError(String),
+  #[status(StatusCode::UNAUTHORIZED)]
+  AuthReqwest(reqwest::Error),
+  #[status(StatusCode::UNAUTHORIZED)]
+  OAuth2(BasicRequestTokenError<AsyncHttpClientError>),
 }
 
 impl std::fmt::Display for ApiError {
@@ -41,6 +61,12 @@ impl std::fmt::Display for ApiError {
       ApiError::Payload(e) => write!(f, "Payload {0}", e),
       ApiError::DbEntryNotFound(e) => write!(f, "NotFound: {0}", e),
       ApiError::Unauthorized(e) => write!(f, "Unauthorized: {0}", e),
+      ApiError::GardePayload(e) => write!(f, "GardePayload: {0}", e),
+      ApiError::DbEntryAlreadyExists(e) => write!(f, "DbEntryAlreadyExists: {0}", e),
+      ApiError::AuthenticationError(e) => write!(f, "AuthenticationError: {0}", e),
+      ApiError::AuthReqwest(e) => write!(f, "AuthReqwest: {0}", e),
+      ApiError::OAuth2(e) => write!(f, "OAuth2: {0}", e),
+      ApiError::DoublySubmittedChange(e) => write!(f, "DoublySubmittedChange: {0}", e),
     }
   }
 }

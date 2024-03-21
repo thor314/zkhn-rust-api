@@ -9,7 +9,9 @@ use uuid::Uuid;
 
 use crate::{
   models::{comment::Comment, item::Item, user::User},
+  password::hash_password,
   queries::*,
+  About, CommentText, Email, Password, Title, Username,
 };
 
 static INIT: std::sync::Once = std::sync::Once::new();
@@ -30,25 +32,32 @@ failed",
 #[sqlx::test]
 async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   let mut users = (1i32..).map(|i| {
-    User::new(format!("testuser{}", i), "testpassword".to_string(), "testemail".to_string(), None)
+    let password = Password("testpassword".to_string());
+    let password_hash = hash_password(&password).unwrap();
+    User::new(
+      Username(format!("testuser{}", i)),
+      password_hash,
+      Some(Email("testemail".to_string())),
+      None,
+    )
   });
   let user = users.next().unwrap();
   create_user(&pool, &user).await.unwrap();
   let gotten_user = get_user(&pool, &user.username).await.unwrap().unwrap();
   assert_eq!(user.username, gotten_user.username);
 
-  let about = "testabout".to_string();
-  update_user_about(&pool, &user.username, &about).await.unwrap();
+  let about = About("testabout".to_string());
+  update_user_about(&pool, &user.username.0.clone(), &about.0).await.unwrap();
   let gotten_about = get_user(&pool, &user.username).await.unwrap().unwrap().about.unwrap();
-  assert_eq!(gotten_about, about);
+  assert_eq!(gotten_about.0, about.0);
 
-  let user_items = get_user_items(&pool, &user.username).await.unwrap();
+  let user_items = get_user_items(&pool, &user.username.0).await.unwrap();
   assert!(user_items.is_empty());
 
   let mut items = (1i32..).map(|i| {
     Item::new(
       user.username.clone(),
-      format!("testtitle{}", i),
+      Title(format!("testtitle{}", i)),
       "news".to_string(),
       true,
       "text content".to_string(),
@@ -74,7 +83,7 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
       true,
       None,
       None,
-      format!("testcomment{}", i),
+      CommentText(format!("testcomment{}", i)),
       false,
     )
   });

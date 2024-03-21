@@ -1,12 +1,11 @@
 use axum::{extract::State, response::IntoResponse};
 use scrypt::{
-  password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+  password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
   Scrypt,
 };
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
 use uuid::Uuid;
-use validator::{Validate, ValidationError};
 
 use super::{
   user_favorite::UserFavorite,
@@ -14,35 +13,32 @@ use super::{
   user_vote::{UserVote, VoteState},
 };
 use crate::{
-  error::{DbError, PasswordError},
-  utils::now,
-  DbPool,
+  error::DbError, utils::now, About, AuthToken, DbPool, Email, Password, PasswordHash,
+  ResetPasswordToken, Username,
 };
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
 pub struct User {
-  // #[validate(custom(function = crate::utils::validate_username))] // todo move to payload
-  pub username: String,
+  pub username: Username,
   /// Hashed password
-  pub password_hash: String,
+  pub password_hash: PasswordHash,
   // todo: oauth
   /// Authentication token
-  pub auth_token: Option<String>,
+  pub auth_token: Option<AuthToken>,
   /// Expiration of auth token
   pub auth_token_expiration: Option<i64>,
   /// Reset password token
-  pub reset_password_token: Option<String>,
+  pub reset_password_token: Option<ResetPasswordToken>,
   /// Expiration of reset password token
   pub reset_password_token_expiration: Option<i64>,
   /// User email
-  // todo: email wrapper
-  pub email: String,
+  pub email: Option<Email>,
   /// Account creation timestamp
   pub created: crate::utils::Timestamp,
   /// User karma score
   pub karma: i32,
   /// User biography
-  pub about: Option<String>,
+  pub about: Option<About>,
   /// Flag to show dead posts
   pub show_dead: bool,
   /// Is user a moderator
@@ -54,10 +50,15 @@ pub struct User {
 }
 
 impl User {
-  pub fn new(username: String, password: String, email: String, about: Option<String>) -> Self {
+  pub fn new(
+    username: Username,
+    password_hash: PasswordHash,
+    email: Option<Email>,
+    about: Option<About>,
+  ) -> Self {
     User {
       username,
-      password_hash: password,
+      password_hash,
       auth_token: None,
       auth_token_expiration: None,
       reset_password_token: None,
@@ -73,23 +74,17 @@ impl User {
     }
   }
 
-  /// verify the provided password against the user's stored password hash
-  pub fn verify_password(&self, other_password: &str) -> Result<bool, PasswordError> {
-    let parsed_hash = PasswordHash::new(&self.password_hash)?;
-    match Scrypt.verify_password(other_password.as_bytes(), &parsed_hash) {
-      Ok(_) => Ok(true),
-      Err(_) => Ok(false),
-    }
-  }
-
+  // todo: probably move
   pub fn favorite(&self, item_type: String, item_id: Uuid) -> UserFavorite {
     UserFavorite { username: self.username.clone(), item_type, item_id, date: now() }
   }
 
+  // todo: probably move
   pub fn hide(&self, item_id: Uuid, item_creation_date: crate::utils::Timestamp) -> UserHidden {
     UserHidden { username: self.username.clone(), item_id, date: now(), item_creation_date }
   }
 
+  // todo: probably move
   pub fn vote(
     &self,
     vote_type: String,
@@ -108,27 +103,4 @@ impl User {
       created: now(),
     }
   }
-}
-
-// todo: move this somewhere else?
-/// Hashes the user's password before saving if it is modified or new.
-pub fn hash_password(password: &str) -> Result<String, PasswordError> {
-  let salt = SaltString::generate(&mut OsRng);
-  let pw_hash: PasswordHash = Scrypt.hash_password(password.as_bytes(), &salt)?;
-  Ok(pw_hash.to_string())
-}
-
-pub async fn increment_karma(conn: &mut PgConnection, username: &str) -> Result<(), DbError> {
-  sqlx::query!(
-    r#"
-      UPDATE users
-      SET karma = karma + 1
-      WHERE username = $1
-    "#,
-    username
-  )
-  .execute(conn)
-  .await?;
-
-  Ok(())
 }
