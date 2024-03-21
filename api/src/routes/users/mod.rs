@@ -132,15 +132,16 @@ pub mod post {
   pub async fn logout_user(
     State(state): State<SharedState>,
     auth_session: AuthSession,
+    Path(token): Path<String>,
   ) -> ApiResult<()> {
     assert_authenticated(&auth_session)?;
-    let user = auth_session.user.unwrap().0;
+    let username = auth_session.user.unwrap().username;
     // user.auth_token = None;
     // user.auth_token_expiration = None;
     // todo update the user in the db
-    db::queries::logout_user(&state.pool, &user.username.0).await?;
+    db::queries::logout_user(&state.pool, &username.0).await?;
 
-    info!("logged out user: {}", user.username);
+    info!("logged out user: {}", username);
     Ok(())
   }
 }

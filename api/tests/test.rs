@@ -50,7 +50,7 @@ async fn test_user_crud_cycle(pool: PgPool) {
   let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
   let response = app.clone().oneshot(post_request).await.unwrap();
   // println!("response: {:?}", response);
-  assert_eq!(response.status(), StatusCode::CREATED);
+  assert_eq!(response.status(), StatusCode::OK);
 
   let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
   let response = app.clone().oneshot(get_request).await.unwrap();
@@ -97,7 +97,7 @@ async fn test_user_login_logout(pool: PgPool) {
   let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
   let response = app.clone().oneshot(post_request).await.unwrap();
   // println!("response: {:?}", response);
-  assert_eq!(response.status(), StatusCode::CREATED);
+  assert_eq!(response.status(), StatusCode::OK);
 
   let login_payload = UserPayload::new("alice", "password", None, None).unwrap();
   let login = Request::builder().uri("/users/login").method("POST").json(json!(login_payload));

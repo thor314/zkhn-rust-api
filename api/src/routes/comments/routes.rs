@@ -52,7 +52,7 @@ pub async fn get_comment(
 
   match auth_session.user {
     Some(user) => {
-      let username = &user.0.username;
+      let username = &user.username;
       let user_vote = queries::get_user_vote_by_content_id(&state.pool, &username.0, comment_id)
         .await
         .context("no vote found")?;
@@ -104,7 +104,7 @@ pub async fn update_comment_vote(
   auth_session: AuthSession,
 ) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
-  let username = &auth_session.user.unwrap().0.username;
+  let username = &auth_session.user.unwrap().username;
 
   let (comment, user_vote) = {
     let comment_task = queries::get_comment(&state.pool, comment_id);
@@ -142,7 +142,7 @@ pub async fn update_comment_favorite(
   auth_session: AuthSession,
 ) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
-  let username = &auth_session.user.unwrap().0.username;
+  let username = &auth_session.user.unwrap().username;
 
   let (comment, maybe_favorite) = {
     let comment_task = queries::get_comment(&state.pool, comment_id);
@@ -182,7 +182,7 @@ pub async fn update_comment_text(
   body: String,
 ) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
-  let username = &auth_session.user.unwrap().0.username;
+  let username = &auth_session.user.unwrap().username;
   todo!()
 }
 
@@ -192,7 +192,7 @@ pub async fn delete_comment(
   Path(comment_id): Path<Uuid>,
 ) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
-  let username = &auth_session.user.unwrap().0.username;
+  let username = &auth_session.user.unwrap().username;
 
   let item_id = queries::get_comment(&state.pool, comment_id)
     .await?

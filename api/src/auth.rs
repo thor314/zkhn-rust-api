@@ -42,7 +42,8 @@ use axum_login::{
   AuthManagerLayerBuilder, AuthUser, AuthnBackend, AuthzBackend, UserId,
 };
 use db::{
-  models::user::User, password::verify_user_password, queries, AuthToken, Password, Username,
+  models::user::User, password::verify_user_password, queries, AuthToken, Password, Timestamp,
+  Username,
 };
 use oauth2::{
   basic::{BasicClient, BasicRequestTokenError},
@@ -55,6 +56,7 @@ use serde::{Deserialize, Serialize};
 use tokio::task;
 use tower_sessions::{MemoryStore, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use crate::{error::ApiError, ApiResult, DbPool, SharedState};
@@ -62,10 +64,8 @@ use crate::{error::ApiError, ApiResult, DbPool, SharedState};
 pub type AuthSession = axum_login::AuthSession<Backend>;
 
 pub mod temp_jank {
-  use db::Timestamp;
-  use tracing::{debug, info};
-
   use super::*;
+
   // todo: questionably secure, certainly jank, but for now it's in the tank
   pub fn generate_user_token() -> (AuthToken, Timestamp) {
     let mut rng = rand::thread_rng();
@@ -107,29 +107,32 @@ pub fn assert_authenticated(auth_session: &AuthSession) -> ApiResult<()> {
   Ok(())
 }
 
-/// Newtype Wrapper allows us to derive `AuthUser` for `User`, despite `User` living in `db`.`
+/// Auth fields for the user.
 #[derive(Clone, Serialize, Deserialize)]
-pub struct UserAuthWrapper(pub User);
+pub struct UserAuth {
+  pub username: Username,
+  auth_token:   AuthToken,
+}
 
 // explicitly implemented to intentionally redact sensitive information
-impl fmt::Debug for UserAuthWrapper {
+impl fmt::Debug for UserAuth {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
-    f.debug_struct("User").field("username", &self.0.username).finish()
+    f.debug_struct("User").field("username", &self.username).finish()
   }
 }
 
-impl From<User> for UserAuthWrapper {
-  fn from(user: User) -> Self { Self(user) }
+impl From<User> for UserAuth {
+  fn from(user: User) -> Self {
+    Self { username: user.username, auth_token: user.auth_token.unwrap() }
+  }
 }
 
-impl AuthUser for UserAuthWrapper {
+impl AuthUser for UserAuth {
   type Id = Username;
 
-  fn id(&self) -> Self::Id { self.0.username.clone() }
+  fn id(&self) -> Self::Id { self.username.clone() }
 
-  fn session_auth_hash(&self) -> &[u8] {
-    self.0.auth_token.as_ref().expect("expected auth token").0.as_bytes()
-  }
+  fn session_auth_hash(&self) -> &[u8] { self.auth_token.0.as_bytes() }
 }
 
 // todo: kill
@@ -175,7 +178,7 @@ impl Backend {
 impl AuthnBackend for Backend {
   type Credentials = Credentials;
   type Error = ApiError;
-  type User = UserAuthWrapper;
+  type User = UserAuth;
 
   // verify that the CRSF state has not been tampered with
   // then process the authorization code, expecting a token response
@@ -218,7 +221,7 @@ impl AuthnBackend for Backend {
   }
 
   async fn get_user(&self, username: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    let user = db::queries::get_user(&self.pool, username).await?.map(UserAuthWrapper::from);
+    let user = db::queries::get_user(&self.pool, username).await?.map(UserAuth::from);
     Ok(user)
   }
 }
