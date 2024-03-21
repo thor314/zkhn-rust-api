@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT username, item_type, item_id, date\n       FROM user_favorites WHERE item_id = $1 and username = $2",
+  "query": "SELECT username as \"username: Username\", item_type, item_id, date\n       FROM user_favorites WHERE item_id = $1 and username = $2",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "username",
+        "name": "username: Username",
         "type_info": "Varchar"
       },
       {
@@ -37,5 +37,5 @@
       false
     ]
   },
-  "hash": "5dfca058ae5f173fe60822b479a6b7f51089c247ec06e802fca7ebab1727035f"
+  "hash": "4bac932418d1d958cb86c878114ff99c78cafcc169be085f8aab914e6ad6831d"
 }

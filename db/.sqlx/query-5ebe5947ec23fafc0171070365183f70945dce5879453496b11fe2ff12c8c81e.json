@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT username, vote_type, content_id, parent_item_id, vote_state as \"vote_state: _\", created FROM user_votes WHERE content_id = $1 and username = $2",
+  "query": "SELECT username as \"username: Username\", vote_type, content_id, parent_item_id, vote_state as \"vote_state: _\", created FROM user_votes WHERE content_id = $1 and username = $2",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "username",
+        "name": "username: Username",
         "type_info": "Varchar"
       },
       {
@@ -60,5 +60,5 @@
       false
     ]
   },
-  "hash": "92ad934cd5c6ab9043e58d76c2446e01433dd98097ae918e8f76c8129736ff6b"
+  "hash": "5ebe5947ec23fafc0171070365183f70945dce5879453496b11fe2ff12c8c81e"
 }

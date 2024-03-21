@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM items WHERE username = $1",
+  "query": "SELECT \n      id,\n      username as \"username: Username\",    \n      title as \"title: Title\",  \n      item_type,   \n      url,         \n      domain,      \n      text,        \n      points,      \n      score,       \n      comment_count,\n      item_category,\n      created,     \n      dead\n    FROM items WHERE username = $1",
   "describe": {
     "columns": [
       {
@@ -10,12 +10,12 @@
       },
       {
         "ordinal": 1,
-        "name": "username",
+        "name": "username: Username",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "title",
+        "name": "title: Title",
         "type_info": "Text"
       },
       {
@@ -90,5 +90,5 @@
       false
     ]
   },
-  "hash": "b01ebfb0f72ebfa7ec58479968043a8296f7f2b9b1f44f4bbbbcb6c6c5715e4d"
+  "hash": "a8efefa548a3c7d497d9a73784a06ccb236d4061af88eb42d3e36ca219b4cf49"
 }
