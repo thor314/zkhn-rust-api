@@ -28,6 +28,7 @@ impl TryFrom<UserPayload> for User {
 }
 
 impl UserPayload {
+  /// convenience method for testing
   pub fn new(
     username: &str,
     password: &str,

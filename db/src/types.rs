@@ -44,3 +44,9 @@ impl Password {
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[repr(transparent)]
 pub struct PasswordHash(pub String);
+
+
+/// A hashed password
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[repr(transparent)]
+pub struct AuthToken(pub String);

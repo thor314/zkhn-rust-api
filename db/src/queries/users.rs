@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::{
   error::{DbError, RecoverableDbError},
   models::{comment::Comment, item::Item, user::User},
-  About, DbPool, DbResult, Email, PasswordHash, Username,
+  AuthToken, About, DbPool, DbResult, Email, PasswordHash, Username,
 };
 
 pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
@@ -15,7 +15,7 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
     User,
     "SELECT username as \"username: Username\", 
             password_hash as \"password_hash: PasswordHash\", 
-            auth_token, 
+            auth_token as \"auth_token: AuthToken\", 
             auth_token_expiration, 
             reset_password_token, 
             reset_password_token_expiration, 
@@ -77,7 +77,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
     username.0,
     password_hash.0,
-    auth_token,
+    auth_token.map(|s| s.0),
     auth_token_expiration,
     reset_password_token,
     reset_password_token_expiration,
