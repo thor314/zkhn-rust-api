@@ -18,7 +18,9 @@ use axum::{
   http::StatusCode,
   routing, Json, Router,
 };
+use axum_garde::WithValidation;
 use db::{models::user::User, DbError, Username};
+use garde::Validate;
 use payload::UserPayload;
 use tracing::info;
 
@@ -49,6 +51,8 @@ pub mod get {
     // auth_session: AuthSession, // keep commented to denote that no auth required
   ) -> ApiResult<Json<User>> {
     let pool = &state.pool;
+    let username = Username(username);
+    username.validate(&())?;
     let user = db::queries::users::get_user(pool, &username)
       .await?
       .ok_or(ApiError::DbEntryNotFound("that user does not exist".to_string()))?;
@@ -58,7 +62,6 @@ pub mod get {
 
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
 pub mod post {
-  use axum_garde::WithValidation;
   use db::password::verify_user_password;
 
   use self::payload::UserUpdatePayload;
@@ -91,7 +94,6 @@ pub mod post {
   /// - If the user does not exist, return NotFound.
   /// - If the user exists, but the password is incorrect, return Unauthorized.
   /// - Otherwise, create the user auth session and provide the new user auth token.
-  #[debug_handler]
   pub async fn login_user(
     // only need username and password
     State(state): State<SharedState>,
@@ -100,7 +102,7 @@ pub mod post {
   ) -> ApiResult<()> {
     let UserPayload { username, password, .. } = user_payload.into_inner();
 
-    let user = db::queries::users::get_user(&state.pool, &username.0)
+    let user = db::queries::users::get_user(&state.pool, &username)
       .await?
       .ok_or(ApiError::DbEntryNotFound("user not found".to_string()))?;
 
@@ -137,12 +139,11 @@ mod put {
   pub async fn update_user(
     State(state): State<SharedState>,
     // auth_session: AuthSession,
-    Json(payload): Json<UserUpdatePayload>,
+    WithValidation(payload): WithValidation<Json<UserUpdatePayload>>,
   ) -> ApiResult<StatusCode> {
     println!("username: {:?}", payload.username);
     // assert_authenticated(&auth_session)?;
-
-    // todo: validate input
+    let payload = payload.into_inner();
     db::queries::users::update_user_about(
       &state.pool,
       &payload.username.0,
@@ -162,6 +163,8 @@ pub mod delete {
     // auth_session: AuthSession,
   ) -> ApiResult<StatusCode> {
     // assert_authenticated(&auth_session)?;
+    let username = Username(username);
+    username.validate(&())?;
     db::queries::users::delete_user(&state.pool, &username).await?;
     Ok(StatusCode::OK)
   }

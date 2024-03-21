@@ -43,12 +43,12 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   });
   let user = users.next().unwrap();
   create_user(&pool, &user).await.unwrap();
-  let gotten_user = get_user(&pool, &user.username.0).await.unwrap().unwrap();
+  let gotten_user = get_user(&pool, &user.username).await.unwrap().unwrap();
   assert_eq!(user.username, gotten_user.username);
 
   let about = About("testabout".to_string());
   update_user_about(&pool, &user.username.0.clone(), &about.0).await.unwrap();
-  let gotten_about = get_user(&pool, &user.username.0).await.unwrap().unwrap().about.unwrap();
+  let gotten_about = get_user(&pool, &user.username).await.unwrap().unwrap().about.unwrap();
   assert_eq!(gotten_about.0, about.0);
 
   let user_items = get_user_items(&pool, &user.username.0).await.unwrap();
@@ -100,8 +100,8 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   let gotten_item = get_item(&pool, item.id).await.unwrap();
   assert!(gotten_item.is_none());
 
-  delete_user(&pool, &user.username.0).await.unwrap();
-  let gotten_user = get_user(&pool, &user.username.0).await.unwrap();
+  delete_user(&pool, &user.username).await.unwrap();
+  let gotten_user = get_user(&pool, &user.username).await.unwrap();
   assert!(gotten_user.is_none());
 
   // todo: test insert comment for user fails if user does not exist

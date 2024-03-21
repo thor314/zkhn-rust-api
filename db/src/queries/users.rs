@@ -10,7 +10,7 @@ use crate::{
   Username,
 };
 
-pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
+pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<User>> {
   info!("get_user function called w username: {username}");
   sqlx::query_as!(
     User,
@@ -29,7 +29,7 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
             shadow_banned, 
             banned 
      FROM users WHERE username = $1",
-    username
+    username.0
   )
   .fetch_optional(pool)
   .await
@@ -111,9 +111,9 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   Ok(())
 }
 
-pub async fn delete_user(pool: &DbPool, username: &str) -> DbResult<()> {
+pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
   let result =
-    sqlx::query!("DELETE FROM users WHERE username = $1", username).execute(pool).await?;
+    sqlx::query!("DELETE FROM users WHERE username = $1", username.0).execute(pool).await?;
 
   if result.rows_affected() == 0 {
     warn!("user {username} does not exist");

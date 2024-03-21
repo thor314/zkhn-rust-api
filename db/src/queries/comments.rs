@@ -137,10 +137,7 @@ pub async fn get_comment_children_layer(pool: &DbPool, comment_id: Uuid) -> DbRe
   .map_err(DbError::from)
 }
 
-async fn get_comment_children_recursive(
-  pool: &DbPool,
-  comment_id: Uuid,
-) -> DbResult<Vec<Uuid>> {
+async fn get_comment_children_recursive(pool: &DbPool, comment_id: Uuid) -> DbResult<Vec<Uuid>> {
   let children_ids = get_comment_children_layer(pool, comment_id).await?;
   let children_futures =
     children_ids.into_iter().map(|row| get_comment_children_recursive(pool, row.id));
@@ -179,7 +176,7 @@ pub async fn delete_comment(pool: &DbPool, comment_id: Uuid, item_id: Uuid) -> D
 // ) -> DbResult<Vec<Comment>> {
 //   let comments: Vec<Comment> = sqlx::query_as!(
 //     Comment,
-//     "SELECT 
+//     "SELECT
 //       id,
 //       username as \"username: Username\",
 //       parent_item_id,

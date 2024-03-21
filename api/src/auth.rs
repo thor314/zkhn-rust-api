@@ -196,7 +196,7 @@ impl AuthnBackend for Backend {
   }
 
   async fn get_user(&self, username: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    let user = db::queries::get_user(&self.pool, &username.0).await?.map(UserAuthWrapper::from);
+    let user = db::queries::get_user(&self.pool, username).await?.map(UserAuthWrapper::from);
     Ok(user)
   }
 }
