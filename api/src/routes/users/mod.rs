@@ -115,7 +115,6 @@ pub mod post {
 
     // renew user token: create a new unique string and store it
     let (auth_token, auth_token_expiration) = auth::temp_jank::generate_user_token();
-    
 
     // todo create auth session, renew the user token
     // return Ok(auth_session);

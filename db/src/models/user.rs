@@ -1,4 +1,3 @@
-
 use scrypt::{
   password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
   Scrypt,
@@ -13,7 +12,9 @@ use super::{
   user_vote::{UserVote, VoteState},
 };
 use crate::{
-  error::DbError, utils::{self, now}, About, AuthToken, DbPool, Email, Password, PasswordHash, ResetPasswordToken, Timestamp, Username
+  error::DbError,
+  utils::{self, now},
+  About, AuthToken, DbPool, Email, Password, PasswordHash, ResetPasswordToken, Timestamp, Username,
 };
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]

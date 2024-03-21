@@ -4,11 +4,10 @@ use tracing::{info, instrument, warn};
 use uuid::Uuid;
 
 use crate::{
-  Timestamp,
   error::{DbError, RecoverableDbError},
   models::{comment::Comment, item::Item, user::User},
-  About, AuthToken, CommentText, DbPool, DbResult, Email, PasswordHash, ResetPasswordToken, Title,
-  Username,
+  About, AuthToken, CommentText, DbPool, DbResult, Email, PasswordHash, ResetPasswordToken,
+  Timestamp, Title, Username,
 };
 
 pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<User>> {
