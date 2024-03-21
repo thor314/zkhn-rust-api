@@ -1,5 +1,5 @@
 use db::{models::comment::Comment, CommentText, Title, Username};
-use garde::Validate;
+use garde::{Valid, Validate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -69,5 +69,21 @@ impl CommentPayload {
         dead:              todo!(),
       }
     }
+  }
+}
+
+impl CommentPayload {
+  /// Assume Comment Payload has already been validated.
+  fn into_comment(self) -> Comment {
+    Comment::new(
+      self.username,
+      self.parent_item_id,
+      self.parent_item_title,
+      self.is_parent,
+      self.root_comment_id,
+      self.parent_comment_id,
+      self.text,
+      self.dead,
+    )
   }
 }

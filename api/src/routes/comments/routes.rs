@@ -15,6 +15,7 @@ use axum::{
   http::StatusCode,
   Json, Router,
 };
+use axum_garde::WithValidation;
 use axum_login::AuthUser;
 use db::{
   models::{
@@ -82,7 +83,7 @@ pub async fn get_comment(
 /// Also update user karma, and item comment count, and tell the search-api.
 pub async fn create_comment(
   State(state): State<SharedState>,
-  Json(payload): Json<CommentPayload>,
+  WithValidation(payload): WithValidation<Json<CommentPayload>>,
   auth_session: AuthSession,
 ) -> ApiResult<StatusCode> {
   assert_authenticated(&auth_session)?;
@@ -91,7 +92,7 @@ pub async fn create_comment(
   let item = queries::get_item(&state.pool, payload.parent_item_id)
     .await?
     .ok_or(ApiError::DbEntryNotFound("comment not found in db".into()))?;
-  let new_comment: Comment = payload.try_into()?;
+  let new_comment: Comment = payload.into_inner().try_into()?;
   queries::insert_comment(&state.pool, &new_comment).await?;
 
   Ok(StatusCode::CREATED)

@@ -39,6 +39,12 @@ impl SharedState {
   fn new(pool: DbPool) -> Self { Self { pool } }
 }
 
+// () must implement FromRef<SharedState> for `axum_garde` to be able to validate payloads
+// https://docs.rs/axum_garde/latest/axum_garde/index.html#getting-started
+impl axum::extract::FromRef<SharedState> for () {
+  fn from_ref(_: &SharedState) {}
+}
+
 /// Build the routes and add middleware for:
 /// - Session management
 /// - Authentication

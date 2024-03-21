@@ -58,8 +58,10 @@ pub mod get {
 
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
 pub mod post {
+  use axum_garde::WithValidation;
   use db::password::verify_user_password;
 
+  use self::payload::UserUpdatePayload;
   use super::*;
 
   /// Create a new user:
@@ -72,9 +74,9 @@ pub mod post {
   pub async fn create_user(
     State(state): State<SharedState>,
     // auth_session: AuthSession, // keep commented to denote that no auth required
-    Json(user_payload): Json<UserPayload>,
+    WithValidation(user_payload): WithValidation<Json<UserPayload>>,
   ) -> ApiResult<StatusCode> {
-    let user: User = user_payload.try_into()?;
+    let user: User = user_payload.into_inner().into_user();
     let result = db::queries::users::create_user(&state.pool, &user).await;
 
     if let Err(DbError::Recoverable(e)) = result {
@@ -85,19 +87,18 @@ pub mod post {
     Ok(StatusCode::CREATED)
   }
 
-  use self::payload::UserUpdatePayload;
-  use super::*;
   /// Log the user in, verify their password, and return their auth session info:
   /// - If the user does not exist, return NotFound.
   /// - If the user exists, but the password is incorrect, return Unauthorized.
   /// - Otherwise, create the user auth session and provide the new user auth token.
+  #[debug_handler]
   pub async fn login_user(
-    State(state): State<SharedState>,
     // only need username and password
-    Json(user_payload): Json<UserPayload>,
+    State(state): State<SharedState>,
+    WithValidation(user_payload): WithValidation<Json<UserPayload>>,
     // ) -> ApiResult<AuthSession> {
   ) -> ApiResult<()> {
-    let UserPayload { username, password, .. } = user_payload;
+    let UserPayload { username, password, .. } = user_payload.into_inner();
 
     let user = db::queries::users::get_user(&state.pool, &username.0)
       .await?
