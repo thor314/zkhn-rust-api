@@ -10,6 +10,7 @@
 //! - change-user-password (todo: diff reset password?)
 
 pub mod payload;
+pub mod responses;
 
 use anyhow::anyhow;
 use axum::{
@@ -64,7 +65,7 @@ pub mod get {
 pub mod post {
   use db::password::verify_user_password;
 
-  use self::payload::UserUpdatePayload;
+  use self::{payload::UserUpdatePayload, responses::UserResponse};
   use super::*;
 
   /// Create a new user:
@@ -78,16 +79,19 @@ pub mod post {
     State(state): State<SharedState>,
     // auth_session: AuthSession, // keep commented to denote that no auth required
     WithValidation(user_payload): WithValidation<Json<UserPayload>>,
-  ) -> ApiResult<StatusCode> {
+  ) -> ApiResult<Json<UserResponse>> {
     let user: User = user_payload.into_inner().into_user();
     let result = db::queries::users::create_user(&state.pool, &user).await;
 
     if let Err(DbError::Recoverable(e)) = result {
+      tracing::error!("error creating user: {}", e);
       return Err(ApiError::DbEntryAlreadyExists("user already exists".to_string()));
     }
     result?;
 
-    Ok(StatusCode::CREATED)
+    let user_response = UserResponse::from(user);
+    info!("created user: {:?}", user_response);
+    Ok(Json(user_response))
   }
 
   /// Log the user in, verify their password, and return their auth session info:
@@ -95,11 +99,9 @@ pub mod post {
   /// - If the user exists, but the password is incorrect, return Unauthorized.
   /// - Otherwise, create the user auth session and provide the new user auth token.
   pub async fn login_user(
-    // only need username and password
     State(state): State<SharedState>,
     WithValidation(user_payload): WithValidation<Json<UserPayload>>,
-    // ) -> ApiResult<AuthSession> {
-  ) -> ApiResult<()> {
+  ) -> ApiResult<Json<UserResponse>> {
     let UserPayload { username, password, .. } = user_payload.into_inner();
 
     let user = db::queries::users::get_user(&state.pool, &username)
@@ -107,11 +109,17 @@ pub mod post {
       .ok_or(ApiError::DbEntryNotFound("user not found".to_string()))?;
 
     if !verify_user_password(&user, &password)? {
-      return Err(ApiError::Unauthorized("invalid password".to_string()));
+      tracing::error!("invalid password for user: {}", username.0);
+      return Err(ApiError::PwError("invalid password".to_string()));
     }
+
+    // renew user token: create a new unique string and store it
+    let (auth_token, auth_token_expiration) = auth::temp_jank::generate_user_token();
+    
 
     // todo create auth session, renew the user token
     // return Ok(auth_session);
+    info!("logged in user: {}", username.0);
     todo!()
   }
 

@@ -1,12 +1,18 @@
 //! Newtype wrappers for input validation and type-safety
 use std::fmt;
 
+use chrono::{DateTime, Utc};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 use sqlx::{prelude::Type, Decode, Encode};
 use uuid::Uuid;
 
 use crate::{password::hash_password, DbResult};
+
+/// A timestamp wrapper that we can use in our sqlx models.
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
+pub struct Timestamp(pub DateTime<Utc>);
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
 #[garde(transparent)]

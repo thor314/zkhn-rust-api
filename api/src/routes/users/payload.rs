@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error::ApiError, ApiResult};
 
+/// Username, password, and optionally email, and about.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct UserPayload {
   #[garde(dive)]

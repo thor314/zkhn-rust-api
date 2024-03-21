@@ -50,6 +50,7 @@ use oauth2::{
   url::Url,
   AuthorizationCode, CsrfToken, TokenResponse,
 };
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::task;
 use tower_sessions::{MemoryStore, SessionManagerLayer};
@@ -57,9 +58,24 @@ use tower_sessions_sqlx_store::PostgresStore;
 use uuid::Uuid;
 
 use crate::{error::ApiError, ApiResult, DbPool, SharedState};
-
 /// Axum extractor for the current user session.
 pub type AuthSession = axum_login::AuthSession<Backend>;
+
+pub mod temp_jank {
+  use super::*;
+  pub fn generate_user_token() -> (AuthToken, i64) {
+    let mut rng = rand::thread_rng();
+    // generate a 40 char token
+    let random_hex_string: String = (0..40)
+      .map(|_| rng.sample(rand::distributions::Alphanumeric))
+      .map(|c| c as char)
+      .filter(|c| c.is_ascii_hexdigit())
+      .collect();
+    let token = AuthToken(random_hex_string);
+    let expiration = crate::utils::default_expiration();
+    (token, expiration)
+  }
+}
 
 /// construct the auth router, with access to the database and session layer.
 /// reference: https://github.com/maxcountryman/axum-login/blob/main/examples/sqlite/src/web/app.rs#L55
