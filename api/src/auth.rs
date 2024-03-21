@@ -62,8 +62,10 @@ use crate::{error::ApiError, ApiResult, DbPool, SharedState};
 pub type AuthSession = axum_login::AuthSession<Backend>;
 
 pub mod temp_jank {
+  use db::Timestamp;
+
   use super::*;
-  pub fn generate_user_token() -> (AuthToken, i64) {
+  pub fn generate_user_token() -> (AuthToken, Timestamp) {
     let mut rng = rand::thread_rng();
     // generate a 40 char token
     let random_hex_string: String = (0..40)

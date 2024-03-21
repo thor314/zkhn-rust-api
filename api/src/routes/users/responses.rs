@@ -1,4 +1,4 @@
-use db::{models::user::User, AuthToken, Username};
+use db::{models::user::User, AuthToken, Timestamp, Username};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -7,7 +7,7 @@ pub struct UserResponse {
   pub success: bool,
   pub username: Username,
   pub auth_token: AuthToken,
-  pub auth_token_expiration_timestamp: i64,
+  pub auth_token_expiration_timestamp: Timestamp,
 }
 
 impl From<User> for UserResponse {

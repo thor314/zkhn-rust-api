@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context};
 use chrono::{NaiveDate, NaiveDateTime, TimeDelta, Utc};
+use db::Timestamp;
 use regex::Regex;
 use tracing::trace;
 use tracing_subscriber::{
@@ -39,5 +40,6 @@ use crate::error::ApiError;
 
 /// generate an expiration date
 pub(crate) fn default_expiration() -> db::Timestamp {
-  Utc::now().naive_utc() + TimeDelta::try_days(30).unwrap()
+  let timestamp = Utc::now().to_utc() + TimeDelta::try_days(30).unwrap();
+  Timestamp(timestamp)
 }
