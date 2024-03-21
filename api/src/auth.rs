@@ -63,8 +63,10 @@ pub type AuthSession = axum_login::AuthSession<Backend>;
 
 pub mod temp_jank {
   use db::Timestamp;
+  use tracing::{debug, info};
 
   use super::*;
+  // todo: questionably secure, certainly jank, but for now it's in the tank
   pub fn generate_user_token() -> (AuthToken, Timestamp) {
     let mut rng = rand::thread_rng();
     // generate a 40 char token
@@ -75,6 +77,8 @@ pub mod temp_jank {
       .collect();
     let token = AuthToken(random_hex_string);
     let expiration = crate::utils::default_expiration();
+
+    debug!("generated token: {:?}", token);
     (token, expiration)
   }
 }

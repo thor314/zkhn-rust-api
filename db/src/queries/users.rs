@@ -185,14 +185,14 @@ pub async fn update_user_about(
     .map_err(DbError::from)
 }
 
-// todo
-pub async fn login_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResult> {
-  // sqlx::query!("UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE username =
-  // $1", username.0)   .execute(pool)
-  //   .await
-  //   .map_err(DbError::from)
-  todo!()
-}
+// // todo
+// pub async fn login_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResult> {
+//   // sqlx::query!("UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE
+// username =   // $1", username.0)   .execute(pool)
+//   //   .await
+//   //   .map_err(DbError::from)
+//   todo!()
+// }
 
 /// Set the user's auth token and expiration in the database to `None`.
 pub async fn logout_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResult> {
@@ -203,4 +203,24 @@ pub async fn logout_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResul
   .execute(pool)
   .await
   .map_err(DbError::from)
+}
+
+pub async fn store_user_auth_token(
+  pool: &DbPool,
+  username: &Username,
+  auth_token: &AuthToken,
+  auth_token_expiration: &Timestamp,
+) -> DbResult<()> {
+  sqlx::query!(
+    "UPDATE users SET auth_token = $1, auth_token_expiration = $2 WHERE username =
+  $3",
+    auth_token.0,
+    auth_token_expiration.0,
+    username.0
+  )
+  .execute(pool)
+  .await
+  .map_err(DbError::from)?;
+
+  Ok(())
 }

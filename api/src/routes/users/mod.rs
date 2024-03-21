@@ -80,7 +80,13 @@ pub mod post {
     // auth_session: AuthSession, // keep commented to denote that no auth required
     WithValidation(user_payload): WithValidation<Json<UserPayload>>,
   ) -> ApiResult<Json<UserResponse>> {
-    let user: User = user_payload.into_inner().into_user();
+    let user: User = {
+      let mut user = user_payload.into_inner().into_user();
+      let (auth_token, auth_token_exp) = auth::temp_jank::generate_user_token();
+      user.auth_token = Some(auth_token);
+      user.auth_token_expiration = Some(auth_token_exp);
+      user
+    };
     let result = db::queries::users::create_user(&state.pool, &user).await;
 
     if let Err(DbError::Recoverable(e)) = result {
@@ -115,14 +121,14 @@ pub mod post {
 
     // renew user token: create a new unique string and store it
     let (auth_token, auth_token_expiration) = auth::temp_jank::generate_user_token();
+    db::queries::store_user_auth_token(&state.pool, &username, &auth_token, &auth_token_expiration)
+      .await?;
+    let user_response = UserResponse::new(user, auth_token, auth_token_expiration);
 
-    // todo create auth session, renew the user token
-    // return Ok(auth_session);
     info!("logged in user: {}", username.0);
-    todo!()
+    Ok(Json(user_response))
   }
 
-  /// todo
   pub async fn logout_user(
     State(state): State<SharedState>,
     auth_session: AuthSession,
@@ -133,6 +139,8 @@ pub mod post {
     // user.auth_token_expiration = None;
     // todo update the user in the db
     db::queries::logout_user(&state.pool, &user.username.0).await?;
+
+    info!("logged out user: {}", user.username);
     Ok(())
   }
 }
@@ -157,6 +165,8 @@ mod put {
       &payload.about.map(|s| s.0).unwrap(),
     )
     .await?;
+
+    info!("updated user: {}", payload.username);
     Ok(StatusCode::OK)
   }
 }
@@ -173,6 +183,8 @@ pub mod delete {
     let username = Username(username);
     username.validate(&())?;
     db::queries::users::delete_user(&state.pool, &username).await?;
+
+    info!("deleted user: {}", username);
     Ok(StatusCode::OK)
   }
 }
