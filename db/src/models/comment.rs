@@ -76,16 +76,9 @@ impl Comment {
     }
   }
 
-  pub fn edit(&mut self, text: CommentText) { self.comment_text = text; }
-
   pub fn increment_point(&mut self) { self.points += 1; }
 
   pub fn decrement_point(&mut self) { self.points = std::cmp::max(MIN_POINTS, self.points - 1); }
-
-  // todo: set children to dead?
-  pub fn kill(&mut self) { self.dead = true }
-
-  pub fn unkill(&mut self) { self.dead = true }
 
   pub fn create_child_comment(&mut self, by: Username, text: CommentText, dead: bool) -> Comment {
     let comment = Comment::new(
@@ -101,76 +94,5 @@ impl Comment {
 
     self.children_count += 1;
     comment
-  }
-}
-
-pub async fn child_comments(
-  mut conn: sqlx::PgConnection,
-  id: Uuid,
-  show_dead_comments: bool,
-) -> Result<Vec<Comment>, DbError> {
-  let comments: Vec<Comment> = sqlx::query_as!(
-    Comment,
-    "SELECT 
-      id,
-      username as \"username: Username\",
-      parent_item_id,
-      parent_item_title as \"parent_item_title: Title\",
-      comment_text as \"comment_text: CommentText\",
-      is_parent,
-      root_comment_id,
-      parent_comment_id,
-      children_count,
-      points,
-      created,
-      dead
-    FROM comments WHERE parent_comment_id = $1",
-    id
-  )
-  .fetch_all(&mut conn)
-  .await?;
-
-  Ok(comments)
-}
-
-// corresponding to `add_new_comment` in API
-#[derive(Debug, Deserialize, Validate)]
-pub struct NewCommentPayload {
-  #[garde(dive)]
-  username:          Username,
-  #[garde(skip)]
-  parent_item_id:    Uuid,
-  #[garde(dive)]
-  parent_item_title: Title,
-  #[garde(skip)]
-  is_parent:         bool,
-  #[garde(skip)]
-  root_comment_id:   Option<Uuid>,
-  #[garde(skip)]
-  parent_comment_id: Option<Uuid>,
-  #[garde(dive)]
-  text:              CommentText,
-  #[garde(skip)]
-  dead:              bool,
-}
-
-// todo: tryfrom
-impl TryFrom<NewCommentPayload> for Comment {
-  type Error = DbError;
-
-  fn try_from(payload: NewCommentPayload) -> DbResult<Self> {
-    payload.validate(&())?;
-    let comment = Comment::new(
-      payload.username,
-      payload.parent_item_id,
-      payload.parent_item_title,
-      payload.is_parent,
-      payload.root_comment_id,
-      payload.parent_comment_id,
-      payload.text,
-      payload.dead,
-    );
-
-    Ok(comment)
   }
 }

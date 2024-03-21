@@ -138,7 +138,7 @@ pub async fn get_comment_children_layer(pool: &DbPool, comment_id: Uuid) -> DbRe
 }
 
 async fn get_comment_children_recursive(
-  pool: &Pool<Postgres>,
+  pool: &DbPool,
   comment_id: Uuid,
 ) -> DbResult<Vec<Uuid>> {
   let children_ids = get_comment_children_layer(pool, comment_id).await?;
@@ -171,3 +171,32 @@ pub async fn delete_comment(pool: &DbPool, comment_id: Uuid, item_id: Uuid) -> D
 
   Ok(())
 }
+
+// pub async fn child_comments(
+//   mut conn: &DbPool,
+//   id: Uuid,
+//   show_dead_comments: bool,
+// ) -> DbResult<Vec<Comment>> {
+//   let comments: Vec<Comment> = sqlx::query_as!(
+//     Comment,
+//     "SELECT 
+//       id,
+//       username as \"username: Username\",
+//       parent_item_id,
+//       parent_item_title as \"parent_item_title: Title\",
+//       comment_text as \"comment_text: CommentText\",
+//       is_parent,
+//       root_comment_id,
+//       parent_comment_id,
+//       children_count,
+//       points,
+//       created,
+//       dead
+//     FROM comments WHERE parent_comment_id = $1",
+//     id
+//   )
+//   .fetch_all(&mut conn)
+//   .await?;
+
+//   Ok(comments)
+// }

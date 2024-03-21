@@ -35,6 +35,9 @@ pub enum ApiError {
   DbEntryAlreadyExists(String),
   #[status(StatusCode::UNAUTHORIZED)]
   Unauthorized(String),
+  /// for when e.g. an upvote or favorite is doubly submitted
+  #[status(StatusCode::BAD_REQUEST)]
+  DoublySubmittedChange(String),
   #[status(StatusCode::BAD_REQUEST)]
   Payload(String),
   #[status(StatusCode::BAD_REQUEST)]
@@ -63,6 +66,7 @@ impl std::fmt::Display for ApiError {
       ApiError::AuthenticationError(e) => write!(f, "AuthenticationError: {0}", e),
       ApiError::AuthReqwest(e) => write!(f, "AuthReqwest: {0}", e),
       ApiError::OAuth2(e) => write!(f, "OAuth2: {0}", e),
+      ApiError::DoublySubmittedChange(e) => write!(f, "DoublySubmittedChange: {0}", e),
     }
   }
 }
