@@ -4,6 +4,7 @@ use tracing::{info, instrument, warn};
 use uuid::Uuid;
 
 use crate::{
+  Timestamp,
   error::{DbError, RecoverableDbError},
   models::{comment::Comment, item::Item, user::User},
   About, AuthToken, CommentText, DbPool, DbResult, Email, PasswordHash, ResetPasswordToken, Title,
@@ -17,9 +18,9 @@ pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<Use
     "SELECT username as \"username: Username\", 
             password_hash as \"password_hash: PasswordHash\", 
             auth_token as \"auth_token: AuthToken\", 
-            auth_token_expiration, 
+            auth_token_expiration as \"auth_token_expiration: Timestamp\", 
             reset_password_token as \"reset_password_token: ResetPasswordToken\", 
-            reset_password_token_expiration, 
+            reset_password_token_expiration as \"reset_password_token_expiration: Timestamp\",  
             email as \"email: Email\", 
             created, 
             karma, 
@@ -79,9 +80,9 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     username.0,
     password_hash.0,
     auth_token.map(|s| s.0),
-    auth_token_expiration,
+    auth_token_expiration.map(|t| t.0),
     reset_password_token.map(|s| s.0),
-    reset_password_token_expiration,
+    reset_password_token_expiration.map(|t| t.0),
     email.map(|s| s.0),
     created.0,
     karma,

@@ -4,8 +4,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-  utils::{now, Timestamp},
-  Username,
+  utils::now, Timestamp, Username
 };
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]

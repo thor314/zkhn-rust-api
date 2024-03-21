@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT username as \"username: Username\", \n            password_hash as \"password_hash: PasswordHash\", \n            auth_token as \"auth_token: AuthToken\", \n            auth_token_expiration, \n            reset_password_token as \"reset_password_token: ResetPasswordToken\", \n            reset_password_token_expiration, \n            email as \"email: Email\", \n            created, \n            karma, \n            about as \"about: About\", \n            show_dead, \n            is_moderator, \n            shadow_banned, \n            banned \n     FROM users WHERE username = $1",
+  "query": "SELECT username as \"username: Username\", \n            password_hash as \"password_hash: PasswordHash\", \n            auth_token as \"auth_token: AuthToken\", \n            auth_token_expiration as \"auth_token_expiration: Timestamp\", \n            reset_password_token as \"reset_password_token: ResetPasswordToken\", \n            reset_password_token_expiration as \"reset_password_token_expiration: Timestamp\",  \n            email as \"email: Email\", \n            created, \n            karma, \n            about as \"about: About\", \n            show_dead, \n            is_moderator, \n            shadow_banned, \n            banned \n     FROM users WHERE username = $1",
   "describe": {
     "columns": [
       {
@@ -20,8 +20,8 @@
       },
       {
         "ordinal": 3,
-        "name": "auth_token_expiration",
-        "type_info": "Int8"
+        "name": "auth_token_expiration: Timestamp",
+        "type_info": "Timestamptz"
       },
       {
         "ordinal": 4,
@@ -30,8 +30,8 @@
       },
       {
         "ordinal": 5,
-        "name": "reset_password_token_expiration",
-        "type_info": "Int8"
+        "name": "reset_password_token_expiration: Timestamp",
+        "type_info": "Timestamptz"
       },
       {
         "ordinal": 6,
@@ -96,5 +96,5 @@
       false
     ]
   },
-  "hash": "adb2069793012107def8600ee251ee4f2c14f168e6bef4c07c6bfe9aaba6f5dc"
+  "hash": "e27637c3f8660b2c7e349f8182ab5867184d2cb4af3c03e89f40ecd274468f13"
 }

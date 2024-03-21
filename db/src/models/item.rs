@@ -5,9 +5,7 @@ use uuid::Uuid;
 
 use super::comment::Comment;
 use crate::{
-  error::DbError,
-  utils::{now, Timestamp},
-  Title, Username,
+  error::DbError, utils::now, Timestamp, Title, Username
 };
 
 /// A single post on the site.

@@ -5,11 +5,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Decode, Encode};
 use uuid::Uuid;
 
-use crate::{
-  error::DbError,
-  utils::{now, Timestamp},
-  CommentText, DbResult, Title, Username,
-};
+use crate::{error::DbError, utils::now, CommentText, DbResult, Timestamp, Title, Username};
 
 /// the minimum points a comment can have
 const MIN_POINTS: i32 = -4;

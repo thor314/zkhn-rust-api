@@ -3,7 +3,7 @@ use chrono::{DateTime, NaiveDate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{utils::Timestamp, Username};
+use crate::{Timestamp, Username};
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct UserHidden {
