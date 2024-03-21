@@ -100,10 +100,7 @@ async fn test_user_login_logout(pool: PgPool) {
   assert_eq!(response.status(), StatusCode::CREATED);
 
   let login_payload = UserPayload::new("alice", "password", None, None).unwrap();
-  let login = Request::builder()
-    .uri("/users/login")
-    .method("POST")
-    .json(json!(login_payload));
+  let login = Request::builder().uri("/users/login").method("POST").json(json!(login_payload));
   let response = app.clone().oneshot(login).await.unwrap();
   assert_eq!(response.status(), StatusCode::OK);
 

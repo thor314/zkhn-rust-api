@@ -5,7 +5,9 @@ use uuid::Uuid;
 
 use super::comment::Comment;
 use crate::{
-  error::DbError, utils::{now, Timestamp}, Title, Username
+  error::DbError,
+  utils::{now, Timestamp},
+  Title, Username,
 };
 
 /// A single post on the site.
@@ -18,16 +20,16 @@ pub struct Item {
   pub title:         Title,
   /// news, show, ask
   pub item_type:     String,
-  pub url:           Option<String>,
+  pub url:           Option<String>, // validate
   pub domain:        Option<String>,
-  pub text:          Option<String>,
+  pub text:          Option<String>, // validate
   /// karma for the item
   pub points:        i32,
   /// internal algorithmic score to sort items on home page by popularity
   pub score:         i32, // todo: both points and score?
   pub comment_count: i32,
   /// Tweet, Blog, Paper, Other
-  pub item_category: String,
+  pub item_category: String, // validate
   pub created:       Timestamp,
   pub dead:          bool,
 }

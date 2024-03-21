@@ -11,7 +11,7 @@ use crate::{
   models::{comment::Comment, item::Item, user::User},
   password::hash_password,
   queries::*,
-  About, Email, Password, Username,
+  About, CommentText, Email, Password, Title, Username,
 };
 
 static INIT: std::sync::Once = std::sync::Once::new();
@@ -56,8 +56,8 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
 
   let mut items = (1i32..).map(|i| {
     Item::new(
-      user.username.0.clone(),
-      format!("testtitle{}", i),
+      user.username.clone(),
+      Title(format!("testtitle{}", i)),
       "news".to_string(),
       true,
       "text content".to_string(),
@@ -77,13 +77,13 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   // todo: try to insert a comment
   let mut comments = (1i32..).map(|i| {
     Comment::new(
-      user.username.0.clone(),
+      user.username.clone(),
       item.id,
       item.title.clone(),
       true,
       None,
       None,
-      format!("testcomment{}", i),
+      CommentText(format!("testcomment{}", i)),
       false,
     )
   });

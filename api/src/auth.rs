@@ -65,7 +65,7 @@ pub type AuthSession = axum_login::AuthSession<Backend>;
 /// reference: https://github.com/maxcountryman/axum-login/blob/main/examples/sqlite/src/web/app.rs#L55
 pub fn auth_router(pool: &DbPool, session_layer: &SessionManagerLayer<PostgresStore>) -> Router {
   // let backend = Backend::new(pool.clone(), BasicClient::new(
-    // "client_id".to_string()));
+  // "client_id".to_string()));
   // let auth_layer = AuthManagerLayerBuilder::new(backend, session_layer.clone()).build();
 
   // Router::new()
@@ -203,7 +203,7 @@ impl AuthnBackend for Backend {
 
 // todo: below this line must this all die
 // ---------------------------------------
-// 
+//
 // mod post {
 //   //! The login and logout handlers
 //   use super::*;

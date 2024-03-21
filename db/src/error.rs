@@ -25,6 +25,8 @@ pub enum DbError {
   #[error(transparent)]
   PwError(#[from] scrypt::password_hash::Error),
   #[error(transparent)]
+  GardePayload(#[from] garde::Report),
+  #[error(transparent)]
   Recoverable(#[from] RecoverableDbError),
 }
 

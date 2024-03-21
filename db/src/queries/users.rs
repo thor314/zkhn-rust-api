@@ -6,7 +6,8 @@ use uuid::Uuid;
 use crate::{
   error::{DbError, RecoverableDbError},
   models::{comment::Comment, item::Item, user::User},
-  About, AuthToken, DbPool, DbResult, Email, PasswordHash, ResetPasswordToken, Title, Username,
+  About, AuthToken, CommentText, DbPool, DbResult, Email, PasswordHash, ResetPasswordToken, Title,
+  Username,
 };
 
 pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
@@ -124,10 +125,27 @@ pub async fn delete_user(pool: &DbPool, username: &str) -> DbResult<()> {
 }
 
 pub async fn get_user_comments(pool: &DbPool, username: &str) -> DbResult<Vec<Comment>> {
-  sqlx::query_as!(Comment, "SELECT * FROM comments WHERE username = $1", username)
-    .fetch_all(pool)
-    .await
-    .map_err(DbError::from)
+  sqlx::query_as!(
+    Comment,
+    "SELECT 
+    id,
+    username as \"username: Username\",
+    parent_item_id,
+    parent_item_title as \"parent_item_title: Title\",
+    comment_text as \"comment_text: CommentText\",
+    is_parent,
+    root_comment_id,
+    parent_comment_id,
+    children_count,
+    points,
+    created,
+    dead
+   FROM comments WHERE username = $1",
+    username
+  )
+  .fetch_all(pool)
+  .await
+  .map_err(DbError::from)
 }
 
 pub async fn get_user_items(pool: &DbPool, username: &str) -> DbResult<Vec<Item>> {

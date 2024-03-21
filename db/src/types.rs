@@ -35,7 +35,6 @@ impl std::fmt::Display for Email {
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 #[garde(transparent)]
 pub struct Password(#[garde(ascii, length(min = 8, max = 25))] pub String);
-
 impl Password {
   pub fn hash(&self) -> DbResult<PasswordHash> { hash_password(self) }
 }
@@ -44,7 +43,6 @@ impl Password {
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[repr(transparent)]
 pub struct PasswordHash(pub String);
-
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[repr(transparent)]
@@ -58,3 +56,8 @@ pub struct ResetPasswordToken(pub String);
 #[garde(transparent)]
 #[repr(transparent)]
 pub struct Title(#[garde(ascii, length(min = 8, max = 100))] pub String);
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Validate)]
+#[garde(transparent)]
+#[repr(transparent)]
+pub struct CommentText(#[garde(ascii, length(min = 8, max = 2000))] pub String);

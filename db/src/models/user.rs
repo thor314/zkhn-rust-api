@@ -12,7 +12,10 @@ use super::{
   user_hidden::UserHidden,
   user_vote::{UserVote, VoteState},
 };
-use crate::{error::DbError, utils::now, About, AuthToken, DbPool, Email, Password, PasswordHash, ResetPasswordToken, Username};
+use crate::{
+  error::DbError, utils::now, About, AuthToken, DbPool, Email, Password, PasswordHash,
+  ResetPasswordToken, Username,
+};
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
 pub struct User {
