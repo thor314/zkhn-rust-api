@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::{
   error::{DbError, RecoverableDbError},
   models::{comment::Comment, item::Item, user::User},
-  AuthToken, About, DbPool, DbResult, Email, PasswordHash, Username,
+  About, AuthToken, DbPool, DbResult, Email, PasswordHash, ResetPasswordToken, Title, Username,
 };
 
 pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
@@ -17,7 +17,7 @@ pub async fn get_user(pool: &DbPool, username: &str) -> DbResult<Option<User>> {
             password_hash as \"password_hash: PasswordHash\", 
             auth_token as \"auth_token: AuthToken\", 
             auth_token_expiration, 
-            reset_password_token, 
+            reset_password_token as \"reset_password_token: ResetPasswordToken\", 
             reset_password_token_expiration, 
             email as \"email: Email\", 
             created, 
@@ -79,7 +79,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     password_hash.0,
     auth_token.map(|s| s.0),
     auth_token_expiration,
-    reset_password_token,
+    reset_password_token.map(|s| s.0),
     reset_password_token_expiration,
     email.map(|s| s.0),
     created.0,
@@ -131,10 +131,28 @@ pub async fn get_user_comments(pool: &DbPool, username: &str) -> DbResult<Vec<Co
 }
 
 pub async fn get_user_items(pool: &DbPool, username: &str) -> DbResult<Vec<Item>> {
-  sqlx::query_as!(Item, "SELECT * FROM items WHERE username = $1", username)
-    .fetch_all(pool)
-    .await
-    .map_err(DbError::from)
+  sqlx::query_as!(
+    Item,
+    "SELECT 
+      id,
+      username as \"username: Username\",    
+      title as \"title: Title\",  
+      item_type,   
+      url,         
+      domain,      
+      text,        
+      points,      
+      score,       
+      comment_count,
+      item_category,
+      created,     
+      dead
+    FROM items WHERE username = $1",
+    username
+  )
+  .fetch_all(pool)
+  .await
+  .map_err(DbError::from)
 }
 
 // todo: make generic to update other user fields

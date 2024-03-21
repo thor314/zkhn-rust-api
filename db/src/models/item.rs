@@ -5,8 +5,7 @@ use uuid::Uuid;
 
 use super::comment::Comment;
 use crate::{
-  error::DbError,
-  utils::{now, Timestamp},
+  error::DbError, utils::{now, Timestamp}, Title, Username
 };
 
 /// A single post on the site.
@@ -15,8 +14,8 @@ use crate::{
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Item {
   pub id:            Uuid,
-  pub username:      String,
-  pub title:         String,
+  pub username:      Username,
+  pub title:         Title,
   /// news, show, ask
   pub item_type:     String,
   pub url:           Option<String>,
@@ -35,8 +34,8 @@ pub struct Item {
 
 impl Item {
   pub fn new(
-    username: String,
-    title: String,
+    username: Username,
+    title: Title,
     item_type: String,
     is_text: bool,
     text_or_url_content: String,

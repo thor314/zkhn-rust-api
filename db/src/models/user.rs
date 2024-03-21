@@ -12,7 +12,7 @@ use super::{
   user_hidden::UserHidden,
   user_vote::{UserVote, VoteState},
 };
-use crate::{error::DbError, utils::now, About, AuthToken, DbPool, Email, Password, PasswordHash, Username};
+use crate::{error::DbError, utils::now, About, AuthToken, DbPool, Email, Password, PasswordHash, ResetPasswordToken, Username};
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
 pub struct User {
@@ -25,7 +25,7 @@ pub struct User {
   /// Expiration of auth token
   pub auth_token_expiration: Option<i64>,
   /// Reset password token
-  pub reset_password_token: Option<String>,
+  pub reset_password_token: Option<ResetPasswordToken>,
   /// Expiration of reset password token
   pub reset_password_token_expiration: Option<i64>,
   /// User email

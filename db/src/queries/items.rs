@@ -3,14 +3,32 @@ use uuid::Uuid;
 use crate::{
   error::DbError,
   models::{comment::Comment, item::Item},
-  DbPool, DbResult,
+  DbPool, DbResult, Title, Username,
 };
 
 pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
-  sqlx::query_as!(Item, "SELECT * FROM items WHERE id = $1", item_id)
-    .fetch_optional(pool)
-    .await
-    .map_err(DbError::from)
+  sqlx::query_as!(
+    Item,
+    "SELECT 
+      id,
+      username as \"username: Username\",    
+      title as \"title: Title\",  
+      item_type,   
+      url,         
+      domain,      
+      text,        
+      points,      
+      score,       
+      comment_count,
+      item_category,
+      created,     
+      dead
+    FROM items WHERE id = $1",
+    item_id
+  )
+  .fetch_optional(pool)
+  .await
+  .map_err(DbError::from)
 }
 
 pub async fn insert_item(pool: &DbPool, new_item: &Item) -> DbResult<()> {
@@ -49,8 +67,8 @@ pub async fn insert_item(pool: &DbPool, new_item: &Item) -> DbResult<()> {
     dead ) 
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
     id,
-    username,
-    title,
+    username.0,
+    title.0,
     item_type,
     url,
     domain,
