@@ -26,12 +26,16 @@
 
 use serde::Deserialize;
 
+use self::backend::Backend;
+
 // mod jank;
 // mod oauth;
 mod auth_user;
 mod backend;
 mod credentials;
 mod password;
+
+pub type AuthSession = axum_login::AuthSession<Backend>;
 
 /// This allows us to extract the "next" field from the query string. We use this
 /// to redirect after log in.

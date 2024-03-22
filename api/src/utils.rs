@@ -11,12 +11,11 @@ use tracing_subscriber::{
 
 use crate::error::ApiError;
 
-// // todo: test. Most of this should probably be done with a crate like ammonia, plus latex
-// rendering? /// Sanitize text:
+// // todo: test. Most of this should probably be done with a crate like ammonia
+// /// Sanitize text:
 // /// - Trim whitespace
 // /// - Remove HTML tags
 // /// - Parse Markdown
-// /// - Parse Latex todo
 // /// - Linkify URLs
 // /// - Prevent XSS attacks with `ammonia`
 // pub fn sanitize_text(text: &str) -> String {
