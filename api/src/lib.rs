@@ -4,6 +4,7 @@
 #![allow(unreachable_code)]
 #![allow(non_snake_case)]
 #![allow(clippy::clone_on_copy)]
+#![allow(unused_mut)]
 
 mod auth;
 pub mod error;
@@ -21,10 +22,7 @@ use routes::router_internal;
 use sessions::get_session_layer;
 use tracing::info;
 
-pub use crate::{
-  auth::{auth_router, AuthSession},
-  routes::users::payload::*,
-};
+pub use crate::routes::users::payload::*;
 
 pub type ApiResult<T> = Result<T, ApiError>;
 
@@ -57,7 +55,7 @@ pub async fn router(pool: &DbPool, analytics_key: Option<String>) -> ApiResult<R
     .merge(router_internal(state)) // 
     .layer(session_layer.clone()) // must precede auth router
     .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth router
-    .merge(auth_router(pool, &session_layer)) // all routes above this may have auth middleware applied
+    // .merge(auth_router(pool, &session_layer)) // all routes above this may have auth middleware applied
 ;
 
   Ok(router)

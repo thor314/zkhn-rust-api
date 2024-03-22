@@ -104,6 +104,7 @@ async fn test_user_login_logout(pool: PgPool) {
   let response = app.clone().oneshot(login).await.unwrap();
   assert_eq!(response.status(), StatusCode::OK);
 
+  // let auth_session = AuthSession::
   // todo
   // let logout = Request::builder()
   //   .uri("/users/logout")

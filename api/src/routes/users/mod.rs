@@ -26,9 +26,10 @@ use payload::UserPayload;
 use tracing::info;
 
 use crate::{
-  auth::{self, assert_authenticated},
+  // auth::{self, assert_authenticated},
   error::ApiError,
-  ApiResult, AuthSession, SharedState,
+  ApiResult,
+  SharedState,
 };
 
 pub fn users_router(state: SharedState) -> Router {
@@ -37,8 +38,8 @@ pub fn users_router(state: SharedState) -> Router {
     .route("/", routing::put(put::update_user))
     .route("/:username", routing::delete(delete::delete_user))
     .route("/", routing::post(post::create_user))
-    .route("/login", routing::post(post::login_user))
-    .route("/logout", routing::post(post::logout_user))
+    // .route("/login", routing::post(post::login_user))
+    // .route("/logout", routing::post(post::logout_user))
     .with_state(state)
 }
 
@@ -63,6 +64,7 @@ pub mod get {
 
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
 pub mod post {
+  use axum::Form;
   use db::password::verify_user_password;
 
   use self::{payload::UserUpdatePayload, responses::UserResponse};
@@ -82,7 +84,8 @@ pub mod post {
   ) -> ApiResult<Json<UserResponse>> {
     let user: User = {
       let mut user = user_payload.into_inner().into_user();
-      let (auth_token, auth_token_exp) = auth::temp_jank::generate_user_token();
+      // let (auth_token, auth_token_exp) = auth::temp_jank::generate_user_token();
+      let (auth_token, auth_token_exp) = todo!();
       user.auth_token = Some(auth_token);
       user.auth_token_expiration = Some(auth_token_exp);
       user
@@ -100,50 +103,50 @@ pub mod post {
     Ok(Json(user_response))
   }
 
-  /// Log the user in, verify their password, and return their auth session info:
-  /// - If the user does not exist, return NotFound.
-  /// - If the user exists, but the password is incorrect, return Unauthorized.
-  /// - Otherwise, create the user auth session and provide the new user auth token.
-  pub async fn login_user(
-    State(state): State<SharedState>,
-    WithValidation(user_payload): WithValidation<Json<UserPayload>>,
-  ) -> ApiResult<Json<UserResponse>> {
-    let UserPayload { username, password, .. } = user_payload.into_inner();
+  // /// Log the user in, verify their password, and return their auth session info:
+  // /// - If the user does not exist, return NotFound.
+  // /// - If the user exists, but the password is incorrect, return Unauthorized.
+  // /// - Otherwise, create the user auth session and provide the new user auth token.
+  // pub async fn login_user_password(
+  //   mut auth_session: AuthSession,
+  //   Form(creds): Form<PasswordCredentials>,
+  // ) -> ApiResult<Json<UserResponse>> {
+  //   let UserPayload { username, password, .. } = user_payload.into_inner();
 
-    let user = db::queries::users::get_user(&state.pool, &username)
-      .await?
-      .ok_or(ApiError::DbEntryNotFound("user not found".to_string()))?;
+  //   let user = db::queries::users::get_user(&state.pool, &username)
+  //     .await?
+  //     .ok_or(ApiError::DbEntryNotFound("user not found".to_string()))?;
 
-    if !verify_user_password(&user, &password)? {
-      tracing::error!("invalid password for user: {}", username.0);
-      return Err(ApiError::PwError("invalid password".to_string()));
-    }
+  //   if !verify_user_password(&user, &password)? {
+  //     tracing::error!("invalid password for user: {}", username.0);
+  //     return Err(ApiError::PwError("invalid password".to_string()));
+  //   }
 
-    // renew user token: create a new unique string and store it
-    let (auth_token, auth_token_expiration) = auth::temp_jank::generate_user_token();
-    db::queries::store_user_auth_token(&state.pool, &username, &auth_token, &auth_token_expiration)
-      .await?;
-    let user_response = UserResponse::new(user, auth_token, auth_token_expiration);
+  //   // renew user token: create a new unique string and store it
+  //   let (auth_token, auth_token_expiration) = auth::temp_jank::generate_user_token();
+  //   db::queries::store_user_auth_token(&state.pool, &username, &auth_token,
+  // &auth_token_expiration)     .await?;
+  //   let user_response = UserResponse::new(user, auth_token, auth_token_expiration);
 
-    info!("logged in user: {}", username.0);
-    Ok(Json(user_response))
-  }
+  //   info!("logged in user: {}", username.0);
+  //   Ok(Json(user_response))
+  // }
 
-  pub async fn logout_user(
-    State(state): State<SharedState>,
-    auth_session: AuthSession,
-    Path(token): Path<String>,
-  ) -> ApiResult<()> {
-    assert_authenticated(&auth_session)?;
-    let username = auth_session.user.unwrap().username;
-    // user.auth_token = None;
-    // user.auth_token_expiration = None;
-    // todo update the user in the db
-    db::queries::logout_user(&state.pool, &username.0).await?;
+  // pub async fn logout_user(
+  //   State(state): State<SharedState>,
+  //   auth_session: AuthSession,
+  //   Path(token): Path<String>,
+  // ) -> ApiResult<()> {
+  //   assert_authenticated(&auth_session)?;
+  //   let username = auth_session.user.unwrap().username;
+  //   // user.auth_token = None;
+  //   // user.auth_token_expiration = None;
+  //   // todo update the user in the db
+  //   db::queries::logout_user(&state.pool, &username.0).await?;
 
-    info!("logged out user: {}", username);
-    Ok(())
-  }
+  //   info!("logged out user: {}", username);
+  //   Ok(())
+  // }
 }
 
 mod put {
