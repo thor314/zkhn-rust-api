@@ -17,7 +17,7 @@ use crate::{
   About, AuthToken, DbPool, Email, Password, PasswordHash, ResetPasswordToken, Timestamp, Username,
 };
 
-#[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
+#[derive(sqlx::FromRow, Serialize, Deserialize, Clone)]
 pub struct User {
   pub username: Username,
   /// Hashed password
@@ -102,5 +102,27 @@ impl User {
       vote_state,
       created: now(),
     }
+  }
+}
+
+// explicitly redact sensitive info
+impl std::fmt::Debug for User {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.debug_struct("User")
+      .field("username", &self.username)
+      .field("password_hash", &self.password_hash)
+      .field("auth_token", &"redacted")
+      .field("auth_token_expiration", &self.auth_token_expiration)
+      .field("reset_password_token", &"redacted")
+      .field("reset_password_token_expiration", &self.reset_password_token_expiration)
+      .field("email", &self.email)
+      .field("created", &self.created)
+      .field("karma", &self.karma)
+      .field("about", &self.about)
+      .field("show_dead", &self.show_dead)
+      .field("is_moderator", &self.is_moderator)
+      .field("shadow_banned", &self.shadow_banned)
+      .field("banned", &self.banned)
+      .finish()
   }
 }

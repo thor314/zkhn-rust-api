@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use tokio::task;
 use tracing_subscriber::filter;
 
-use super::credentials::Credentials;
+use super::{credentials::Credentials, User};
 use crate::{auth::UserInfo, error::ApiError, ApiResult};
 
 #[derive(Debug, Clone)]
@@ -38,7 +38,7 @@ impl Backend {
 impl AuthnBackend for Backend {
   type Credentials = Credentials;
   type Error = ApiError;
-  type User = super::auth_user::User;
+  type User = User;
 
   async fn authenticate(&self, creds: Self::Credentials) -> ApiResult<Option<Self::User>> {
     match creds {
@@ -49,6 +49,7 @@ impl AuthnBackend for Backend {
   }
 
   async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    Ok(db::queries::get_user(&self.db, user_id).await.unwrap().map(|u| u.into()))
+    let user = db::queries::get_user(&self.db, user_id).await?.map(User);
+    Ok(user)
   }
 }
