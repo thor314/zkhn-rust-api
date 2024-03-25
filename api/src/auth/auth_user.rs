@@ -1,3 +1,5 @@
+//! A simplified auth struct for testing auth
+//! ref: https://github.com/maxcountryman/axum-login/blob/main/examples/multi-auth/src/users.rs
 use axum::Router;
 use axum_login::{tower_sessions::SessionManagerLayer, AuthUser};
 use db::{AuthToken, DbPool, PasswordHash, Username};
