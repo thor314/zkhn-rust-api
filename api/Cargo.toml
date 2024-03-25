@@ -26,8 +26,8 @@ uuid={ version="1.7.0", features=["serde", "v4"] }
 url="2.5.0"
 axum-login = "0.15.0"
 tower = "0.4.13"
-tower-sessions = "0.11.0"
-tower-sessions-sqlx-store = { version = "0.11.0", features = ["postgres"] }
+tower-sessions = "0.12.0"
+tower-sessions-sqlx-store = { version = "0.12.0", features = ["postgres"] }
 axum-analytics = "1.1.3"
 axum-derive-error = "0.1.0"
 
@@ -39,7 +39,9 @@ axum_garde = "0.18.0"
 rand = "0.8.5"
 
 [dev-dependencies]
+axum-test = "14.5.0"
 http-body-util = "0.1.1"
+serde_urlencoded = "0.7.1"
 sqlx = { version = "0.7.3", features = ["postgres", "tls-rustls", "chrono", "uuid", "runtime-tokio"] }
 
 # rstest           ="0.18"                                 # testing convenience proc-macros

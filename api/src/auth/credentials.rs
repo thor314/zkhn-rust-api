@@ -4,73 +4,79 @@ use oauth2::{
   CsrfToken, TokenResponse,
 };
 use reqwest::header::AUTHORIZATION;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use self::{oauth_creds::OAuthCreds, password_creds::PasswordCreds};
 use super::auth_user;
 use crate::{
-  auth::{User, UserInfo},
+  auth::{auth_user::User, UserInfo},
   error::ApiError,
   ApiResult,
 };
 
 /// Users may log in either via password or via OAuth.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Credentials {
   Password(PasswordCreds),
   OAuth(OAuthCreds),
 }
 
-mod password_creds {
+pub mod password_creds {
+
+  use db::password::verify_password;
 
   use super::*;
   /// Credentials for logging in with a username and password.
-  #[derive(Debug, Clone, Deserialize)]
+  #[derive(Debug, Clone, Deserialize, Serialize)]
   pub struct PasswordCreds {
     pub username: Username,
     pub password: Password,
+    /// Where to redirect the user after login
     pub next:     Option<String>,
   }
 
   impl PasswordCreds {
-    pub async fn authenticate(&self, pool: &DbPool) -> ApiResult<Option<User>> {
-      let user = db::queries::get_user(pool, &self.username).await?;
+    pub fn new(username: &str, password: &str, next: Option<String>) -> Self {
+      let username = Username(username.to_string());
+      let password = Password(password.to_string());
+      Self { username, password, next }
+    }
 
-      // Verifying the password is blocking and potentially slow, so we'll do so via
-      // `spawn_blocking`.
-      // task::spawn_blocking(|| {
-      //   // We're using password-based authentication: this works by comparing our form
-      //   // input with an argon2 password hash.
-      //   let filtered_user = user.filter(|user| {
-      //     let Some(ref password) = user.password else {
-      //       return false;
-      //     };
+    /// Returns:
+    /// - Ok(Some(user)) - if the user was found and the password was correct
+    /// - Ok(None) - if the user was not found, or if the user was found but the password was
+    ///   incorrect
+    /// - Err(_) - if there was an error with the database
+    pub async fn authenticate_password(&self, pool: &DbPool) -> ApiResult<Option<User>> {
+      let user = db::queries::get_user(pool, &self.username)
+        .await?
+        .filter(|user| verify_password(&user.password_hash, &self.password).is_ok())
+        .map(User);
 
-      //     let stored_password_hash = user.password_hash;
-      //     verify_password(stored_password_hash, password_cred.password).is_ok()
-      //   });
-
-      //   Ok(filtered_user)
-      // })
-      // .await?
-      todo!()
+      Ok(user)
     }
   }
 }
 
-mod oauth_creds {
+pub mod oauth_creds {
 
   use super::*;
 
   /// Credentials for logging in with an OAuth code.
-  #[derive(Debug, Clone, Deserialize)]
+  #[derive(Debug, Clone, Deserialize, Serialize)]
   pub struct OAuthCreds {
     pub code:      String,
     pub old_state: CsrfToken,
     pub new_state: CsrfToken,
+    // pub next:      Option<String>, // todo
   }
 
   impl OAuthCreds {
+    /// Returns:
+    /// - Ok(Some(user)) - if the user was found and the password was correct
+    /// - Ok(None) - if the user was not found, or if the user was found but the password was
+    ///   incorrect
+    /// - Err(_) - if there was an error with the database
     pub async fn authenticate(
       &self,
       pool: &DbPool,

@@ -17,7 +17,7 @@ use axum::Router;
 use axum_analytics::Analytics;
 use db::DbPool;
 use error::ApiError;
-use routes::router_internal;
+use routes::routes;
 use sessions::get_session_layer;
 use tracing::info;
 
@@ -42,6 +42,7 @@ impl axum::extract::FromRef<SharedState> for () {
   fn from_ref(_: &SharedState) {}
 }
 
+
 /// Build the routes and add middleware for:
 /// - Session management
 /// - Authentication
@@ -51,10 +52,10 @@ pub async fn router(pool: &DbPool, analytics_key: Option<String>) -> ApiResult<R
   let session_layer = get_session_layer(pool).await?;
 
   let router = Router::new()
-    .merge(router_internal(state)) // 
     .layer(session_layer.clone()) // must precede auth router
     .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth router
-    // .merge(auth_router(pool, &session_layer)) // all routes above this may have auth middleware applied
+    .merge(routes(state)) // all these routes should have 
+    // .merge(auth_router) // all routes above this may have auth middleware applied
 ;
 
   Ok(router)

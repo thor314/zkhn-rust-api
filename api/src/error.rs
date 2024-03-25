@@ -26,7 +26,7 @@ pub enum ApiError {
   DbError(#[from] DbError),
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   Session(tower_sessions::session_store::Error),
-  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
+  #[status(StatusCode::BAD_REQUEST)]
   AuthenticationError(String),
   // 400s
   #[status(StatusCode::NOT_FOUND)]
@@ -45,9 +45,12 @@ pub enum ApiError {
   #[status(StatusCode::UNAUTHORIZED)]
   PwError(String),
   #[status(StatusCode::UNAUTHORIZED)]
-  AuthReqwest(reqwest::Error),
+  AuthReqwest(#[from] reqwest::Error),
   #[status(StatusCode::UNAUTHORIZED)]
   OAuth2(BasicRequestTokenError<AsyncHttpClientError>),
+  // don't uncomment - creates circular dependency
+  // #[status(StatusCode::UNAUTHORIZED)]
+  // AxumLogin(#[from] axum_login::Error<crate::auth::Backend>),
 }
 
 impl std::fmt::Display for ApiError {
