@@ -26,6 +26,9 @@ pub fn auth_router() -> Router {
 }
 
 // ref: https://github.com/maxcountryman/axum-login/blob/main/examples/multi-auth/src/web/auth.rs#L45
+// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L48
+/// WIP: need to add logic to mirror js handler
+/// BLOCKED: https://github.com/maxcountryman/axum-login/pull/210
 async fn login_password(
   mut auth_session: AuthSession,
   Json(creds): Json<PasswordCreds>,
@@ -42,10 +45,13 @@ async fn login_password(
     return Err(ApiError::AuthenticationError(e.to_string()));
   }
 
+  // todo: check if user is banned
+
   // todo: redirect to the "next" field in the query string or credentials struct
   info!("logged in user: {}", user.0.username);
   let redirect_location = creds.next.clone().unwrap_or_else(|| "/".to_string());
   Ok(Redirect::to(&redirect_location).into_response())
+  // todo: return user data
 }
 
 // ref: https://github.com/maxcountryman/axum-login/blob/main/examples/multi-auth/src/web/auth.rs#L75
@@ -81,6 +87,8 @@ async fn login_oauth(
   // Ok(Redirect::to("/protected").into_response())
 }
 
+// todo: blocked
+// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L123
 async fn logout_handler(mut auth_session: AuthSession) -> ApiResult<StatusCode> {
   dbg!("auth: {:?}", &auth_session);
   auth_session.logout().await.map_err(|e| ApiError::AuthenticationError(e.to_string()))?;

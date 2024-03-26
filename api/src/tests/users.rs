@@ -17,25 +17,7 @@ use tower::ServiceExt;
 use tracing::info;
 
 use super::common::*;
-use crate::{utils, PasswordCreds, UserUpdatePayload};
-
-#[sqlx::test(migrations = "../db/migrations")]
-async fn simple_test_demo(pool: PgPool) {
-  setup_test_tracing();
-  let app = crate::router(&pool, None).await.expect("failed to build router");
-
-  let get_request = Request::builder().uri("/health").body(Body::empty()).unwrap();
-  let response = app.clone().oneshot(get_request).await.unwrap();
-  // println!("response: {:?}", response);
-  assert!(response.status().is_success());
-  let response_body = response.into_body().collect().await.unwrap().to_bytes();
-  assert_eq!(b"ok", &*response_body);
-
-  let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
-  let response = app.oneshot(get_request).await.unwrap();
-  println!("response: {:?}", response);
-  assert_eq!(response.status(), StatusCode::NOT_FOUND);
-}
+use crate::{utils, ChangePasswordPayload, PasswordCreds, UserUpdatePayload};
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_user_crud_cycle(pool: PgPool) {
@@ -45,13 +27,13 @@ async fn test_user_crud_cycle(pool: PgPool) {
   let user_payload =
     crate::UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
 
-  let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
-  let response = app.clone().oneshot(post_request).await.unwrap();
+  let request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
+  let response = app.clone().oneshot(request).await.unwrap();
   // println!("response: {:?}", response);
   assert_eq!(response.status(), StatusCode::OK);
 
-  let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
-  let response = app.clone().oneshot(get_request).await.unwrap();
+  let request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(request).await.unwrap();
   // println!("response: {:?}", response);
   assert_eq!(response.status(), StatusCode::OK);
   let user = response.into_body().collect().await.unwrap().to_bytes();
@@ -62,12 +44,12 @@ async fn test_user_crud_cycle(pool: PgPool) {
   let update_payload =
     UserUpdatePayload::new("alice", Some("password"), Some("email@email.com"), Some("about"))
       .unwrap();
-  let put = Request::builder().uri("/users").method("PUT").json(json!(update_payload));
-  let response = app.clone().oneshot(put).await.unwrap();
+  let request = Request::builder().uri("/users").method("PUT").json(json!(update_payload));
+  let response = app.clone().oneshot(request).await.unwrap();
   assert_eq!(response.status(), StatusCode::OK);
 
-  let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
-  let response = app.clone().oneshot(get_request).await.unwrap();
+  let request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(request).await.unwrap();
   // println!("response: {:?}", response);
   assert_eq!(response.status(), StatusCode::OK);
   let user = response.into_body().collect().await.unwrap().to_bytes();
@@ -75,13 +57,14 @@ async fn test_user_crud_cycle(pool: PgPool) {
   println!("user: {:?}", user.about);
   assert!(user.about.as_ref().unwrap().0 == "about");
 
-  let delete = Request::builder().uri("/users/alice").method("DELETE").body(Body::empty()).unwrap();
-  let response = app.clone().oneshot(delete).await.unwrap();
+  let request =
+    Request::builder().uri("/users/alice").method("DELETE").body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(request).await.unwrap();
   // println!("response: {:?}", response);
   assert_eq!(response.status(), StatusCode::OK);
 
-  let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
-  let response = app.clone().oneshot(get_request).await.unwrap();
+  let request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(request).await.unwrap();
   // println!("response: {:?}", response);
   assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
@@ -91,8 +74,8 @@ async fn test_user_login_logout(pool: PgPool) {
   let app = router_with_user_alice(&pool).await;
 
   let creds = PasswordCreds::new("alice", "password", None);
-  let login_request = Request::builder().uri("/login/password").method("POST").json(json!(creds));
-  let response = app.clone().oneshot(login_request).await.unwrap();
+  let request = Request::builder().uri("/login/password").method("POST").json(json!(creds));
+  let response = app.clone().oneshot(request).await.unwrap();
   dbg!(&response);
   assert!(response.status().is_redirection());
   let body = &response.into_body().collect().await.unwrap();
@@ -114,4 +97,41 @@ async fn test_user_login_logout(pool: PgPool) {
   //   .uri("/users/logout")
   //   .method("POST")
   //   .json(json!({"username": "alice"}));
+}
+
+#[sqlx::test(migrations = "../db/migrations")]
+async fn test_request_password_reset_link(pool: PgPool) {
+  let app = router_with_user_alice(&pool).await;
+
+  let request =
+    Request::builder().uri("/users/reset-password-link/alice").method("PUT").empty_body();
+  let response = app.clone().oneshot(request).await.unwrap();
+  dbg!(&response);
+  assert_eq!(response.status(), StatusCode::OK);
+  let body = &response.into_body().collect().await.unwrap();
+  dbg!(body);
+
+  let request =
+    Request::builder().uri("/users/reset-password-link/alice").method("PUT").empty_body();
+  let response = app.clone().oneshot(request).await.unwrap();
+  dbg!(&response);
+  assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[sqlx::test(migrations = "../db/migrations")]
+async fn test_change_password(pool: PgPool) {
+  let app = router_with_user_alice(&pool).await;
+
+  // change her password
+  let payload = json!(ChangePasswordPayload::new("alice", "password", "new_password").unwrap());
+  let request = Request::builder().uri("/users/change-password").method("PUT").json(payload);
+  let response = app.clone().oneshot(request).await.unwrap();
+  assert_eq!(response.status(), StatusCode::OK);
+  // let body = &response.into_body().collect().await.unwrap();
+
+  // change her password again
+  let payload = json!(ChangePasswordPayload::new("alice", "new_password", "password").unwrap());
+  let request = Request::builder().uri("/users/change-password").method("PUT").json(payload);
+  let response = app.clone().oneshot(request).await.unwrap();
+  assert_eq!(response.status(), StatusCode::OK);
 }

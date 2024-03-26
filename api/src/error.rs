@@ -50,6 +50,8 @@ pub enum ApiError {
   AuthReqwest(#[from] reqwest::Error),
   #[status(StatusCode::UNAUTHORIZED)]
   OAuth2(BasicRequestTokenError<AsyncHttpClientError>),
+  #[status(StatusCode::NOT_FOUND)]
+  MissingField(String),
   // don't uncomment - creates circular dependency
   // #[status(StatusCode::UNAUTHORIZED)]
   // AxumLogin(#[from] axum_login::Error<crate::auth::Backend>),
@@ -73,6 +75,7 @@ impl std::fmt::Display for ApiError {
       ApiError::AuthReqwest(e) => write!(f, "AuthReqwest: {0}", e),
       ApiError::OAuth2(e) => write!(f, "OAuth2: {0}", e),
       ApiError::DoublySubmittedChange(e) => write!(f, "DoublySubmittedChange: {0}", e),
+      ApiError::MissingField(e) => write!(f, "MissingField: {0}", e),
     }
   }
 }

@@ -13,7 +13,7 @@ pub mod queries;
 mod types;
 mod utils;
 
-pub use crate::{error::DbError, types::*};
+pub use crate::{error::*, types::*};
 
 pub type DbPool = sqlx::postgres::PgPool;
 pub type DbResult<T> = Result<T, DbError>;

@@ -43,7 +43,6 @@ impl RequestBuilderExt for request::Builder {
 
 /// create a router with a user named "alice".
 pub async fn router_with_user_alice(pool: &PgPool) -> Router {
-  setup_test_tracing();
   let app = crate::router(pool, None).await.expect("failed to build router");
 
   let user_payload =
@@ -54,5 +53,6 @@ pub async fn router_with_user_alice(pool: &PgPool) -> Router {
   // println!("response: {:?}", response);
   assert_eq!(response.status(), StatusCode::OK);
 
+  setup_test_tracing();
   app
 }

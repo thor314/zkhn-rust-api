@@ -86,3 +86,27 @@ impl UserUpdatePayload {
     Ok(payload)
   }
 }
+
+/// Payload for `change_password`
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+pub struct ChangePasswordPayload {
+  #[garde(dive)]
+  pub username:         Username,
+  #[garde(dive)]
+  pub current_password: Password,
+  #[garde(dive)]
+  pub new_password:     Password,
+}
+
+impl ChangePasswordPayload {
+  /// convenience method for testing
+  pub fn new(username: &str, current_password: &str, new_password: &str) -> ApiResult<Self> {
+    let username = Username(username.to_string());
+    let current_password = Password(current_password.to_string());
+    let new_password = Password(new_password.to_string());
+    let payload = Self { username, current_password, new_password };
+    payload.validate(&())?;
+
+    Ok(payload)
+  }
+}
