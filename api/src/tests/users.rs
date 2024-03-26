@@ -123,7 +123,7 @@ async fn test_request_password_reset_link(pool: PgPool) {
   //"/users/reset_password_link/:username", routing::put(put::request_password_reset_link))
   //"/users/reset_password_link/alice").method("PUT").empty_body();
   let request =
-    Request::builder().uri("/users/reset_password_link/alice").method("PUT").empty_body();
+    Request::builder().uri("/users/reset-password-link/alice").method("PUT").empty_body();
   let response = app.clone().oneshot(request).await.unwrap();
   dbg!(&response);
   // assert!(response.status().is_success());
@@ -132,7 +132,7 @@ async fn test_request_password_reset_link(pool: PgPool) {
   panic!();
 
   let request =
-    Request::builder().uri("/users/reset_password_link/alice").method("PUT").empty_body();
+    Request::builder().uri("/users/reset-password-link/alice").method("PUT").empty_body();
   let response = app.clone().oneshot(request).await.unwrap();
   assert!(response.status().is_success());
 }
@@ -143,7 +143,7 @@ async fn test_change_password(pool: PgPool) {
 
   // alice already has a password, this should fail
   let payload = json!(ChangePasswordPayload::new("alice", "password", "new_password").unwrap());
-  let request = Request::builder().uri("/users/change_password").method("PUT").json(payload);
+  let request = Request::builder().uri("/users/change-password").method("PUT").json(payload);
   let response = app.clone().oneshot(request).await.unwrap();
   // dbg!(&response);
   assert!(response.status().is_client_error()); // todo: granularity
@@ -153,13 +153,13 @@ async fn test_change_password(pool: PgPool) {
 
   // change her password
   let payload = json!(ChangePasswordPayload::new("alice", "password", "new_password").unwrap());
-  let request = Request::builder().uri("/users/change_password").method("PUT").json(payload);
+  let request = Request::builder().uri("/users/change-password").method("PUT").json(payload);
   let response = app.clone().oneshot(request).await.unwrap();
   assert!(response.status().is_success()); // todo: granularity
 
   // change her password again
   let payload = json!(ChangePasswordPayload::new("alice", "new_password", "password").unwrap());
-  let request = Request::builder().uri("/users/change_password").method("PUT").json(payload);
+  let request = Request::builder().uri("/users/change-password").method("PUT").json(payload);
   let response = app.clone().oneshot(request).await.unwrap();
   assert!(response.status().is_success()); // todo: granularity
 }

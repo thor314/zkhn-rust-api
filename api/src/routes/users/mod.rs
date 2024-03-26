@@ -8,6 +8,7 @@
 //! - get-user-profile-data
 //! - update-user-profile-data
 //! - change-user-password (todo: diff reset password?)
+// todo(cookie) - remove user cookie data - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L142
 
 pub mod payload;
 pub mod responses;
@@ -38,12 +39,13 @@ fn todo_auth_token() -> AuthToken {
 
 pub fn users_router(state: SharedState) -> Router {
   Router::new()
+  // note - called `/users/get-user-data` in reference
     .route("/:username", routing::get(get::get_user))
     .route("/", routing::put(put::update_user))
     .route("/:username", routing::delete(delete::delete_user))
     .route("/", routing::post(post::create_user))
-    .route("/users/reset_password_link/:username", routing::put(put::request_password_reset_link))
-    .route("/users/change_password", routing::put(put::change_password))
+    .route("/users/reset-password-link/:username", routing::put(put::request_password_reset_link))
+    .route("/users/change-password", routing::put(put::change_password))
     // .route("/login", routing::post(post::login_user))
     // .route("/logout", routing::post(post::logout_user))
     .with_state(state)
@@ -93,6 +95,7 @@ pub mod post {
   /// No authentication required.
   // todo: tell the Algolia about the new user
   // todo: spam prevention?
+  // todo(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
   pub async fn create_user(
     State(state): State<SharedState>,
     WithValidation(payload): WithValidation<Json<UserPayload>>,
@@ -130,6 +133,8 @@ pub mod post {
   // todo: authenticate user: blocked
   // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L97
   // BLOCKED: https://github.com/maxcountryman/axum-login/pull/210
+  // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L71
+  // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L124
 }
 
 mod put {
@@ -160,6 +165,7 @@ mod put {
     Ok(StatusCode::OK)
   }
 
+  // todo: testing
   pub async fn request_password_reset_link(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
@@ -190,6 +196,8 @@ mod put {
     Ok(StatusCode::OK)
   }
 
+  // todo(cookie) ref - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L267
+  // todo: testing
   pub async fn change_password(
     State(state): State<SharedState>,
     WithValidation(payload): WithValidation<Json<ChangePasswordPayload>>,
