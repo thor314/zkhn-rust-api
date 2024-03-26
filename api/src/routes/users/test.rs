@@ -44,13 +44,17 @@ async fn test_user_crud_cycle(pool: PgPool) {
   assert!(user.about.is_none() || user.about.as_ref().unwrap().0.is_empty());
 
   let update_payload =
-    UserUpdatePayload::new("alice", Some("password"), Some("email@email.com"), Some("about"))
-      .unwrap();
-  let request = Request::builder().uri("/users").method("PUT").json(json!(update_payload));
+    UserUpdatePayload::new("alice", Some("newemail@email.com"), Some("about")).unwrap();
+  let request =
+    Request::builder().uri("/users/about").method("PUT").json(json!(update_payload.clone()));
   let response = app.clone().oneshot(request).await.unwrap();
   assert_eq!(response.status(), StatusCode::OK);
 
-  let request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
+  let request = Request::builder().uri("/users/email").method("PUT").json(json!(update_payload));
+  let response = app.clone().oneshot(request).await.unwrap();
+  assert_eq!(response.status(), StatusCode::OK);
+
+  let request = Request::builder().uri("/users/alice").method("GET").body(Body::empty()).unwrap();
   let response = app.clone().oneshot(request).await.unwrap();
   // println!("response: {:?}", response);
   assert_eq!(response.status(), StatusCode::OK);
@@ -58,6 +62,7 @@ async fn test_user_crud_cycle(pool: PgPool) {
   let user: User = serde_json::from_slice(&user).unwrap();
   println!("user: {:?}", user.about);
   assert!(user.about.as_ref().unwrap().0 == "about");
+  assert!(user.email.as_ref().unwrap().0 == "newemail@email.com");
 
   let request =
     Request::builder().uri("/users/alice").method("DELETE").body(Body::empty()).unwrap();

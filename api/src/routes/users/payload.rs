@@ -61,8 +61,6 @@ pub struct UserUpdatePayload {
   #[garde(dive)]
   pub username: Username,
   #[garde(dive)]
-  pub password: Option<Password>,
-  #[garde(dive)]
   pub email:    Option<Email>,
   #[garde(dive)]
   pub about:    Option<About>,
@@ -70,17 +68,14 @@ pub struct UserUpdatePayload {
 
 impl UserUpdatePayload {
   /// convenience method for testing
-  pub fn new(
-    username: &str,
-    password: Option<&str>,
-    email: Option<&str>,
-    about: Option<&str>,
-  ) -> ApiResult<Self> {
+  pub fn new(username: &str, email: Option<&str>, about: Option<&str>) -> ApiResult<Self> {
     let username = Username(username.to_string());
-    let password = password.map(|s| Password(s.to_string()));
+    if email.is_none() && about.is_none() {
+      return Err(ApiError::MissingField("email or about must be provided".to_string()));
+    }
     let email = email.map(|s| Email(s.to_string()));
     let about = about.map(|s| About(s.to_string()));
-    let payload = Self { username, password, email, about };
+    let payload = Self { username, email, about };
     payload.validate(&())?;
 
     Ok(payload)
