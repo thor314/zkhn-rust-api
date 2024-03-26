@@ -8,7 +8,7 @@ mod common;
 
 use std::borrow::{Borrow, BorrowMut};
 
-use api::{UserPayload, UserUpdatePayload};
+use api::{Credentials, PasswordCreds, UserPayload, UserUpdatePayload};
 use axum::{
   body::Body,
   extract::connect_info::MockConnectInfo,
@@ -23,8 +23,49 @@ use sqlx::PgPool;
 use tower::ServiceExt;
 use tracing::info;
 
+use crate::utils::setup_test_tracing;
+
+mod utils {
+  use axum::{http::Request, Router};
+  use reqwest::StatusCode;
+  use serde_json::json;
+  use sqlx::PgPool;
+  use tower::ServiceExt;
+
+  use crate::RequestBuilderExt;
+
+  static INIT: std::sync::Once = std::sync::Once::new();
+  pub fn setup_test_tracing() {
+    use tracing::Level;
+    use tracing_subscriber::FmtSubscriber;
+
+    INIT.call_once(|| {
+      let subscriber =
+        FmtSubscriber::builder().with_max_level(Level::DEBUG).with_test_writer().finish();
+      tracing::subscriber::set_global_default(subscriber)
+        .expect("setting default subscriber failed");
+    });
+  }
+
+  pub async fn router_with_user_alice(pool: &PgPool) -> Router {
+    setup_test_tracing();
+    let app = api::router(pool, None).await.expect("failed to build router");
+
+    let user_payload =
+      api::UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
+
+    let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
+    let response = app.clone().oneshot(post_request).await.unwrap();
+    // println!("response: {:?}", response);
+    assert_eq!(response.status(), StatusCode::OK);
+
+    app
+  }
+}
+
 #[sqlx::test(migrations = "../db/migrations")]
 async fn simple_test_demo(pool: PgPool) {
+  setup_test_tracing();
   let app = api::router(&pool, None).await.expect("failed to build router");
 
   let get_request = Request::builder().uri("/health").body(Body::empty()).unwrap();
@@ -42,6 +83,7 @@ async fn simple_test_demo(pool: PgPool) {
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_user_crud_cycle(pool: PgPool) {
+  setup_test_tracing();
   let app = api::router(&pool, None).await.expect("failed to build router");
 
   let user_payload =
@@ -50,7 +92,7 @@ async fn test_user_crud_cycle(pool: PgPool) {
   let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
   let response = app.clone().oneshot(post_request).await.unwrap();
   // println!("response: {:?}", response);
-  assert_eq!(response.status(), StatusCode::CREATED);
+  assert_eq!(response.status(), StatusCode::OK);
 
   let get_request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
   let response = app.clone().oneshot(get_request).await.unwrap();
@@ -90,20 +132,27 @@ async fn test_user_crud_cycle(pool: PgPool) {
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_user_login_logout(pool: PgPool) {
-  let app = api::router(&pool, None).await.expect("failed to build router");
-  let user_payload =
-    api::UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
+  let app = utils::router_with_user_alice(&pool).await;
 
-  let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
-  let response = app.clone().oneshot(post_request).await.unwrap();
-  // println!("response: {:?}", response);
-  assert_eq!(response.status(), StatusCode::CREATED);
+  let creds = PasswordCreds::new("alice", "password", None);
+  let login_request = Request::builder().uri("/login/password").method("POST").json(json!(creds));
+  let response = app.clone().oneshot(login_request).await.unwrap();
+  dbg!(&response);
+  // assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
+  let body = &response.into_body().collect().await.unwrap();
+  dbg!(&body);
+  panic!();
 
-  let login_payload = UserPayload::new("alice", "password", None, None).unwrap();
-  let login = Request::builder().uri("/users/login").method("POST").json(json!(login_payload));
-  let response = app.clone().oneshot(login).await.unwrap();
-  assert_eq!(response.status(), StatusCode::OK);
+  // check double-login
+  // let login_request =
+  // Request::builder().uri("/login/password").method("POST").json(json!(creds)); let response =
+  // app.clone().oneshot(login_request).await.unwrap(); let body =
+  // &response.into_body().collect().await.unwrap(); assert_eq!(response.status(),
+  // StatusCode::TEMPORARY_REDIRECT);
 
+  // panic!();
+
+  // let auth_session = AuthSession::
   // todo
   // let logout = Request::builder()
   //   .uri("/users/logout")

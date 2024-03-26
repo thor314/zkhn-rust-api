@@ -1,4 +1,3 @@
-use axum::{extract::State, response::IntoResponse};
 use scrypt::{
   password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
   Scrypt,
@@ -13,11 +12,12 @@ use super::{
   user_vote::{UserVote, VoteState},
 };
 use crate::{
-  error::DbError, utils::now, About, AuthToken, DbPool, Email, Password, PasswordHash,
-  ResetPasswordToken, Username,
+  error::DbError,
+  utils::{self, now},
+  About, AuthToken, DbPool, Email, Password, PasswordHash, ResetPasswordToken, Timestamp, Username,
 };
 
-#[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
+#[derive(sqlx::FromRow, Serialize, Deserialize, Clone)]
 pub struct User {
   pub username: Username,
   /// Hashed password
@@ -26,15 +26,15 @@ pub struct User {
   /// Authentication token
   pub auth_token: Option<AuthToken>,
   /// Expiration of auth token
-  pub auth_token_expiration: Option<i64>,
+  pub auth_token_expiration: Option<Timestamp>,
   /// Reset password token
   pub reset_password_token: Option<ResetPasswordToken>,
   /// Expiration of reset password token
-  pub reset_password_token_expiration: Option<i64>,
+  pub reset_password_token_expiration: Option<Timestamp>,
   /// User email
   pub email: Option<Email>,
   /// Account creation timestamp
-  pub created: crate::utils::Timestamp,
+  pub created: Timestamp,
   /// User karma score
   pub karma: i32,
   /// User biography
@@ -80,7 +80,7 @@ impl User {
   }
 
   // todo: probably move
-  pub fn hide(&self, item_id: Uuid, item_creation_date: crate::utils::Timestamp) -> UserHidden {
+  pub fn hide(&self, item_id: Uuid, item_creation_date: Timestamp) -> UserHidden {
     UserHidden { username: self.username.clone(), item_id, date: now(), item_creation_date }
   }
 
@@ -102,5 +102,27 @@ impl User {
       vote_state,
       created: now(),
     }
+  }
+}
+
+// explicitly redact sensitive info
+impl std::fmt::Debug for User {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.debug_struct("User")
+      .field("username", &self.username)
+      .field("password_hash", &self.password_hash)
+      .field("auth_token", &"redacted")
+      .field("auth_token_expiration", &self.auth_token_expiration)
+      .field("reset_password_token", &"redacted")
+      .field("reset_password_token_expiration", &self.reset_password_token_expiration)
+      .field("email", &self.email)
+      .field("created", &self.created)
+      .field("karma", &self.karma)
+      .field("about", &self.about)
+      .field("show_dead", &self.show_dead)
+      .field("is_moderator", &self.is_moderator)
+      .field("shadow_banned", &self.shadow_banned)
+      .field("banned", &self.banned)
+      .finish()
   }
 }

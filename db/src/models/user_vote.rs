@@ -3,10 +3,7 @@ use chrono::{DateTime, NaiveDate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{
-  utils::{now, Timestamp},
-  Username,
-};
+use crate::{utils::now, Timestamp, Username};
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 /// Represents a vote cast by a user on an item or comment.

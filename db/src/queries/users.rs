@@ -6,8 +6,8 @@ use uuid::Uuid;
 use crate::{
   error::{DbError, RecoverableDbError},
   models::{comment::Comment, item::Item, user::User},
-  About, AuthToken, CommentText, DbPool, DbResult, Email, PasswordHash, ResetPasswordToken, Title,
-  Username,
+  About, AuthToken, CommentText, DbPool, DbResult, Email, PasswordHash, ResetPasswordToken,
+  Timestamp, Title, Username,
 };
 
 pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<User>> {
@@ -17,9 +17,9 @@ pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<Use
     "SELECT username as \"username: Username\", 
             password_hash as \"password_hash: PasswordHash\", 
             auth_token as \"auth_token: AuthToken\", 
-            auth_token_expiration, 
+            auth_token_expiration as \"auth_token_expiration: Timestamp\", 
             reset_password_token as \"reset_password_token: ResetPasswordToken\", 
-            reset_password_token_expiration, 
+            reset_password_token_expiration as \"reset_password_token_expiration: Timestamp\",  
             email as \"email: Email\", 
             created, 
             karma, 
@@ -79,9 +79,9 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     username.0,
     password_hash.0,
     auth_token.map(|s| s.0),
-    auth_token_expiration,
+    auth_token_expiration.map(|t| t.0),
     reset_password_token.map(|s| s.0),
-    reset_password_token_expiration,
+    reset_password_token_expiration.map(|t| t.0),
     email.map(|s| s.0),
     created.0,
     karma,
@@ -185,14 +185,14 @@ pub async fn update_user_about(
     .map_err(DbError::from)
 }
 
-// todo
-pub async fn login_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResult> {
-  // sqlx::query!("UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE username =
-  // $1", username.0)   .execute(pool)
-  //   .await
-  //   .map_err(DbError::from)
-  todo!()
-}
+// // todo
+// pub async fn login_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResult> {
+//   // sqlx::query!("UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE
+// username =   // $1", username.0)   .execute(pool)
+//   //   .await
+//   //   .map_err(DbError::from)
+//   todo!()
+// }
 
 /// Set the user's auth token and expiration in the database to `None`.
 pub async fn logout_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResult> {
@@ -203,4 +203,24 @@ pub async fn logout_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResul
   .execute(pool)
   .await
   .map_err(DbError::from)
+}
+
+pub async fn store_user_auth_token(
+  pool: &DbPool,
+  username: &Username,
+  auth_token: &AuthToken,
+  auth_token_expiration: &Timestamp,
+) -> DbResult<()> {
+  sqlx::query!(
+    "UPDATE users SET auth_token = $1, auth_token_expiration = $2 WHERE username =
+  $3",
+    auth_token.0,
+    auth_token_expiration.0,
+    username.0
+  )
+  .execute(pool)
+  .await
+  .map_err(DbError::from)?;
+
+  Ok(())
 }

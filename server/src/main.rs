@@ -10,12 +10,9 @@ mod error;
 mod utils;
 
 use anyhow::Context;
-use db::DbPool;
 use error::ServerError;
 use sqlx::PgPool;
-use tower_sessions::{session_store::ExpiredDeletion, Expiry, SessionManagerLayer};
-// use tokio::{signal, task::AbortHandle};
-use tower_sessions_sqlx_store::PostgresStore;
+use tracing::info;
 
 pub type ServerResult<T> = Result<T, ServerError>;
 
@@ -24,16 +21,16 @@ async fn main(
   #[shuttle_runtime::Secrets] secret_store: shuttle_runtime::SecretStore,
   #[shuttle_shared_db::Postgres] pool: PgPool,
 ) -> shuttle_axum::ShuttleAxum {
-  tracing::info!("Starting server...");
   utils::setup(&secret_store).unwrap();
-  tracing::info!("Migrating db...");
+  info!("Migrating db...");
+  info!("pool info: {:?}", pool);
   db::migrate(&pool).await.unwrap();
-  tracing::info!("Initializing router...");
+  info!("Initializing router...");
 
-  tracing::info!("Building middleware layers...");
+  info!("Building middleware layers...");
   let analytics_key = secret_store.get("ANALYTICS_API_KEY");
   let router = api::router(&pool, analytics_key).await.context("failed to build router").unwrap();
 
-  tracing::info!("🚀🚀🚀");
+  info!("🚀🚀🚀");
   Ok(router.into())
 }

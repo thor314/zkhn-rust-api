@@ -4,11 +4,7 @@ use sqlx::PgConnection;
 use uuid::Uuid;
 
 use super::comment::Comment;
-use crate::{
-  error::DbError,
-  utils::{now, Timestamp},
-  Title, Username,
-};
+use crate::{error::DbError, utils::now, Timestamp, Title, Username};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.

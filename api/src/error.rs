@@ -19,6 +19,8 @@ use tokio::task;
 pub enum ApiError {
   // 500s
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
+  OtherISE(String),
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   TaskJoin(#[from] task::JoinError),
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   Anyhow(#[from] anyhow::Error),
@@ -26,7 +28,7 @@ pub enum ApiError {
   DbError(#[from] DbError),
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   Session(tower_sessions::session_store::Error),
-  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
+  #[status(StatusCode::BAD_REQUEST)]
   AuthenticationError(String),
   // 400s
   #[status(StatusCode::NOT_FOUND)]
@@ -45,14 +47,18 @@ pub enum ApiError {
   #[status(StatusCode::UNAUTHORIZED)]
   PwError(String),
   #[status(StatusCode::UNAUTHORIZED)]
-  AuthReqwest(reqwest::Error),
+  AuthReqwest(#[from] reqwest::Error),
   #[status(StatusCode::UNAUTHORIZED)]
   OAuth2(BasicRequestTokenError<AsyncHttpClientError>),
+  // don't uncomment - creates circular dependency
+  // #[status(StatusCode::UNAUTHORIZED)]
+  // AxumLogin(#[from] axum_login::Error<crate::auth::Backend>),
 }
 
 impl std::fmt::Display for ApiError {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
+      ApiError::OtherISE(e) => write!(f, "OtherISE: {0}", e),
       ApiError::TaskJoin(e) => write!(f, "TaskJoin: {0}", e),
       ApiError::Anyhow(e) => write!(f, "Anyhow: {0}", e),
       ApiError::PwError(e) => write!(f, "PwError: {0}", e),

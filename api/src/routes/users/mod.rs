@@ -10,6 +10,7 @@
 //! - change-user-password (todo: diff reset password?)
 
 pub mod payload;
+pub mod responses;
 
 use anyhow::anyhow;
 use axum::{
@@ -25,9 +26,10 @@ use payload::UserPayload;
 use tracing::info;
 
 use crate::{
-  auth::{self, assert_authenticated},
+  // auth::{self, assert_authenticated},
   error::ApiError,
-  ApiResult, AuthSession, SharedState,
+  ApiResult,
+  SharedState,
 };
 
 pub fn users_router(state: SharedState) -> Router {
@@ -36,8 +38,8 @@ pub fn users_router(state: SharedState) -> Router {
     .route("/", routing::put(put::update_user))
     .route("/:username", routing::delete(delete::delete_user))
     .route("/", routing::post(post::create_user))
-    .route("/login", routing::post(post::login_user))
-    .route("/logout", routing::post(post::logout_user))
+    // .route("/login", routing::post(post::login_user))
+    // .route("/logout", routing::post(post::logout_user))
     .with_state(state)
 }
 
@@ -62,9 +64,10 @@ pub mod get {
 
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
 pub mod post {
-  use db::password::verify_user_password;
+  use axum::Form;
+  use db::{password::verify_user_password, AuthToken};
 
-  use self::payload::UserUpdatePayload;
+  use self::{payload::UserUpdatePayload, responses::UserResponse};
   use super::*;
 
   /// Create a new user:
@@ -78,56 +81,75 @@ pub mod post {
     State(state): State<SharedState>,
     // auth_session: AuthSession, // keep commented to denote that no auth required
     WithValidation(user_payload): WithValidation<Json<UserPayload>>,
-  ) -> ApiResult<StatusCode> {
-    let user: User = user_payload.into_inner().into_user();
+  ) -> ApiResult<Json<UserResponse>> {
+    let user: User = {
+      let mut user = user_payload.into_inner().into_user();
+      // let auth_token = oauth2::CsrfToken::new_random();
+      let auth_token = AuthToken("aoedbaugcelrudahcr".to_string());
+      let expiration = crate::utils::default_expiration();
+      user.auth_token = Some(auth_token);
+      user.auth_token_expiration = Some(expiration);
+      user
+    };
     let result = db::queries::users::create_user(&state.pool, &user).await;
 
-    if let Err(DbError::Recoverable(e)) = result {
-      return Err(ApiError::DbEntryAlreadyExists("user already exists".to_string()));
-    }
-    result?;
-
-    Ok(StatusCode::CREATED)
-  }
-
-  /// Log the user in, verify their password, and return their auth session info:
-  /// - If the user does not exist, return NotFound.
-  /// - If the user exists, but the password is incorrect, return Unauthorized.
-  /// - Otherwise, create the user auth session and provide the new user auth token.
-  pub async fn login_user(
-    // only need username and password
-    State(state): State<SharedState>,
-    WithValidation(user_payload): WithValidation<Json<UserPayload>>,
-    // ) -> ApiResult<AuthSession> {
-  ) -> ApiResult<()> {
-    let UserPayload { username, password, .. } = user_payload.into_inner();
-
-    let user = db::queries::users::get_user(&state.pool, &username)
-      .await?
-      .ok_or(ApiError::DbEntryNotFound("user not found".to_string()))?;
-
-    if !verify_user_password(&user, &password)? {
-      return Err(ApiError::Unauthorized("invalid password".to_string()));
+    match result {
+      Err(DbError::Recoverable(e)) => {
+        tracing::info!("duplicate user creation attempt {}", e);
+      },
+      Err(e) => return Err(ApiError::from(e)),
+      Ok(_) => (),
     }
 
-    // todo create auth session, renew the user token
-    // return Ok(auth_session);
-    todo!()
+    let user_response = UserResponse::from(user);
+    info!("created user: {:?}", user_response);
+    Ok(Json(user_response))
   }
 
-  /// todo
-  pub async fn logout_user(
-    State(state): State<SharedState>,
-    auth_session: AuthSession,
-  ) -> ApiResult<()> {
-    assert_authenticated(&auth_session)?;
-    let user = auth_session.user.unwrap().0;
-    // user.auth_token = None;
-    // user.auth_token_expiration = None;
-    // todo update the user in the db
-    db::queries::logout_user(&state.pool, &user.username.0).await?;
-    Ok(())
-  }
+  // /// Log the user in, verify their password, and return their auth session info:
+  // /// - If the user does not exist, return NotFound.
+  // /// - If the user exists, but the password is incorrect, return Unauthorized.
+  // /// - Otherwise, create the user auth session and provide the new user auth token.
+  // pub async fn login_user_password(
+  //   mut auth_session: AuthSession,
+  //   Form(creds): Form<PasswordCredentials>,
+  // ) -> ApiResult<Json<UserResponse>> {
+  //   let UserPayload { username, password, .. } = user_payload.into_inner();
+
+  //   let user = db::queries::users::get_user(&state.pool, &username)
+  //     .await?
+  //     .ok_or(ApiError::DbEntryNotFound("user not found".to_string()))?;
+
+  //   if !verify_user_password(&user, &password)? {
+  //     tracing::error!("invalid password for user: {}", username.0);
+  //     return Err(ApiError::PwError("invalid password".to_string()));
+  //   }
+
+  //   // renew user token: create a new unique string and store it
+  //   let (auth_token, auth_token_expiration) = auth::temp_jank::generate_user_token();
+  //   db::queries::store_user_auth_token(&state.pool, &username, &auth_token,
+  // &auth_token_expiration)     .await?;
+  //   let user_response = UserResponse::new(user, auth_token, auth_token_expiration);
+
+  //   info!("logged in user: {}", username.0);
+  //   Ok(Json(user_response))
+  // }
+
+  // pub async fn logout_user(
+  //   State(state): State<SharedState>,
+  //   auth_session: AuthSession,
+  //   Path(token): Path<String>,
+  // ) -> ApiResult<()> {
+  //   assert_authenticated(&auth_session)?;
+  //   let username = auth_session.user.unwrap().username;
+  //   // user.auth_token = None;
+  //   // user.auth_token_expiration = None;
+  //   // todo update the user in the db
+  //   db::queries::logout_user(&state.pool, &username.0).await?;
+
+  //   info!("logged out user: {}", username);
+  //   Ok(())
+  // }
 }
 
 mod put {
@@ -150,6 +172,8 @@ mod put {
       &payload.about.map(|s| s.0).unwrap(),
     )
     .await?;
+
+    info!("updated user: {}", payload.username);
     Ok(StatusCode::OK)
   }
 }
@@ -166,6 +190,8 @@ pub mod delete {
     let username = Username(username);
     username.validate(&())?;
     db::queries::users::delete_user(&state.pool, &username).await?;
+
+    info!("deleted user: {}", username);
     Ok(StatusCode::OK)
   }
 }
