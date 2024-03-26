@@ -16,16 +16,18 @@ use sqlx::PgPool;
 use tower::ServiceExt;
 use tracing::info;
 
-use super::common::*;
-use crate::{utils, ChangePasswordPayload, PasswordCreds, UserUpdatePayload};
+use crate::{
+  auth::credentials::password_creds::PasswordCreds,
+  routes::users::{payload::UserUpdatePayload, ChangePasswordPayload, UserPayload},
+  tests::common::{router_with_user_alice, setup_test_tracing, RequestBuilderExt},
+};
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_user_crud_cycle(pool: PgPool) {
   setup_test_tracing();
   let app = crate::router(&pool, None).await.expect("failed to build router");
 
-  let user_payload =
-    crate::UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
+  let user_payload = UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
 
   let request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
   let response = app.clone().oneshot(request).await.unwrap();

@@ -10,8 +10,13 @@
 //! - change-user-password (todo: diff reset password?)
 // todo(cookie) - remove user cookie data - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L142
 
-pub mod payload;
-pub mod responses;
+mod payload;
+mod response;
+
+pub use payload::*;
+pub use response::*;
+
+#[cfg(test)] mod test;
 
 use anyhow::anyhow;
 use axum::{
@@ -21,9 +26,13 @@ use axum::{
   routing, Json, Router,
 };
 use axum_garde::WithValidation;
-use db::{models::user::User, AuthToken, DbError, Username};
+use db::{
+  models::user::User, password::verify_user_password, AuthToken, DbError, RecoverableDbError,
+  Username,
+};
 use garde::Validate;
-use payload::UserPayload;
+use payload::*;
+use response::*;
 use tracing::{debug, info};
 
 use crate::{
@@ -33,13 +42,14 @@ use crate::{
   SharedState,
 };
 
+// todo(auth)
 fn todo_auth_token() -> AuthToken {
   AuthToken("temporaryytemporaryytemporaryytemporaryy".to_string())
 }
 
 pub fn users_router(state: SharedState) -> Router {
   Router::new()
-  // note - called `/users/get-user-data` in reference
+    // note - called `/users/get-user-data` in reference
     .route("/:username", routing::get(get::get_user))
     .route("/", routing::put(put::update_user))
     .route("/:username", routing::delete(delete::delete_user))
@@ -51,7 +61,7 @@ pub fn users_router(state: SharedState) -> Router {
     .with_state(state)
 }
 
-pub mod get {
+mod get {
   use super::*;
 
   /// If `username` exists, return the User. Otherwise, return NotFound.
@@ -63,7 +73,7 @@ pub mod get {
   pub async fn get_user(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
-    // auth_session: AuthSession,  // todo
+    // auth_session: AuthSession,  // todo(auth)
   ) -> ApiResult<Json<User>> {
     debug!("get_user called with username: {username}");
     let pool = &state.pool;
@@ -79,12 +89,8 @@ pub mod get {
 }
 
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
-pub mod post {
-  use db::{password::verify_user_password, AuthToken, RecoverableDbError};
-
-  use self::{payload::UserUpdatePayload, responses::UserResponse};
+mod post {
   use super::*;
-  use crate::PasswordCreds;
 
   /// Create a new user:
   ///
@@ -93,8 +99,8 @@ pub mod post {
   ///   - if the user already exists, return a 409.
   ///
   /// No authentication required.
-  // todo: tell the Algolia about the new user
-  // todo: spam prevention?
+  // todo(search): tell the Algolia about the new user
+  // todo(session): spam prevention?
   // todo(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
   pub async fn create_user(
     State(state): State<SharedState>,
@@ -116,7 +122,7 @@ pub mod post {
         match e {
           RecoverableDbError::DbEntryAlreadyExists => {
             tracing::warn!("duplicate user creation attempt {}", e);
-            // todo: what error to return? Conflict?
+            return Err(ApiError::DbEntryAlreadyExists("user already exists".to_string()));
           },
         };
       },
@@ -130,7 +136,7 @@ pub mod post {
   }
 
   // login and logout - see auth
-  // todo: authenticate user: blocked
+  // todo(auth): authenticate user: blocked
   // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L97
   // BLOCKED: https://github.com/maxcountryman/axum-login/pull/210
   // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L71
@@ -138,17 +144,12 @@ pub mod post {
 }
 
 mod put {
-  use db::password::verify_user_password;
-
   use super::*;
-  use crate::{ChangePasswordPayload, UserUpdatePayload};
 
-  // todo: this is a crap way to do an api, do it better, probably define an update payload or
-  // something
   // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L287
   pub async fn update_user(
     State(state): State<SharedState>,
-    // auth_session: AuthSession, // todo
+    // auth_session: AuthSession, // todo(auth)
     WithValidation(payload): WithValidation<Json<UserUpdatePayload>>,
   ) -> ApiResult<StatusCode> {
     debug!("update_user called with payload: {payload:?}");
@@ -165,7 +166,7 @@ mod put {
     Ok(StatusCode::OK)
   }
 
-  // todo: testing
+  /// Request a password reset link for the user.
   pub async fn request_password_reset_link(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
@@ -189,7 +190,7 @@ mod put {
     .await?;
 
     // blocked: mailgun-email-feature
-    // todo: use the email api to send a reset password email
+    // todo(email): use the email api to send a reset password email
     // send_reset_email(&email, &reset_password_token).await?;
 
     info!("sent password reset email to: {email}");
@@ -197,7 +198,7 @@ mod put {
   }
 
   // todo(cookie) ref - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L267
-  // todo: testing
+  /// Change the user's password.
   pub async fn change_password(
     State(state): State<SharedState>,
     WithValidation(payload): WithValidation<Json<ChangePasswordPayload>>,
@@ -215,8 +216,7 @@ mod put {
       .await?;
     // todo(email) - send an email to the user that their password has changed
 
-    // todo(insecure) redact password after testing
-    info!("changed password for user: {} to {:?}", payload.username, payload.new_password);
+    info!("changed password for user: {}", payload.username);
     Ok(StatusCode::OK)
   }
 }
@@ -227,7 +227,7 @@ pub mod delete {
   pub async fn delete_user(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
-    // auth_session: AuthSession,
+    // auth_session: AuthSession, // todo(auth), todo(mods)
   ) -> ApiResult<StatusCode> {
     debug!("delete_user called with username: {username}");
     // assert_authenticated(&auth_session)?;

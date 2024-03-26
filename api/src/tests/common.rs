@@ -8,6 +8,8 @@ use serde_json::json;
 use sqlx::PgPool;
 use tower::ServiceExt;
 
+use crate::routes::users::UserPayload;
+
 static INIT: std::sync::Once = std::sync::Once::new();
 /// Set up tracing for a test. Avoid duplicate work.
 pub fn setup_test_tracing() {
@@ -45,8 +47,7 @@ impl RequestBuilderExt for request::Builder {
 pub async fn router_with_user_alice(pool: &PgPool) -> Router {
   let app = crate::router(pool, None).await.expect("failed to build router");
 
-  let user_payload =
-    crate::UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
+  let user_payload = UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
 
   let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
   let response = app.clone().oneshot(post_request).await.unwrap();

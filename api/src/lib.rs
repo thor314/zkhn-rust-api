@@ -8,14 +8,13 @@
 
 mod auth;
 pub mod error;
-mod routes;
+pub mod routes;
 mod sessions;
 #[cfg(test)] mod tests;
 mod utils;
 
 use anyhow::Context;
 use auth::auth_router;
-pub use auth::credentials::{oauth_creds::OAuthCreds, password_creds::PasswordCreds, Credentials};
 use axum::{routing, Router};
 use axum_analytics::Analytics;
 use axum_login::{login_required, AuthManagerLayerBuilder};
@@ -26,7 +25,6 @@ use sessions::get_session_layer;
 use tracing::info;
 
 use crate::auth::AuthBackend;
-pub use crate::routes::users::payload::*;
 
 pub type ApiResult<T> = Result<T, ApiError>;
 
