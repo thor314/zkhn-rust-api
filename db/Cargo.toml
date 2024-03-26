@@ -8,7 +8,7 @@ repository ="https://github.com/thor314/zkhn-rust-api"
 version    ="0.1.0"
 
 [dependencies]
-ammonia="3.3.0"
+ammonia="4.0.0"
 anyhow="1.0"
 axum={ version="0.7.3", features=["macros"] }
 chrono={ version="0.4.34", features=["serde"] }
