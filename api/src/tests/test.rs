@@ -94,7 +94,7 @@ async fn test_user_login_logout(pool: PgPool) {
   let login_request = Request::builder().uri("/login/password").method("POST").json(json!(creds));
   let response = app.clone().oneshot(login_request).await.unwrap();
   dbg!(&response);
-  // assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
+  assert!(response.status().is_redirection());
   let body = &response.into_body().collect().await.unwrap();
   dbg!(&body);
   panic!();

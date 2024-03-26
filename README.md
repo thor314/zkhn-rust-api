@@ -14,14 +14,22 @@ You will need Rust, `cargo-shuttle`, `sqlx-cli`, Docker, and postgres installed.
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # If you have not updated rust recently, you may need to run: 
 rustup update
-# we use the nightly toolchain, specified in rust-toolchain.toml. You should not need to change anything here.
-## May need to run
-rustup default nightly
+
+## we use the nightly toolchain, specified in rust-toolchain.toml. 
+## This line is only for documentation, you shouldn't have to change anything.
+```
 
 ### Install cargo-shuttle:
+```sh
 cargo install cargo-binstall # fast-installer for rust binaries
 cargo binstall -y cargo-shuttle 
 cargo binstall -y sqlx-cli
+```
+
+### Cargo Shuttle updates versions often - you may need to update it:
+```sh
+cargo binstall -y cargo-update     # fast binary updater
+cargo install-update cargo-shuttle # update cargo shuttle
 ```
 
 ### Postgres installation and setup
@@ -50,11 +58,11 @@ Common steps for both platforms:
 4. Create a new PostgreSQL user (optional)
    `createuser --interactive --pwprompt`
 5. Create a new database
-   `createdb tk-shuttle-zkhn-rust-api`
+   `createdb tk-shuttle-zkhn-rust-api2`
 6. Grant privileges to your user, replacing `$YOUR_USER`
    ```
-   psql tk-shuttle-zkhn-rust-api
-   GRANT ALL PRIVILEGES ON DATABASE tk-shuttle-zkhn-rust-api TO $YOUR_USER;
+   psql tk-shuttle-zkhn-rust-api2
+   GRANT ALL PRIVILEGES ON DATABASE tk-shuttle-zkhn-rust-api2 TO $YOUR_USER;
    ```
 7. Exit the PostgreSQL prompt `quit` or `ctrl/cmd-d`
 
