@@ -144,12 +144,12 @@ async fn test_user_login_logout(pool: PgPool) {
   panic!();
 
   // check double-login
-  // let login_request = Request::builder().uri("/login/password").method("POST").json(json!(creds));
-  // let response = app.clone().oneshot(login_request).await.unwrap();
-  // let body = &response.into_body().collect().await.unwrap();
-  // assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
+  // let login_request =
+  // Request::builder().uri("/login/password").method("POST").json(json!(creds)); let response =
+  // app.clone().oneshot(login_request).await.unwrap(); let body =
+  // &response.into_body().collect().await.unwrap(); assert_eq!(response.status(),
+  // StatusCode::TEMPORARY_REDIRECT);
 
-  
   // panic!();
 
   // let auth_session = AuthSession::

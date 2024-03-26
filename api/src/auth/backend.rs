@@ -61,4 +61,3 @@ impl AuthnBackend for AuthBackend {
     Ok(user)
   }
 }
-

@@ -48,7 +48,6 @@ async fn login_password(
   Ok(Redirect::to(&redirect_location).into_response())
 }
 
-
 // ref: https://github.com/maxcountryman/axum-login/blob/main/examples/multi-auth/src/web/auth.rs#L75
 async fn login_oauth(
   mut auth_session: AuthSession,
