@@ -6,8 +6,8 @@ use uuid::Uuid;
 use crate::{
   error::{DbError, RecoverableDbError},
   models::{comment::Comment, item::Item, user::User},
-  About, AuthToken, CommentText, DbPool, DbResult, Email, PasswordHash, ResetPasswordToken,
-  Timestamp, Title, Username,
+  About, AuthToken, CommentText, DbPool, DbResult, Email, Password, PasswordHash,
+  ResetPasswordToken, Timestamp, Title, Username,
 };
 
 pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<User>> {
@@ -205,7 +205,7 @@ pub async fn logout_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResul
   .map_err(DbError::from)
 }
 
-pub async fn store_user_auth_token(
+pub async fn update_user_auth_token(
   pool: &DbPool,
   username: &Username,
   auth_token: &AuthToken,
@@ -217,6 +217,46 @@ pub async fn store_user_auth_token(
     auth_token.0,
     auth_token_expiration.0,
     username.0
+  )
+  .execute(pool)
+  .await
+  .map_err(DbError::from)?;
+
+  Ok(())
+}
+
+pub async fn update_user_password_token(
+  pool: &DbPool,
+  username: &Username,
+  reset_password_token: &AuthToken,
+  reset_password_token_expiration: &Timestamp,
+) -> DbResult<()> {
+  sqlx::query!(
+    "UPDATE users SET reset_password_token = $1, reset_password_token_expiration = $2 WHERE \
+     username =
+  $3",
+    reset_password_token.0,
+    reset_password_token_expiration.0,
+    username.0
+  )
+  .execute(pool)
+  .await
+  .map_err(DbError::from)?;
+
+  Ok(())
+}
+
+pub async fn update_user_password(
+  pool: &sqlx::Pool<sqlx::Postgres>,
+  username: &Username,
+  new_password_hash: &PasswordHash,
+) -> DbResult<()> {
+  sqlx::query!(
+    "UPDATE users SET password_hash = $1, auth_token = NULL, auth_token_expiration = NULL WHERE \
+     username =
+  $2",
+    new_password_hash.0,
+    username.0,
   )
   .execute(pool)
   .await

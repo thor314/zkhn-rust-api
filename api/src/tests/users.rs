@@ -17,7 +17,7 @@ use tower::ServiceExt;
 use tracing::info;
 
 use super::common::*;
-use crate::{utils, PasswordCreds, UserUpdatePayload};
+use crate::{utils, ChangePasswordPayload, PasswordCreds, UserUpdatePayload};
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn simple_test_demo(pool: PgPool) {
@@ -91,8 +91,8 @@ async fn test_user_login_logout(pool: PgPool) {
   let app = router_with_user_alice(&pool).await;
 
   let creds = PasswordCreds::new("alice", "password", None);
-  let login_request = Request::builder().uri("/login/password").method("POST").json(json!(creds));
-  let response = app.clone().oneshot(login_request).await.unwrap();
+  let request = Request::builder().uri("/login/password").method("POST").json(json!(creds));
+  let response = app.clone().oneshot(request).await.unwrap();
   dbg!(&response);
   assert!(response.status().is_redirection());
   let body = &response.into_body().collect().await.unwrap();
@@ -114,4 +114,52 @@ async fn test_user_login_logout(pool: PgPool) {
   //   .uri("/users/logout")
   //   .method("POST")
   //   .json(json!({"username": "alice"}));
+}
+
+#[sqlx::test(migrations = "../db/migrations")]
+async fn test_request_password_reset_link(pool: PgPool) {
+  let app = router_with_user_alice(&pool).await;
+
+  //"/users/reset_password_link/:username", routing::put(put::request_password_reset_link))
+  //"/users/reset_password_link/alice").method("PUT").empty_body();
+  let request =
+    Request::builder().uri("/users/reset_password_link/alice").method("PUT").empty_body();
+  let response = app.clone().oneshot(request).await.unwrap();
+  dbg!(&response);
+  // assert!(response.status().is_success());
+  let body = &response.into_body().collect().await.unwrap();
+  dbg!(&body);
+  panic!();
+
+  let request =
+    Request::builder().uri("/users/reset_password_link/alice").method("PUT").empty_body();
+  let response = app.clone().oneshot(request).await.unwrap();
+  assert!(response.status().is_success());
+}
+
+#[sqlx::test(migrations = "../db/migrations")]
+async fn test_change_password(pool: PgPool) {
+  let app = router_with_user_alice(&pool).await;
+
+  // alice already has a password, this should fail
+  let payload = json!(ChangePasswordPayload::new("alice", "password", "new_password").unwrap());
+  let request = Request::builder().uri("/users/change_password").method("PUT").json(payload);
+  let response = app.clone().oneshot(request).await.unwrap();
+  // dbg!(&response);
+  assert!(response.status().is_client_error()); // todo: granularity
+  let body = &response.into_body().collect().await.unwrap();
+  dbg!(&body);
+  panic!();
+
+  // change her password
+  let payload = json!(ChangePasswordPayload::new("alice", "password", "new_password").unwrap());
+  let request = Request::builder().uri("/users/change_password").method("PUT").json(payload);
+  let response = app.clone().oneshot(request).await.unwrap();
+  assert!(response.status().is_success()); // todo: granularity
+
+  // change her password again
+  let payload = json!(ChangePasswordPayload::new("alice", "new_password", "password").unwrap());
+  let request = Request::builder().uri("/users/change_password").method("PUT").json(payload);
+  let response = app.clone().oneshot(request).await.unwrap();
+  assert!(response.status().is_success()); // todo: granularity
 }
