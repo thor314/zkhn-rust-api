@@ -53,6 +53,7 @@ pub struct PasswordHash(pub String);
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[repr(transparent)]
 pub struct AuthToken(pub String);
+// pub struct AuthToken(pub oauth2::CsrfToken);
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[repr(transparent)]

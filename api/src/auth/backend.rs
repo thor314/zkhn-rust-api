@@ -12,13 +12,14 @@ use oauth2::{
 use super::{auth_user::User, credentials::Credentials};
 use crate::{auth::UserInfo, error::ApiError, ApiResult};
 
+// ref: https://github.com/maxcountryman/axum-login/blob/main/examples/multi-auth/src/users.rs#L97
 #[derive(Debug, Clone)]
-pub struct Backend {
+pub struct AuthBackend {
   db:     DbPool,
   client: BasicClient,
 }
 
-impl Backend {
+impl AuthBackend {
   pub fn new(db: DbPool, client: BasicClient) -> Self { Self { db, client } }
 
   pub fn new_with_default_client(db: DbPool) -> Self {
@@ -34,13 +35,14 @@ impl Backend {
     Self { db, client }
   }
 
+  // ref: https://github.com/maxcountryman/axum-login/blob/main/examples/multi-auth/src/users.rs#L107
   pub fn authorize_url(&self) -> (Url, CsrfToken) {
     self.client.authorize_url(CsrfToken::new_random).url()
   }
 }
 
 #[async_trait]
-impl AuthnBackend for Backend {
+impl AuthnBackend for AuthBackend {
   type Credentials = Credentials;
   type Error = ApiError;
   type User = User;
@@ -59,3 +61,4 @@ impl AuthnBackend for Backend {
     Ok(user)
   }
 }
+

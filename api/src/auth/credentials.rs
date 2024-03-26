@@ -15,6 +15,7 @@ use crate::{
 };
 
 /// Users may log in either via password or via OAuth.
+// ref: https://github.com/maxcountryman/axum-login/blob/main/examples/multi-auth/src/users.rs#L57
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Credentials {
   Password(PasswordCreds),
@@ -24,9 +25,11 @@ pub enum Credentials {
 pub mod password_creds {
 
   use db::password::verify_password;
+  use tracing::debug;
 
   use super::*;
   /// Credentials for logging in with a username and password.
+  // ref: https://github.com/maxcountryman/axum-login/blob/main/examples/multi-auth/src/users.rs#L63
   #[derive(Debug, Clone, Deserialize, Serialize)]
   pub struct PasswordCreds {
     pub username: Username,
@@ -48,9 +51,11 @@ pub mod password_creds {
     ///   incorrect
     /// - Err(_) - if there was an error with the database
     pub async fn authenticate_password(&self, pool: &DbPool) -> ApiResult<Option<User>> {
+      debug!("authenticating user: {:?}", self);
       let user = db::queries::get_user(pool, &self.username)
         .await?
         .filter(|user| verify_password(&user.password_hash, &self.password).is_ok())
+        .inspect(|user| tracing::debug!("authenticated user: {:?}", user))
         .map(User);
 
       Ok(user)
@@ -63,6 +68,7 @@ pub mod oauth_creds {
   use super::*;
 
   /// Credentials for logging in with an OAuth code.
+  // ref: https://github.com/maxcountryman/axum-login/blob/main/examples/multi-auth/src/users.rs#L70
   #[derive(Debug, Clone, Deserialize, Serialize)]
   pub struct OAuthCreds {
     pub code:      String,

@@ -19,6 +19,8 @@ use tokio::task;
 pub enum ApiError {
   // 500s
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
+  OtherISE(String),
+  #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   TaskJoin(#[from] task::JoinError),
   #[status(status::StatusCode::INTERNAL_SERVER_ERROR)]
   Anyhow(#[from] anyhow::Error),
@@ -56,6 +58,7 @@ pub enum ApiError {
 impl std::fmt::Display for ApiError {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
+      ApiError::OtherISE(e) => write!(f, "OtherISE: {0}", e),
       ApiError::TaskJoin(e) => write!(f, "TaskJoin: {0}", e),
       ApiError::Anyhow(e) => write!(f, "Anyhow: {0}", e),
       ApiError::PwError(e) => write!(f, "PwError: {0}", e),

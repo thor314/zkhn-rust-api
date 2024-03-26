@@ -41,6 +41,7 @@ rand = "0.8.5"
 [dev-dependencies]
 axum-test = "14.5.0"
 http-body-util = "0.1.1"
+rstest = "0.18.2"
 serde_urlencoded = "0.7.1"
 sqlx = { version = "0.7.3", features = ["postgres", "tls-rustls", "chrono", "uuid", "runtime-tokio"] }
 

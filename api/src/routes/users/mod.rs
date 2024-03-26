@@ -65,7 +65,7 @@ pub mod get {
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
 pub mod post {
   use axum::Form;
-  use db::password::verify_user_password;
+  use db::{password::verify_user_password, AuthToken};
 
   use self::{payload::UserUpdatePayload, responses::UserResponse};
   use super::*;
@@ -84,19 +84,22 @@ pub mod post {
   ) -> ApiResult<Json<UserResponse>> {
     let user: User = {
       let mut user = user_payload.into_inner().into_user();
-      // let (auth_token, auth_token_exp) = auth::temp_jank::generate_user_token();
-      let (auth_token, auth_token_exp) = todo!();
+      // let auth_token = oauth2::CsrfToken::new_random();
+      let auth_token = AuthToken("aoedbaugcelrudahcr".to_string());
+      let expiration = crate::utils::default_expiration();
       user.auth_token = Some(auth_token);
-      user.auth_token_expiration = Some(auth_token_exp);
+      user.auth_token_expiration = Some(expiration);
       user
     };
     let result = db::queries::users::create_user(&state.pool, &user).await;
 
-    if let Err(DbError::Recoverable(e)) = result {
-      tracing::error!("error creating user: {}", e);
-      return Err(ApiError::DbEntryAlreadyExists("user already exists".to_string()));
+    match result {
+      Err(DbError::Recoverable(e)) => {
+        tracing::info!("duplicate user creation attempt {}", e);
+      },
+      Err(e) => return Err(ApiError::from(e)),
+      Ok(_) => (),
     }
-    result?;
 
     let user_response = UserResponse::from(user);
     info!("created user: {:?}", user_response);
