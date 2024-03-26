@@ -57,7 +57,8 @@ async fn test_user_crud_cycle(pool: PgPool) {
   println!("user: {:?}", user.about);
   assert!(user.about.as_ref().unwrap().0 == "about");
 
-  let request = Request::builder().uri("/users/alice").method("DELETE").body(Body::empty()).unwrap();
+  let request =
+    Request::builder().uri("/users/alice").method("DELETE").body(Body::empty()).unwrap();
   let response = app.clone().oneshot(request).await.unwrap();
   // println!("response: {:?}", response);
   assert_eq!(response.status(), StatusCode::OK);
