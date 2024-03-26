@@ -51,7 +51,8 @@ pub fn users_router(state: SharedState) -> Router {
   Router::new()
     // note - called `/users/get-user-data` in reference
     .route("/:username", routing::get(get::get_user))
-    .route("/", routing::put(put::update_user))
+    .route("/about", routing::put(put::update_user_about))
+    .route("/email", routing::put(put::update_user_email))
     .route("/:username", routing::delete(delete::delete_user))
     .route("/", routing::post(post::create_user))
     .route("/reset-password-link/:username", routing::put(put::request_password_reset_link))
@@ -147,22 +148,35 @@ mod put {
   use super::*;
 
   // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L287
-  pub async fn update_user(
+  /// Update the user's about.
+  pub async fn update_user_about(
     State(state): State<SharedState>,
     // auth_session: AuthSession, // todo(auth)
     WithValidation(payload): WithValidation<Json<UserUpdatePayload>>,
   ) -> ApiResult<StatusCode> {
-    debug!("update_user called with payload: {payload:?}");
+    debug!("update_user_about called with payload: {payload:?}");
     // assert_authenticated(&auth_session)?;
     let payload = payload.into_inner();
-    db::queries::users::update_user_about(
-      &state.pool,
-      &payload.username.0,
-      &payload.about.map(|s| s.0).unwrap(),
-    )
-    .await?;
+    let about = payload.about.ok_or(ApiError::MissingField("about missing".to_string()))?;
+    db::queries::users::update_user_about(&state.pool, &payload.username, &about).await?;
 
-    info!("updated user: {}", payload.username);
+    info!("updated user about for: {}", payload.username);
+    Ok(StatusCode::OK)
+  }
+
+  /// Update the user's email.
+  pub async fn update_user_email(
+    State(state): State<SharedState>,
+    // auth_session: AuthSession, // todo(auth)
+    WithValidation(payload): WithValidation<Json<UserUpdatePayload>>,
+  ) -> ApiResult<StatusCode> {
+    debug!("update_user_email called with payload: {payload:?}");
+    // assert_authenticated(&auth_session)?;
+    let payload = payload.into_inner();
+    let email = payload.email.ok_or(ApiError::MissingField("email missing".to_string()))?;
+    db::queries::users::update_user_email(&state.pool, &payload.username, &email).await?;
+
+    info!("updated user {}, email: {}", payload.username, email);
     Ok(StatusCode::OK)
   }
 

@@ -124,7 +124,7 @@ pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
   Ok(())
 }
 
-pub async fn get_user_comments(pool: &DbPool, username: &str) -> DbResult<Vec<Comment>> {
+pub async fn get_user_comments(pool: &DbPool, username: &Username) -> DbResult<Vec<Comment>> {
   sqlx::query_as!(
     Comment,
     "SELECT 
@@ -141,14 +141,14 @@ pub async fn get_user_comments(pool: &DbPool, username: &str) -> DbResult<Vec<Co
     created,
     dead
    FROM comments WHERE username = $1",
-    username
+    username.0
   )
   .fetch_all(pool)
   .await
   .map_err(DbError::from)
 }
 
-pub async fn get_user_items(pool: &DbPool, username: &str) -> DbResult<Vec<Item>> {
+pub async fn get_user_items(pool: &DbPool, username: &Username) -> DbResult<Vec<Item>> {
   sqlx::query_as!(
     Item,
     "SELECT 
@@ -166,39 +166,40 @@ pub async fn get_user_items(pool: &DbPool, username: &str) -> DbResult<Vec<Item>
       created,     
       dead
     FROM items WHERE username = $1",
-    username
+    username.0
   )
   .fetch_all(pool)
   .await
   .map_err(DbError::from)
 }
 
-// todo: make generic to update other user fields
 pub async fn update_user_about(
   pool: &DbPool,
-  username: &str,
-  about: &str,
+  username: &Username,
+  about: &About,
 ) -> DbResult<PgQueryResult> {
-  sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about, username)
+  sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about.0, username.0)
     .execute(pool)
     .await
     .map_err(DbError::from)
 }
 
-// // todo
-// pub async fn login_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResult> {
-//   // sqlx::query!("UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE
-// username =   // $1", username.0)   .execute(pool)
-//   //   .await
-//   //   .map_err(DbError::from)
-//   todo!()
-// }
+pub async fn update_user_email(
+  pool: &DbPool,
+  username: &Username,
+  email: &Email,
+) -> DbResult<PgQueryResult> {
+  sqlx::query!("UPDATE users SET email = $1 WHERE username = $2", email.0, username.0)
+    .execute(pool)
+    .await
+    .map_err(DbError::from)
+}
 
 /// Set the user's auth token and expiration in the database to `None`.
-pub async fn logout_user(pool: &DbPool, username: &str) -> DbResult<PgQueryResult> {
+pub async fn logout_user(pool: &DbPool, username: &Username) -> DbResult<PgQueryResult> {
   sqlx::query!(
     "UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE username = $1",
-    username
+    username.0
   )
   .execute(pool)
   .await
