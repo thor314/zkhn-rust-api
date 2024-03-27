@@ -35,14 +35,14 @@ async fn login_password(
 ) -> ApiResult<impl IntoResponse> {
   let user = match auth_session.authenticate(Credentials::Password(creds.clone())).await {
     Ok(Some(user)) => user,
-    Ok(None) => return Err(ApiError::AuthenticationError("Invalid credentials.".to_string())),
+    Ok(None) => return Err(ApiError::BadRequest("Invalid credentials.".to_string())),
     Err(e) => return Err(ApiError::OtherISE(e.to_string())),
   };
 
   if let Err(e) = auth_session.login(&user).await {
     // todo: breakpoint
     tracing::error!("login error: {}", e);
-    return Err(ApiError::AuthenticationError(e.to_string()));
+    return Err(ApiError::BadRequest(e.to_string()));
   }
 
   // todo: check if user is banned
@@ -91,6 +91,6 @@ async fn login_oauth(
 // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L123
 async fn logout_handler(mut auth_session: AuthSession) -> ApiResult<StatusCode> {
   dbg!("auth: {:?}", &auth_session);
-  auth_session.logout().await.map_err(|e| ApiError::AuthenticationError(e.to_string()))?;
+  auth_session.logout().await.map_err(|e| ApiError::BadRequest(e.to_string()))?;
   Ok(StatusCode::OK)
 }

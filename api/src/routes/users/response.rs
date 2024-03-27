@@ -1,7 +1,8 @@
 use db::{models::user::User, AuthToken, Timestamp, Username};
 use serde::{Deserialize, Serialize};
+use utoipa::{OpenApi, ToSchema};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct UserResponse {
   // todo: success is redundant
   pub success: bool,

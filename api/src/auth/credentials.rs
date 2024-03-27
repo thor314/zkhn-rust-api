@@ -111,10 +111,10 @@ pub mod oauth_creds {
                     )
                     .send()
                     .await
-                    .map_err(ApiError::AuthReqwest)?
+                    .map_err(ApiError::OAuthRequestFailure)?
                     .json::<UserInfo>() // todo: wtf
                     .await
-                    .map_err(ApiError::AuthReqwest)?;
+                    .map_err(|e| ApiError::OAuthBadGateway(e.to_string()))?;
 
       // Persist user in our database so we can use `get_user`.
       // let user = db::queries::update_access_token(&self.db, username, access_token).await?;
