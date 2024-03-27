@@ -1,11 +1,12 @@
 use db::{models::user::User, About, Email, Password, Username};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
+use utoipa::IntoParams;
 
 use crate::{error::ApiError, ApiResult};
 
 /// Username, password, and optionally email, and about.
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, IntoParams)]
 pub struct UserPayload {
   #[garde(dive)]
   pub username: Username,
@@ -56,7 +57,7 @@ impl UserPayload {
 }
 
 /// Update user details.
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, IntoParams)]
 pub struct UserUpdatePayload {
   #[garde(dive)]
   pub username: Username,
@@ -83,7 +84,7 @@ impl UserUpdatePayload {
 }
 
 /// Payload for `change_password`
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, IntoParams)]
 pub struct ChangePasswordPayload {
   #[garde(dive)]
   pub username:         Username,

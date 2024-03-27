@@ -26,10 +26,7 @@ use axum::{
   routing, Json, Router,
 };
 use axum_garde::WithValidation;
-use db::{
-  models::user::User, password::verify_user_password, AuthToken, DbError, RecoverableDbError,
-  Username,
-};
+use db::{models::user::User, password::verify_user_password, AuthToken, DbError, Username};
 use garde::Validate;
 use payload::*;
 use response::*;
@@ -90,7 +87,7 @@ mod get {
 }
 
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
-mod post {
+pub(crate) mod post {
   use super::*;
 
   /// Create a new user:
@@ -118,18 +115,11 @@ mod post {
     };
     let result = db::queries::users::create_user(&state.pool, &user).await;
 
-    match result {
-      Err(DbError::Recoverable(e)) => {
-        match e {
-          RecoverableDbError::DbEntryAlreadyExists => {
-            tracing::warn!("duplicate user creation attempt {}", e);
-            return Err(ApiError::DbEntryAlreadyExists("user already exists".to_string()));
-          },
-        };
-      },
-      Err(e) => return Err(ApiError::from(e)),
-      Ok(_) => (),
+    if let Err(DbError::Conflict) = result {
+      tracing::warn!("duplicate user creation attempt");
+      return Err(ApiError::DbConflict("user already exists".to_string()));
     }
+    result?;
 
     let user_response = UserResponse::from(user);
     info!("created user: {user_response:?}");
@@ -181,6 +171,16 @@ mod put {
   }
 
   /// Request a password reset link for the user.
+  #[utoipa::path(
+      put,
+      path = "/users/{username}",
+      params(("username" = String, Path, description = "request a new password reset link for the user")),
+      responses(
+        (status = 200, description = "Password reset link sent successfully"),
+        (status = 404, description = "User not found", body = ApiError),
+        (status = 422, description = "Invalid username", body = ApiError),
+      ),
+  )]
   pub async fn request_password_reset_link(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
@@ -236,8 +236,20 @@ mod put {
 }
 
 pub mod delete {
+  use tracing::warn;
+
   use super::*;
 
+  #[utoipa::path(
+      delete,
+      path = "/users/{username}",
+      params(("username" = String, Path, description = "delete user")),
+      responses(
+        (status = 200, description = "User successfully deleted"),
+        (status = 404, description = "User not found", body = ApiError),
+        (status = 422, description = "Invalid username", body = ApiError),
+      ),
+  )]
   pub async fn delete_user(
     State(state): State<SharedState>,
     Path(username): Path<Username>,

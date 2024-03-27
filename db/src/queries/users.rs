@@ -4,7 +4,7 @@ use tracing::{info, instrument, warn};
 use uuid::Uuid;
 
 use crate::{
-  error::{DbError, RecoverableDbError},
+  error::DbError,
   models::{comment::Comment, item::Item, user::User},
   About, AuthToken, CommentText, DbPool, DbResult, Email, Password, PasswordHash,
   ResetPasswordToken, Timestamp, Title, Username,
@@ -99,7 +99,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     if e.as_database_error().expect("expected db error").is_unique_violation() {
       tx.rollback().await?;
       warn!("user already exists");
-      return Err(RecoverableDbError::DbEntryAlreadyExists.into());
+      return Err(DbError::Conflict);
     } else {
       tracing::error!("error creating user: {e}");
     }
