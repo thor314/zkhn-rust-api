@@ -97,6 +97,11 @@ curl -X GET http://localhost:8000/users/alice
 
 If `cargo shuttle run` gives an error about docker on MacOS, run `brew install --cask docker`, open Docker (GUI) in /Applications, check that docker is running via `docker info`.
 
+### Documentation
+run `cargo shuttle run` and visit `localhost:8000/docs/swagger-ui` or `localhost:8000/docs/rapidoc` for route documentation. 
+
+🏗️ API is currently under construction: not all routes may function as expected! 🏗️
+
 See `api/tests` for usage.
 
 ## Deploy to Shuttle
