@@ -60,8 +60,6 @@ pub enum ApiError {
   DoublySubmittedChange(String),
   #[status(StatusCode::UNPROCESSABLE_ENTITY)]
   UnprocessableContent(#[from] garde::Report), // 422
-  // #[status(StatusCode::UNPROCESSABLE_ENTITY)] // 422
-  // Payload(String),
   #[status(StatusCode::UNPROCESSABLE_ENTITY)] // 422
   MissingField(String),
   // don't uncomment - creates circular dependency

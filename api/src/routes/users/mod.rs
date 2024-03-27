@@ -25,7 +25,6 @@ use axum::{
   http::StatusCode,
   routing, Json, Router,
 };
-use axum_garde::WithValidation;
 use db::{models::user::User, password::verify_user_password, AuthToken, DbError, Username};
 use garde::Validate;
 use payload::*;
@@ -59,7 +58,7 @@ pub fn users_router(state: SharedState) -> Router {
     .with_state(state)
 }
 
-mod get {
+pub(super) mod get {
   use super::*;
 
   /// If `username` exists, return the User. Otherwise, return NotFound.
@@ -87,7 +86,7 @@ mod get {
 }
 
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
-pub(crate) mod post {
+pub(super) mod post {
   use super::*;
 
   /// Create a new user:
@@ -100,26 +99,30 @@ pub(crate) mod post {
   // todo(search): tell the Algolia about the new user
   // todo(session): spam prevention?
   // todo(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
+  #[utoipa::path(
+      post,
+      path = "/users",
+      request_body = UserPayload,
+      responses(
+        (status = 200, description = "User created successfully", body = UserResponse),
+        (status = 422, description = "Invalid username", body = ApiError),
+      ),
+  )]
   pub async fn create_user(
     State(state): State<SharedState>,
-    WithValidation(payload): WithValidation<Json<UserPayload>>,
+    Json(payload): Json<UserPayload>,
   ) -> ApiResult<Json<UserResponse>> {
     debug!("create_user called with payload: {payload:?}");
+    payload.validate(&())?;
     let user: User = {
-      let mut user = payload.into_inner().into_user();
+      let mut user = payload.into_user();
       let auth_token = todo_auth_token();
       let expiration = crate::utils::default_expiration();
       user.auth_token = Some(auth_token);
       user.auth_token_expiration = Some(expiration);
       user
     };
-    let result = db::queries::users::create_user(&state.pool, &user).await;
-
-    if let Err(DbError::Conflict) = result {
-      tracing::warn!("duplicate user creation attempt");
-      return Err(ApiError::DbConflict("user already exists".to_string()));
-    }
-    result?;
+    db::queries::users::create_user(&state.pool, &user).await?;
 
     let user_response = UserResponse::from(user);
     info!("created user: {user_response:?}");
@@ -134,7 +137,7 @@ pub(crate) mod post {
   // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L124
 }
 
-mod put {
+pub(super) mod put {
   use super::*;
 
   // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L287
@@ -142,11 +145,11 @@ mod put {
   pub async fn update_user_about(
     State(state): State<SharedState>,
     // auth_session: AuthSession, // todo(auth)
-    WithValidation(payload): WithValidation<Json<UserUpdatePayload>>,
+    Json(payload): Json<UserUpdatePayload>,
   ) -> ApiResult<StatusCode> {
     debug!("update_user_about called with payload: {payload:?}");
+    payload.validate(&())?;
     // assert_authenticated(&auth_session)?;
-    let payload = payload.into_inner();
     let about = payload.about.ok_or(ApiError::MissingField("about missing".to_string()))?;
     db::queries::users::update_user_about(&state.pool, &payload.username, &about).await?;
 
@@ -158,11 +161,11 @@ mod put {
   pub async fn update_user_email(
     State(state): State<SharedState>,
     // auth_session: AuthSession, // todo(auth)
-    WithValidation(payload): WithValidation<Json<UserUpdatePayload>>,
+    Json(payload): Json<UserUpdatePayload>,
   ) -> ApiResult<StatusCode> {
     debug!("update_user_email called with payload: {payload:?}");
     // assert_authenticated(&auth_session)?;
-    let payload = payload.into_inner();
+    payload.validate(&())?;
     let email = payload.email.ok_or(ApiError::MissingField("email missing".to_string()))?;
     db::queries::users::update_user_email(&state.pool, &payload.username, &email).await?;
 
@@ -213,11 +216,22 @@ mod put {
 
   // todo(cookie) ref - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L267
   /// Change the user's password.
+  #[utoipa::path(
+      put,
+      path = "/users/change-password",
+      request_body = ChangePasswordPayload,
+      responses(
+        (status = 200, description = "Password changed successfully"),
+      //   (status = 404, description = "User not found", body = ApiError),
+      //   (status = 422, description = "Invalid username", body = ApiError),
+      ),
+  )]
   pub async fn change_password(
     State(state): State<SharedState>,
-    WithValidation(payload): WithValidation<Json<ChangePasswordPayload>>,
+    Json(payload): Json<ChangePasswordPayload>,
   ) -> ApiResult<StatusCode> {
     debug!("change_password called with payload: {payload:?}");
+    payload.validate(&())?;
     let user = db::queries::users::get_user(&state.pool, &payload.username)
       .await?
       .ok_or(ApiError::DbEntryNotFound("no such user".to_string()))?;
@@ -235,7 +249,7 @@ mod put {
   }
 }
 
-pub mod delete {
+pub(super) mod delete {
   use tracing::warn;
 
   use super::*;
@@ -243,7 +257,7 @@ pub mod delete {
   #[utoipa::path(
       delete,
       path = "/users/{username}",
-      params(("username" = String, Path, description = "delete user")),
+      params(("username" = String, Path,)),
       responses(
         (status = 200, description = "User successfully deleted"),
         (status = 404, description = "User not found", body = ApiError),
