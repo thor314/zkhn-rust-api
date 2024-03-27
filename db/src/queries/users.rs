@@ -117,11 +117,11 @@ pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
 
   if result.rows_affected() == 0 {
     warn!("user {username} does not exist");
+    Err(DbError::NotFound)
   } else {
     info!("user {username} deleted");
+    Ok(())
   }
-
-  Ok(())
 }
 
 pub async fn get_user_comments(pool: &DbPool, username: &Username) -> DbResult<Vec<Comment>> {

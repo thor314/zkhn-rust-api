@@ -54,17 +54,19 @@ pub enum ApiError {
   #[status(StatusCode::UNAUTHORIZED)] // 401
   Unauthorized(String),
   #[status(StatusCode::UNAUTHORIZED)] // 401
-  PwError(String),
+  IncorrectPassword(String),
+  /// for when a required field is missing in the table
+  #[status(StatusCode::NOT_FOUND)] // 404
+  MissingField(String),
   /// for when e.g. an upvote or favorite is doubly submitted
   #[status(StatusCode::CONFLICT)] // 409
   DoublySubmittedChange(String),
   #[status(StatusCode::UNPROCESSABLE_ENTITY)]
-  UnprocessableContent(#[from] garde::Report), // 422
-  #[status(StatusCode::UNPROCESSABLE_ENTITY)] // 422
-  MissingField(String),
-  // don't uncomment - creates circular dependency
-  // #[status(StatusCode::UNAUTHORIZED)]
-  // AxumLogin(#[from] axum_login::Error<crate::auth::Backend>),
+  InvalidPayload(#[from] garde::Report), /* 422
+                                          * don't uncomment - creates circular dependency
+                                          * #[status(StatusCode::UNAUTHORIZED)]
+                                          * AxumLogin(#[from]
+                                          * axum_login::Error<crate::auth::Backend>), */
 }
 
 impl std::fmt::Display for ApiError {
@@ -73,13 +75,13 @@ impl std::fmt::Display for ApiError {
       ApiError::OtherISE(e) => write!(f, "OtherISE: {0}", e),
       ApiError::TaskJoin(e) => write!(f, "TaskJoin: {0}", e),
       ApiError::Anyhow(e) => write!(f, "Anyhow: {0}", e),
-      ApiError::PwError(e) => write!(f, "PwError: {0}", e),
+      ApiError::IncorrectPassword(e) => write!(f, "Incorrect Password: {0}", e),
       ApiError::OtherDbError(e) => write!(f, "DbError: {0}", e),
       ApiError::Session(e) => write!(f, "Session: {0}", e),
       // ApiError::Payload(e) => write!(f, "Payload {0}", e),
       ApiError::DbEntryNotFound(e) => write!(f, "NotFound: {0}", e),
       ApiError::Unauthorized(e) => write!(f, "Unauthorized: {0}", e),
-      ApiError::UnprocessableContent(e) => write!(f, "GardePayload: {0}", e),
+      ApiError::InvalidPayload(e) => write!(f, "Invalid Payload: {0}", e.to_string().trim()),
       ApiError::DbConflict(e) => write!(f, "DbEntryAlreadyExists: {0}", e),
       ApiError::BadRequest(e) => write!(f, "Invalid request submitted: {0}", e),
       ApiError::OAuthRequestFailure(e) => write!(f, "AuthReqwest: {0}", e),
@@ -96,7 +98,8 @@ impl From<DbError> for ApiError {
     match e {
       DbError::Conflict => ApiError::DbConflict(e.to_string()),
       DbError::NotFound => ApiError::DbEntryNotFound(e.to_string()),
-      DbError::PwError(e) => ApiError::PwError(e.to_string()),
+      // keep PwError commented - db password error is internal library failure
+      // DbError::PwError(e) => ApiError::IncorrectPassword(e.to_string()),
       // DbError::PayloadValidation(e) => ApiError::(e.to_string()),
       _ => ApiError::OtherDbError(e.to_string()),
     }

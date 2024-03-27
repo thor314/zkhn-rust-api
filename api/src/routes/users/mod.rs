@@ -1,13 +1,3 @@
-//! Routes:
-//! - create-new-user
-//! - login-user
-//! - authenticate-user
-//! - logout-user
-//! - logout-user-clear-cookies
-//! - reset-user-password
-//! - get-user-profile-data
-//! - update-user-profile-data
-//! - change-user-password (todo: diff reset password?)
 // todo(cookie) - remove user cookie data - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L142
 
 mod payload;
@@ -29,7 +19,7 @@ use db::{models::user::User, password::verify_user_password, AuthToken, DbError,
 use garde::Validate;
 use payload::*;
 use response::*;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 use crate::{
   // auth::{self, assert_authenticated},
@@ -61,12 +51,29 @@ pub fn users_router(state: SharedState) -> Router {
 pub(super) mod get {
   use super::*;
 
+  #[utoipa::path(
+      get,
+      path = "/users/{username}",
+      params( ("username" = String, Path, example = "alice") ),
+      responses(
+        // todo(auth) auth error
+        // (status = 401, description = "Unauthorized"),
+        (status = 422, description = "Invalid Payload"),
+        (status = 422, description = "Invalid username"),
+        (status = 500, description = "Database Error"),
+        (status = 404, description = "User not found"),
+        (status = 200, description = "Success"),
+      ),
+  )]
+  /// Get user.
+  ///
   /// If `username` exists, return the User. Otherwise, return NotFound.
-  // todo(auth): currently, we return the whole user. When auth is implemented, we will want to
-  // return different user data, per the caller's auth.
-  //
-  // ref get_public: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L223
-  // ref get_private: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L244
+  ///
+  /// todo(auth): currently, we return the whole user. When auth is implemented, we will want to
+  /// return different user data, per the caller's auth.
+  ///
+  /// ref get_public: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L223
+  /// ref get_private: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L244
   pub async fn get_user(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
@@ -89,25 +96,21 @@ pub(super) mod get {
 pub(super) mod post {
   use super::*;
 
-  /// Create a new user:
-  ///
-  /// - validate and create a new user from the payload
-  /// - attempt to insert the new user into the db
-  ///   - if the user already exists, return a 409.
-  ///
-  /// No authentication required.
-  // todo(search): tell the Algolia about the new user
-  // todo(session): spam prevention?
-  // todo(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
   #[utoipa::path(
       post,
       path = "/users",
       request_body = UserPayload,
       responses(
-        (status = 200, description = "User created successfully", body = UserResponse),
-        (status = 422, description = "Invalid username", body = ApiError),
+        (status = 422, description = "Invalid Payload"),
+        (status = 500, description = "Database Error"),
+        (status = 200, description = "Success"),
       ),
   )]
+  /// Create a new user:
+  ///
+  /// todo(search): tell the Algolia about the new user
+  /// todo(session): spam prevention?
+  /// todo(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
   pub async fn create_user(
     State(state): State<SharedState>,
     Json(payload): Json<UserPayload>,
@@ -140,8 +143,22 @@ pub(super) mod post {
 pub(super) mod put {
   use super::*;
 
-  // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L287
+  #[utoipa::path(
+      put,
+      path = "/users/about",
+      request_body = UserUpdatePayload,
+      responses(
+        // todo(auth) auth error
+        // (status = 401, description = "Unauthorized"),
+        (status = 422, description = "Invalid Payload"),
+        (status = 500, description = "Database Error"),
+        (status = 404, description = "User not found"),
+        (status = 200, description = "Success"),
+      ),
+  )]
   /// Update the user's about.
+  ///
+  /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L287
   pub async fn update_user_about(
     State(state): State<SharedState>,
     // auth_session: AuthSession, // todo(auth)
@@ -157,7 +174,20 @@ pub(super) mod put {
     Ok(StatusCode::OK)
   }
 
-  /// Update the user's email.
+  #[utoipa::path(
+      put,
+      path = "/users/email",
+      request_body = UserUpdatePayload,
+      responses(
+        // todo(auth) auth error
+        // (status = 401, description = "Unauthorized"),
+        (status = 422, description = "Invalid Payload"),
+        (status = 500, description = "Database Error"),
+        (status = 404, description = "User not found"),
+        (status = 200, description = "Success"),
+      ),
+  )]
+  /// Update the user email.
   pub async fn update_user_email(
     State(state): State<SharedState>,
     // auth_session: AuthSession, // todo(auth)
@@ -173,17 +203,21 @@ pub(super) mod put {
     Ok(StatusCode::OK)
   }
 
-  /// Request a password reset link for the user.
   #[utoipa::path(
       put,
-      path = "/users/{username}",
-      params(("username" = String, Path, description = "request a new password reset link for the user")),
+      path = "/users/reset-password-link/{username}",
+      params( ("username" = String, Path, example = "alice") ),
       responses(
-        (status = 200, description = "Password reset link sent successfully"),
-        (status = 404, description = "User not found", body = ApiError),
-        (status = 422, description = "Invalid username", body = ApiError),
+        // todo(auth) auth error
+        // (status = 401, description = "Unauthorized", body = ApiError::Unauthorized),
+        (status = 422, description = "Invalid username"),
+        (status = 500, description = "Database Error"),
+        (status = 404, description = "User not found"),
+        (status = 404, description = "No email found"),
+        (status = 200, description = "Success"),
       ),
   )]
+  /// Request a password reset link.
   pub async fn request_password_reset_link(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
@@ -214,18 +248,23 @@ pub(super) mod put {
     Ok(StatusCode::OK)
   }
 
-  // todo(cookie) ref - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L267
-  /// Change the user's password.
   #[utoipa::path(
       put,
       path = "/users/change-password",
       request_body = ChangePasswordPayload,
       responses(
-        (status = 200, description = "Password changed successfully"),
-      //   (status = 404, description = "User not found", body = ApiError),
-      //   (status = 422, description = "Invalid username", body = ApiError),
+        // todo(auth) auth error
+        // (status = 401, description = "Unauthorized", body = ApiError::Unauthorized),
+        (status = 422, description = "Payload Validation Error"),
+        (status = 500, description = "Database Error"),
+        (status = 404, description = "User not found"),
+        (status = 401, description = "Incorrect Password"),
+        (status = 200, description = "Success"),
       ),
   )]
+  /// Change user password.
+  ///
+  /// todo(cookie) ref - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L267
   pub async fn change_password(
     State(state): State<SharedState>,
     Json(payload): Json<ChangePasswordPayload>,
@@ -236,7 +275,7 @@ pub(super) mod put {
       .await?
       .ok_or(ApiError::DbEntryNotFound("no such user".to_string()))?;
     if !verify_user_password(&user, &payload.current_password)? {
-      return Err(ApiError::Unauthorized("incorrect password".to_string()));
+      return Err(ApiError::IncorrectPassword("incorrect password".to_string()));
     }
 
     let password_hash = db::password::hash_password(&payload.new_password)?;
@@ -250,20 +289,22 @@ pub(super) mod put {
 }
 
 pub(super) mod delete {
-  use tracing::warn;
-
   use super::*;
 
   #[utoipa::path(
       delete,
       path = "/users/{username}",
-      params(("username" = String, Path,)),
+      params( ("username" = String, Path, example = "alice") ),
       responses(
-        (status = 200, description = "User successfully deleted"),
-        (status = 404, description = "User not found", body = ApiError),
-        (status = 422, description = "Invalid username", body = ApiError),
+        // todo(auth) auth error
+        // (status = 401, description = "Unauthorized", body = ApiError::Unauthorized),
+        (status = 422, description = "Invalid username"),
+        (status = 500, description = "Database Error"),
+        (status = 404, description = "User not found"),
+        (status = 200, description = "Success"),
       ),
   )]
+  /// Delete a user.
   pub async fn delete_user(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
