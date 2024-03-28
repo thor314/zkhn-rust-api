@@ -3,13 +3,26 @@ use serde::{Deserialize, Serialize};
 use utoipa::{OpenApi, ToSchema};
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[schema(default = UserResponse::default, example=json!(UserResponse::default()))]
 pub struct UserResponse {
-  // todo: success is redundant
+  // todo(refactor): success is redundant
   pub success: bool,
   pub username: Username,
   pub auth_token: AuthToken,
   pub auth_token_expiration_timestamp: Timestamp,
 }
+
+impl Default for UserResponse {
+  fn default() -> Self {
+    Self {
+      success: false,
+      username: Username("alice".to_string()),
+      auth_token: AuthToken("auth_token".to_string()),
+      auth_token_expiration_timestamp: Timestamp(chrono::Utc::now()),
+    }
+  }
+}
+
 impl UserResponse {
   pub(crate) fn new(user: User, auth_token: AuthToken, auth_token_expiration: Timestamp) -> Self {
     Self {

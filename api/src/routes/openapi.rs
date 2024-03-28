@@ -13,9 +13,6 @@
 //!     (status = 200, description = "Success", body = UserResponse),
 //!     ...
 //!   )
-//! Params:
-//! - if the method takes a path argument
-//! params()
 //! ]
 //! [^1]: If param is a newtype like `Username(String)`, use the underlying type `String` for the example for clarity.
 //! [^2]: example fields make testing the api in the UI more convenient.

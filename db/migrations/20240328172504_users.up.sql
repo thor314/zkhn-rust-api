@@ -1,5 +1,4 @@
--- Add migration script here
-DROP TABLE IF EXISTS users;
+-- Add up migration script here
 CREATE TABLE users (
     username TEXT PRIMARY KEY,
     password_hash TEXT NOT NULL,
@@ -7,7 +6,7 @@ CREATE TABLE users (
     auth_token_expiration TIMESTAMP WITH TIME ZONE,
     reset_password_token TEXT,
     reset_password_token_expiration TIMESTAMP WITH TIME ZONE,
-    email TEXT NOT NULL DEFAULT '',
+    email TEXT,
     created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     karma INTEGER DEFAULT 0 CHECK (karma >= 0) NOT NULL,
     about TEXT,

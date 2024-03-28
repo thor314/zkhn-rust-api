@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE users SET reset_password_token = $1, reset_password_token_expiration = $2 WHERE username =\n  $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8d4896e23c2907b318ca581158e6fcab47a8e07009a71ff492dcd13747b155ed"
+}

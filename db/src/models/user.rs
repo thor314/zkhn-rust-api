@@ -1,7 +1,3 @@
-use scrypt::{
-  password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
-  Scrypt,
-};
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
 use uuid::Uuid;

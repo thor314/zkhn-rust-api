@@ -83,20 +83,3 @@ impl Item {
 //   Show,
 //   Ask,
 // }
-
-// todo: move
-pub(crate) async fn increment_comments(
-  conn: &mut PgConnection,
-  parent_item_id: Uuid,
-) -> Result<(), DbError> {
-  sqlx::query!(
-    "UPDATE items
-    SET comment_count = comment_count + 1
-    WHERE id = $1",
-    parent_item_id
-  )
-  .execute(conn)
-  .await?;
-
-  Ok(())
-}

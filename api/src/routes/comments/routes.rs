@@ -37,69 +37,69 @@ use crate::{
   SharedState,
 };
 
-/// if user is signed in, check if the user has voted on this comment.
-/// If no comment exists, return Not Found.
-/// If the comment exists, but the user is not signed in, return the Ok((Comment, None)).
-/// If the comment exists, and the user is signed in, return the Ok((Comment, bool)), where bool
-/// indicates whether the user has voted.
+// /// if user is signed in, check if the user has voted on this comment.
+// /// If no comment exists, return Not Found.
+// /// If the comment exists, but the user is not signed in, return the Ok((Comment, None)).
+// /// If the comment exists, and the user is signed in, return the Ok((Comment, bool)), where bool
+// /// indicates whether the user has voted.
 // todo: this method diverges significantly from the js api, including not taking page argument
-pub async fn get_comment(
-  State(state): State<SharedState>,
-  Path(comment_id): Path<Uuid>,
-  // auth_session: AuthSession,
-) -> ApiResult<(Json<Comment>, Json<Option<VoteState>>)> {
-  let comment = queries::get_comment(&state.pool, comment_id)
-    .await?
-    .ok_or(ApiError::DbEntryNotFound("comment not found in db".into()))?;
+// pub async fn get_comment(
+//   State(state): State<SharedState>,
+//   Path(comment_id): Path<Uuid>,
+//   // auth_session: AuthSession,
+// ) -> ApiResult<(Json<Comment>, Json<Option<VoteState>>)> {
+//   let comment = queries::get_comment(&state.pool, comment_id)
+//     .await?
+//     .ok_or(ApiError::DbEntryNotFound("comment not found in db".into()))?;
 
-  // match auth_session.user {
-  //   Some(user) => {
-  //     let username = &user.username;
-  //     let user_vote = queries::get_user_vote_by_content_id(&state.pool, &username.0, comment_id)
-  //       .await
-  //       .context("no vote found")?;
-  //     let vote_state = user_vote.map(|v| v.vote_state);
-  //     Ok((Json(comment), Json(vote_state)))
-  //   },
-  //   None => Ok((Json(comment), Json(None))),
-  todo!()
+// match auth_session.user {
+//   Some(user) => {
+//     let username = &user.username;
+//     let user_vote = queries::get_user_vote_by_content_id(&state.pool, &username.0, comment_id)
+//       .await
+//       .context("no vote found")?;
+//     let vote_state = user_vote.map(|v| v.vote_state);
+//     Ok((Json(comment), Json(vote_state)))
+//   },
+//   None => Ok((Json(comment), Json(None))),
+// todo!()
 
-  // todo: the js api contains many more things, that appear to not truly belong in a method such as
-  // this
+// todo: the js api contains many more things, that appear to not truly belong in a method such as
+// this
 
-  // // todo: this is not a field on the comment, so it stays commented
-  // // comment.pageMetadataTitle = comment.text.replace(/<[^>]+>/g, "");
+// // todo: this is not a field on the comment, so it stays commented
+// // comment.pageMetadataTitle = comment.text.replace(/<[^>]+>/g, "");
 
-  // // todo: the js api now sorts comments by points and chunks by page
-  // // let mut comments: Vec<Comment> = todo!();
-  // // // sort comments first by most points, then by latest date created
-  // // comments.sort_by(|a, b| a.points.cmp(&b.points).then_with(||
-  // a.created.0.cmp(&b.created.0)));
+// // todo: the js api now sorts comments by points and chunks by page
+// // let mut comments: Vec<Comment> = todo!();
+// // // sort comments first by most points, then by latest date created
+// // comments.sort_by(|a, b| a.points.cmp(&b.points).then_with(||
+// a.created.0.cmp(&b.created.0)));
 
-  // // if (!authUser.userSignedIn) {
-  // //   return { success: true, comment: comment };
-  // Ok((Json(comment), user_vote))
-}
+// // if (!authUser.userSignedIn) {
+// //   return { success: true, comment: comment };
+// Ok((Json(comment), user_vote))
+// }
 
-/// Add a new comment to the database.
-/// Also update user karma, and item comment count, and tell the search-api.
-pub async fn create_comment(
-  State(state): State<SharedState>,
-  Json(payload): Json<CommentPayload>,
-  // auth_session: AuthSession,
-) -> ApiResult<StatusCode> {
-  // assert_authenticated(&auth_session)?;
-  // todo: item is dead
-  // assert item exists?
-  let item = queries::get_item(&state.pool, payload.parent_item_id)
-    .await?
-    .ok_or(ApiError::DbEntryNotFound("comment not found in db".into()))?;
-  payload.validate(&())?;
-  let comment = Comment::try_from(payload)?;
-  queries::insert_comment(&state.pool, &comment).await?;
+// /// Add a new comment to the database.
+// /// Also update user karma, and item comment count, and tell the search-api.
+// pub async fn create_comment(
+//   State(state): State<SharedState>,
+//   Json(payload): Json<CommentPayload>,
+//   // auth_session: AuthSession,
+// ) -> ApiResult<StatusCode> {
+//   // assert_authenticated(&auth_session)?;
+//   // todo: item is dead
+//   // assert item exists?
+//   let item = queries::get_item(&state.pool, payload.parent_item_id)
+//     .await?
+//     .ok_or(ApiError::DbEntryNotFound("comment not found in db".into()))?;
+//   payload.validate(&())?;
+//   let comment = Comment::try_from(payload)?;
+//   queries::insert_comment(&state.pool, &comment).await?;
 
-  Ok(StatusCode::CREATED)
-}
+//   Ok(StatusCode::CREATED)
+// }
 
 // pub async fn update_comment_vote(
 //   State(mut state): State<SharedState>,

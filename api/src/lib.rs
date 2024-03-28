@@ -63,9 +63,10 @@ pub async fn router(pool: &DbPool, analytics_key: Option<String>) -> ApiResult<R
     .route_layer(login_required!(AuthBackend, login_url = "/login"))
     // unprotected routes (like "/login") go below the login route_layer
     .merge(routes(state))
-    .merge(auth_router())
+    // .merge(auth_router()) // todo: move to routes router
     .layer(auth_layer)
-    .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth router
+    // NOTE: analytics slowing server down dramatically, removal pending
+    // .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth router
     //
     ;
 
