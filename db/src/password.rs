@@ -1,3 +1,4 @@
+use argon2::Argon2;
 use scrypt::{
   password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
   Scrypt,
@@ -6,7 +7,18 @@ use tracing::debug;
 
 use crate::{models::user::User, DbError, DbResult, Password, PasswordHash};
 
-pub async fn hash_password(password: &Password) -> DbResult<PasswordHash> {
+pub async fn hash_password_argon(password: &Password) -> DbResult<PasswordHash> {
+  let salt = SaltString::generate(&mut OsRng);
+  let argon2 = Argon2::default();
+  debug!("hashing password");
+  let instant = std::time::Instant::now();
+  let password_hash = argon2.hash_password(password.0.as_bytes(), &salt)?.to_string();
+  let elapsed = instant.elapsed();
+  debug!("hashing password, time elapsed: {:?}", elapsed);
+  Ok(PasswordHash(password_hash))
+}
+
+pub async fn hash_password_scrypt(password: &Password) -> DbResult<PasswordHash> {
   let salt = SaltString::generate(&mut OsRng);
   let password = password.clone();
   // Move `salt` into the closure

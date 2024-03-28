@@ -282,7 +282,7 @@ pub(super) mod put {
       return Err(ApiError::IncorrectPassword("incorrect password".to_string()));
     }
 
-    let password_hash = db::password::hash_password(&payload.new_password).await?;
+    let password_hash = db::password::hash_password_scrypt(&payload.new_password).await?;
     db::queries::users::update_user_password(&state.pool, &payload.username, &password_hash)
       .await?;
     // todo(email) - send an email to the user that their password has changed
