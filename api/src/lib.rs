@@ -14,10 +14,7 @@ mod sessions;
 #[cfg(test)] mod tests;
 mod utils;
 
-use anyhow::Context;
-use auth::auth_router;
 use axum::{routing, Router};
-use axum_analytics::Analytics;
 use axum_login::{login_required, AuthManagerLayerBuilder};
 use db::DbPool;
 use error::ApiError;

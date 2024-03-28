@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use super::{
@@ -13,7 +14,8 @@ use crate::{
   About, AuthToken, DbPool, Email, Password, PasswordHash, ResetPasswordToken, Timestamp, Username,
 };
 
-#[derive(sqlx::FromRow, Serialize, Deserialize, Clone)]
+#[derive(sqlx::FromRow, Serialize, Deserialize, Clone, ToSchema)]
+#[schema(example = User::default, default = User::default)]
 pub struct User {
   pub username: Username,
   /// Hashed password
@@ -45,6 +47,27 @@ pub struct User {
   pub banned: bool,
 }
 
+impl Default for User {
+  fn default() -> Self {
+    User {
+      username: Username("alice".to_string()),
+      password_hash: PasswordHash("password".to_string()),
+      auth_token: None,
+      auth_token_expiration: None,
+      reset_password_token: None,
+      reset_password_token_expiration: None,
+      email: None,
+      created: now(),
+      karma: 1,
+      about: None,
+      show_dead: false,
+      is_moderator: false,
+      shadow_banned: false,
+      banned: false,
+    }
+  }
+}
+
 impl User {
   pub fn new(
     username: Username,
@@ -52,22 +75,7 @@ impl User {
     email: Option<Email>,
     about: Option<About>,
   ) -> Self {
-    User {
-      username,
-      password_hash,
-      auth_token: None,
-      auth_token_expiration: None,
-      reset_password_token: None,
-      reset_password_token_expiration: None,
-      email,
-      created: now(),
-      karma: 1,
-      about,
-      show_dead: false,
-      is_moderator: false,
-      shadow_banned: false,
-      banned: false,
-    }
+    User { username, password_hash, email, about, ..Default::default() }
   }
 
   // todo: probably move

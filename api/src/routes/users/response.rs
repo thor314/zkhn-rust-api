@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::{OpenApi, ToSchema};
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
-#[schema(default = UserResponse::default, example=json!(UserResponse::default()))]
+#[schema(default = UserResponse::default, example=UserResponse::default)]
 pub struct UserResponse {
   // todo(refactor): success is redundant
   pub success: bool,

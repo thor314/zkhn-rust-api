@@ -1,9 +1,4 @@
-use axum::{
-  http::{self, HeaderValue, Method},
-  response::{Html, IntoResponse},
-  routing::get,
-  Json, Router,
-};
+use axum::http::{self, HeaderValue, Method};
 use tower_http::cors::CorsLayer;
 
 // see https://docs.rs/tower-http/latest/tower_http/cors/index.html

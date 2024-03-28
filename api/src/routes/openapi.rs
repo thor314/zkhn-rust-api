@@ -21,6 +21,7 @@
 //! Derive IntoParams for Payloads sent as Path or Query params.
 //! Derive ToSchema for Payloads and Responses.
 use axum::{routing, Json, Router};
+use db::models::user::User;
 use utoipa::OpenApi;
 use utoipa_rapidoc::RapiDoc;
 use utoipauto::utoipauto;
@@ -42,7 +43,7 @@ pub(super) fn docs_router() -> Router {
 #[openapi(
   info(description = "API documentation for ZKHN"),
   // Schemas that may be returned in the body by the api.
-  components(schemas(UserUpdatePayload, ChangePasswordPayload, UserPayload, UserResponse))
+  components(schemas(UserUpdatePayload, ChangePasswordPayload, UserPayload, UserResponse, User))
   // components(schemas(ApiError, UserResponse, ChangePasswordPayload, UserPayload, UserUpdatePayload, UserDeletePayload)),
   // components(schemas(ChangePasswordPayload)),
   // runtime modification, e.g. for jwt: https://docs.rs/utoipa/latest/utoipa/trait.Modify.html
