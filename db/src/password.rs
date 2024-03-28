@@ -2,16 +2,34 @@ use scrypt::{
   password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
   Scrypt,
 };
+use tracing::debug;
 
 use crate::{models::user::User, DbError, DbResult, Password, PasswordHash};
 
-/// Hashes the user's password before saving if it is modified or new.
-pub fn hash_password(password: &Password) -> DbResult<PasswordHash> {
+pub async fn hash_password(password: &Password) -> DbResult<PasswordHash> {
   let salt = SaltString::generate(&mut OsRng);
-  let pw_hash: scrypt::password_hash::PasswordHash =
-    Scrypt.hash_password(password.0.as_bytes(), &salt)?;
-  Ok(PasswordHash(pw_hash.to_string()))
+  let password = password.clone();
+  // Move `salt` into the closure
+  let pw_hash = tokio::task::spawn_blocking(move || {
+    let out = Scrypt.hash_password(password.0.as_bytes(), &salt)?.to_string();
+    Ok::<String, scrypt::password_hash::Error>(out)
+  })
+  .await??;
+  Ok(PasswordHash(pw_hash))
 }
+
+// /// Hashes the user's password before saving if it is modified or new.
+// pub async fn hash_password(password: Password) -> DbResult<PasswordHash> {
+//   let salt = SaltString::generate(&mut OsRng);
+//   let pw_hash = tokio::task::spawn_blocking(move || {
+//     // let password = password.clone();
+//     // let salt = salt.clone();
+//     Scrypt.hash_password(password.0.as_bytes(), &salt)
+//   })
+//   .await??;
+//   debug!("ok_password");
+//   Ok(PasswordHash(pw_hash.to_string()))
+// }
 
 /// verify the provided password against the user's stored password hash.
 /// Convenience wrapper of `verify_password`.

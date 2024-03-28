@@ -30,22 +30,10 @@ impl Default for UserPayload {
   }
 }
 
-impl TryFrom<UserPayload> for User {
-  type Error = ApiError;
-
-  /// Validate the payload and convert it into a User.
-  fn try_from(value: UserPayload) -> Result<Self, Self::Error> {
-    value.validate(&())?;
-    let UserPayload { username, password, email, about } = value;
-    let password_hash = password.hash()?;
-    Ok(User::new(username, password_hash, email, about))
-  }
-}
-
 impl UserPayload {
   /// Assume Comment Payload has already been validated.
-  pub fn into_user(self) -> User {
-    let password_hash = self.password.hash().unwrap();
+  pub async fn into_user(self) -> User {
+    let password_hash = self.password.hash().await.unwrap();
     User::new(self.username, password_hash, self.email, self.about)
   }
 

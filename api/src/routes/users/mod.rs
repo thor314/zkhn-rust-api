@@ -102,6 +102,7 @@ pub(super) mod post {
       request_body = UserPayload,
       responses(
         (status = 422, description = "Invalid Payload"),
+        (status = 409, description = "User Conflict"),
         (status = 500, description = "Database Error"),
         (status = 200, description = "Success", body = UserResponse),
       ),
@@ -118,14 +119,17 @@ pub(super) mod post {
     debug!("create_user called with payload: {payload:?}");
     payload.validate(&())?;
     let user: User = {
-      let mut user = payload.into_user();
+      let mut user = payload.into_user().await;
       let auth_token = todo_auth_token();
       let expiration = crate::utils::default_expiration();
       user.auth_token = Some(auth_token);
       user.auth_token_expiration = Some(expiration);
       user
     };
+
+    debug!("2");
     db::queries::users::create_user(&state.pool, &user).await?;
+    debug!("3");
 
     let user_response = UserResponse::from(user);
     info!("created user: {user_response:?}");
@@ -278,7 +282,7 @@ pub(super) mod put {
       return Err(ApiError::IncorrectPassword("incorrect password".to_string()));
     }
 
-    let password_hash = db::password::hash_password(&payload.new_password)?;
+    let password_hash = db::password::hash_password(&payload.new_password).await?;
     db::queries::users::update_user_password(&state.pool, &payload.username, &password_hash)
       .await?;
     // todo(email) - send an email to the user that their password has changed

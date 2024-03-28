@@ -24,6 +24,7 @@ async fn main(
   info!("Migrating db...");
   info!("pool info: {:?}", pool);
   db::migrate(&pool).await.unwrap();
+
   info!("Initializing router...");
 
   info!("Building middleware layers...");

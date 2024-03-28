@@ -34,7 +34,7 @@ use crate::{
 //   match maybe_favorite {
 //     Some(favorite) => {
 //       sqlx::query!(
-//         "DELETE FROM user_favorites 
+//         "DELETE FROM user_favorites
 //       WHERE item_id = $1",
 //         favorite.item_id,
 //       )

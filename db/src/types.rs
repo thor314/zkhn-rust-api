@@ -5,6 +5,7 @@ use chrono::{DateTime, Utc};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 use sqlx::{prelude::Type, Decode, Encode};
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::{password::hash_password, DbResult};
@@ -19,6 +20,9 @@ pub struct Timestamp(pub DateTime<Utc>);
 #[repr(transparent)]
 pub struct About(#[garde(ascii, length(min = 0, max = 400))] pub String);
 
+// NOTE: deriving ToSchema doesn't appear to make the docs clearer
+// #[derive(Debug, Clone, Serialize, Deserialize, Validate, PartialEq, Type, ToSchema)]
+// #[schema(default = "Username(\"alice\")")]
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, PartialEq, Type)]
 #[garde(transparent)]
 #[repr(transparent)]
@@ -42,7 +46,7 @@ impl std::fmt::Display for Email {
 #[garde(transparent)]
 pub struct Password(#[garde(ascii, length(min = 8, max = 25))] pub String);
 impl Password {
-  pub fn hash(&self) -> DbResult<PasswordHash> { hash_password(self) }
+  pub async fn hash(&self) -> DbResult<PasswordHash> { hash_password(self).await }
 }
 
 /// A hashed password

@@ -9,19 +9,19 @@ use crate::{
 // pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
 //   sqlx::query_as!(
 //     Item,
-//     "SELECT 
+//     "SELECT
 //       id,
-//       username as \"username: Username\",    
-//       title as \"title: Title\",  
-//       item_type,   
-//       url,         
-//       domain,      
-//       text,        
-//       points,      
-//       score,       
+//       username as \"username: Username\",
+//       title as \"title: Title\",
+//       item_type,
+//       url,
+//       domain,
+//       text,
+//       points,
+//       score,
 //       comment_count,
 //       item_category,
-//       created,     
+//       created,
 //       dead
 //     FROM items WHERE id = $1",
 //     item_id
@@ -64,7 +64,7 @@ use crate::{
 //     comment_count,
 //     item_category,
 //     created,
-//     dead ) 
+//     dead )
 //     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
 //     id,
 //     username.0,

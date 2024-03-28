@@ -50,13 +50,8 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     reset_password_token,
     reset_password_token_expiration,
     email,
-    created,
     karma,
-    about,
-    show_dead,
-    is_moderator,
-    shadow_banned,
-    banned,
+    ..
   } = new_user.clone();
 
   let result = sqlx::query!(
@@ -67,10 +62,8 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     auth_token_expiration,
     reset_password_token,
     reset_password_token_expiration,
-    email,
-    created,
-    about
-  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+    email
+  ) VALUES ($1, $2, $3, $4, $5, $6, $7)",
     username.0,
     password_hash.0,
     auth_token.map(|s| s.0),
@@ -78,8 +71,6 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     reset_password_token.map(|s| s.0),
     reset_password_token_expiration.map(|t| t.0),
     email.map(|s| s.0),
-    created.0,
-    about.map(|s| s.0),
   )
   .execute(&mut *tx)
   .await;
@@ -119,7 +110,7 @@ pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
 //   debug!("get_user_comments with: {username}");
 //   sqlx::query_as!(
 //     Comment,
-//     "SELECT 
+//     "SELECT
 //     id,
 //     username as \"username: Username\",
 //     parent_item_id,
@@ -144,19 +135,19 @@ pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
 //   debug!("get_user_items with: {username}");
 //   sqlx::query_as!(
 //     Item,
-//     "SELECT 
+//     "SELECT
 //       id,
-//       username as \"username: Username\",    
-//       title as \"title: Title\",  
-//       item_type,   
-//       url,         
-//       domain,      
-//       text,        
-//       points,      
-//       score,       
+//       username as \"username: Username\",
+//       title as \"title: Title\",
+//       item_type,
+//       url,
+//       domain,
+//       text,
+//       points,
+//       score,
 //       comment_count,
 //       item_category,
-//       created,     
+//       created,
 //       dead
 //     FROM items WHERE username = $1",
 //     username.0

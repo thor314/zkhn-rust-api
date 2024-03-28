@@ -14,8 +14,8 @@ use crate::{
 // ) -> DbResult<Option<UserVote>> {
 //   sqlx::query_as!(
 //     UserVote,
-//     "SELECT username as \"username: Username\", vote_type, content_id, parent_item_id, vote_state \
-//      as \"vote_state: _\", created FROM user_votes WHERE content_id = $1 and username = $2",
+//     "SELECT username as \"username: Username\", vote_type, content_id, parent_item_id, vote_state
+// \      as \"vote_state: _\", created FROM user_votes WHERE content_id = $1 and username = $2",
 //     content_id,
 //     username
 //   )
@@ -35,8 +35,8 @@ use crate::{
 // ) -> DbResult<()> {
 //   let mut tx = pool.begin().await?;
 //   sqlx::query!(
-//     "INSERT INTO user_votes (username, vote_type, content_id, parent_item_id, vote_state, created)
-//          VALUES ($1, $2, $3, $4, $5, $6)",
+//     "INSERT INTO user_votes (username, vote_type, content_id, parent_item_id, vote_state,
+// created)          VALUES ($1, $2, $3, $4, $5, $6)",
 //     username,
 //     "comment",
 //     comment_id,

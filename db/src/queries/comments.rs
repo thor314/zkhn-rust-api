@@ -19,7 +19,7 @@
 // pub async fn get_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
 //   sqlx::query_as!(
 //     Comment,
-//     "SELECT 
+//     "SELECT
 //     id,
 //     username as \"username: Username\",
 //     parent_item_id,
@@ -66,19 +66,19 @@
 //   } = new_comment.clone();
 
 //   sqlx::query!(
-//     "INSERT INTO comments 
-//     ( id, 
-//       username, 
-//       parent_item_id, 
-//       parent_item_title, 
-//       comment_text, 
-//       is_parent, 
-//       root_comment_id, 
-//       parent_comment_id, 
+//     "INSERT INTO comments
+//     ( id,
+//       username,
+//       parent_item_id,
+//       parent_item_title,
+//       comment_text,
+//       is_parent,
+//       root_comment_id,
+//       parent_comment_id,
 //       children_count,
 //       points,
 //       created,
-//       dead ) 
+//       dead )
 //     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
 //     id,
 //     username.0,
@@ -102,8 +102,8 @@
 //     .await?;
 
 //   // Increment item comment count
-//   sqlx::query!("UPDATE items SET comment_count = comment_count + 1 WHERE id = $1", parent_item_id)
-//     .execute(&mut *tx)
+//   sqlx::query!("UPDATE items SET comment_count = comment_count + 1 WHERE id = $1",
+// parent_item_id)     .execute(&mut *tx)
 //     .await?;
 
 //   // todo: tell the search api about the new comment
@@ -113,10 +113,10 @@
 //   Ok(())
 // }
 
-// pub async fn get_comment_children_layer(pool: &DbPool, comment_id: Uuid) -> DbResult<Vec<Comment>> {
-//   sqlx::query_as!(
+// pub async fn get_comment_children_layer(pool: &DbPool, comment_id: Uuid) ->
+// DbResult<Vec<Comment>> {   sqlx::query_as!(
 //     Comment,
-//     "SELECT 
+//     "SELECT
 //     id,
 //     username as \"username: Username\",
 //     parent_item_id,

@@ -31,9 +31,9 @@ failed",
 
 #[sqlx::test]
 async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
-  let mut users = (1i32..).map(|i| {
+  let mut users = (1i32..).map(|i| async move {
     let password = Password("testpassword".to_string());
-    let password_hash = hash_password(&password).unwrap();
+    let password_hash = hash_password(&password).await.unwrap();
     User::new(
       Username(format!("testuser{}", i)),
       password_hash,
@@ -41,7 +41,7 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
       None,
     )
   });
-  let user = users.next().unwrap();
+  let user = users.next().unwrap().await;
   create_user(&pool, &user).await.unwrap();
   let gotten_user = get_user(&pool, &user.username).await.unwrap().unwrap();
   assert_eq!(user.username, gotten_user.username);
