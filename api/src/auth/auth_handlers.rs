@@ -1,5 +1,7 @@
 use axum::{
-  http::StatusCode, response::{IntoResponse, Redirect}, routing, Json, Router
+  http::StatusCode,
+  response::{IntoResponse, Redirect},
+  routing, Json, Router,
 };
 use tower_sessions::Session;
 use tracing::{debug, info};
