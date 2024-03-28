@@ -62,7 +62,8 @@ pub(super) mod get {
         (status = 422, description = "Invalid username"),
         (status = 500, description = "Database Error"),
         (status = 404, description = "User not found"),
-        (status = 200, description = "Success"),
+        // (status = 200, description = "Success", body = User), // todo(define reduced UserResponse body)
+        (status = 200, description = "Success", body = User),
       ),
   )]
   /// Get user.
@@ -103,7 +104,7 @@ pub(super) mod post {
       responses(
         (status = 422, description = "Invalid Payload"),
         (status = 500, description = "Database Error"),
-        (status = 200, description = "Success"),
+        (status = 200, description = "Success", body = UserResponse),
       ),
   )]
   /// Create a new user:

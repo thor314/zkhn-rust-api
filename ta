@@ -1,0 +1,166 @@
+[1m[93mapi/src/routes/openapi.rs[39m[0m[2m --- Rust[0m
+[2m13 [0m[2m13 [0m[94;3m//!     (status = 200, description = "Success", body = UserResponse),[0m
+[2m14 [0m[2m14 [0m[94;3m//!     ...[0m
+[2m15 [0m[2m15 [0m[94;3m//!   )[0m
+[91;1m16 [0m[2m.. [0m[91;3m//! Params:[0m
+[91;1m17 [0m[2m.. [0m[91;3m//! - if the method takes a path argument[0m
+[91;1m18 [0m[2m.. [0m[91;3m//! params()[0m
+[2m19 [0m[2m16 [0m[94;3m//! ][0m
+[2m20 [0m[2m17 [0m[94;3m//! [^1]: If param is a newtype like `Username(String)`, use the underlying type `String` for the example for clarity.[0m
+[2m21 [0m[2m18 [0m[94;3m//! [^2]: example fields make testing the api in the UI more convenient.[0m
+
+[1m[93mapi/src/routes/users/mod.rs[39m[0m[2m --- 1/2 --- Rust[0m
+[2m62 [0m[2m62 [0m        (status = [1m422[0m, description = [95m"Invalid username"[0m),
+[2m63 [0m[2m63 [0m        (status = [1m500[0m, description = [95m"Database Error"[0m),
+[2m64 [0m[2m64 [0m        (status = [1m404[0m, description = [95m"User not found"[0m),
+[2m.. [0m[92;1m65 [0m        [92;3m// (status = 200, description = "Success", body = User), // todo(define reduced UserResponse body)[0m
+[2m65 [0m[92;1m66 [0m        (status = [1m200[0m, description = [95m"Success"[0m[92m,[0m [92mbody[0m [92m=[0m [92;1mUser[0m),
+[2m66 [0m[2m67 [0m      ),
+[2m67 [0m[2m68 [0m  )]
+[2m68 [0m[2m69 [0m  [94;3m/// Get user.[0m
+
+[1mapi/src/routes/users/mod.rs[0m[2m --- 2/2 --- Rust[0m
+[2m103 [0m[2m104 [0m      responses(
+[2m104 [0m[2m105 [0m        (status = [1m422[0m, description = [95m"Invalid Payload"[0m),
+[2m105 [0m[2m106 [0m        (status = [1m500[0m, description = [95m"Database Error"[0m),
+[2m106 [0m[92;1m107 [0m        (status = [1m200[0m, description = [95m"Success"[0m[92m,[0m [92mbody[0m [92m=[0m [92;1mUserResponse[0m),
+[2m107 [0m[2m108 [0m      ),
+[2m108 [0m[2m109 [0m  )]
+[2m109 [0m[2m110 [0m  [94;3m/// Create a new user:[0m
+
+[1m[93mapi/src/routes/users/payload.rs[39m[0m[2m --- 1/7 --- Rust[0m
+[2m 1 [0m[2m 1 [0m[1muse[0m db::{models::user::[1mUser[0m, [1mAbout[0m, [1mEmail[0m, [1mPassword[0m, [1mUsername[0m};
+[2m 2 [0m[2m 2 [0m[1muse[0m garde::[1mValidate[0m;
+[2m 3 [0m[2m 3 [0m[1muse[0m serde::{[1mDeserialize[0m, [1mSerialize[0m};
+[91;1m 4 [0m[2m . [0m[91;1muse[0m [91mutoipa[0m[91m::[0m[91;1m{[0m[91mopenapi[0m[91m::[0m[91mschema[0m[91m,[0m [91;1mIntoParams[0m[91m,[0m [91;1mToSchema[0m[91;1m}[0m[91m;[0m
+[2m 5 [0m[2m 4 [0m
+[2m 6 [0m[2m 5 [0m[1muse[0m [1mcrate[0m::{error::[1mApiError[0m, [1mApiResult[0m};
+[2m 7 [0m[2m 6 [0m
+[2m 8 [0m[2m 7 [0m[94;3m/// Username, password, and optionally email, and about.[0m
+[91;1m 9 [0m[2m 8 [0m#[derive([1mDebug[0m, [1mClone[0m, [1mSerialize[0m, [1mDeserialize[0m, [1mValidate[0m[91m,[0m [91;1mToSchema[0m)]
+[91;1m10 [0m[2m . [0m[91m#[0m[91;1m[[0m[91mschema[0m[91;1m([0m[91;1mdefault[0m [91m=[0m [91;1mUserPayload[0m[91m::[0m[91;1mdefault[0m[91m,[0m [91mexample[0m[91m=[0m[91mjson[0m[91m![0m[91;1m([0m[91;1mUserPayload[0m[91m::[0m[91;1mdefault[0m[91;1m([0m[91;1m)[0m[91;1m)[0m[91;1m)[0m[91;1m][0m
+[2m11 [0m[2m 9 [0m[1mpub[0m [1mstruct[0m [1mUserPayload[0m {
+[2m12 [0m[2m10 [0m  #[garde(dive)]
+[2m13 [0m[2m11 [0m  [1mpub[0m username: [1mUsername[0m,
+
+[1mapi/src/routes/users/payload.rs[0m[2m --- 2/7 --- Rust[0m
+[2m19 [0m[2m17 [0m  [1mpub[0m about:    [1mOption[0m<[1mAbout[0m>,
+[2m20 [0m[2m18 [0m}
+[91;1m21 [0m[2m.. [0m
+[91;1m22 [0m[2m.. [0m[91;1mimpl[0m [91;1mDefault[0m [91;1mfor[0m [91;1mUserPayload[0m [91;1m{[0m
+[91;1m23 [0m[2m.. [0m  [91;1mfn[0m [91mdefault[0m[91;1m([0m[91;1m)[0m [91m->[0m [91;1mSelf[0m [91;1m{[0m
+[91;1m24 [0m[2m.. [0m    [91;1mSelf[0m [91;1m{[0m
+[91;1m25 [0m[2m.. [0m      [91musername[0m[91m:[0m [91;1mUsername[0m[91;1m([0m[91m"alice"[0m[91m.[0m[91mto_string[0m[91;1m([0m[91;1m)[0m[91;1m)[0m[91m,[0m
+[91;1m26 [0m[2m.. [0m      [91mpassword[0m[91m:[0m [91;1mPassword[0m[91;1m([0m[91m"email@email.com"[0m[91m.[0m[91mto_string[0m[91;1m([0m[91;1m)[0m[91;1m)[0m[91m,[0m
+[91;1m27 [0m[2m.. [0m      [91memail[0m[91m:[0m    [91;1mNone[0m[91m,[0m
+[91;1m28 [0m[2m.. [0m      [91mabout[0m[91m:[0m    [91;1mNone[0m[91m,[0m
+[91;1m29 [0m[2m.. [0m    [91;1m}[0m
+[91;1m30 [0m[2m.. [0m  [91;1m}[0m
+[91;1m31 [0m[2m.. [0m[91;1m}[0m
+[2m32 [0m[2m19 [0m
+[2m33 [0m[2m20 [0m[1mimpl[0m [1mTryFrom[0m<[1mUserPayload[0m> [1mfor[0m [1mUser[0m {
+[2m34 [0m[2m21 [0m  [1mtype[0m [1mError[0m = [1mApiError[0m;
+
+[1mapi/src/routes/users/payload.rs[0m[2m --- 3/7 --- Rust[0m
+[2m42 [0m  }                                      [2m29 [0m  }
+[2m43 [0m}                                        [2m30 [0m}
+[2m44 [0m                                         [2m31 [0m
+[91;1m45 [0m[1mimpl[0m [1mUserPayload[0m [91;1m{[0m                       [92;1m32 [0m[1mimpl[0m [1mUserPayload[0m [92;1m{[0m
+[2m46 [0m  [94;3m/// Assume Comment Payload has already[0m [2m33 [0m  [94;3m/// Assume Comment Payload has already[0m
+[2m[2m.. [0m[0m[94;3m been validated.[0m                         [2m[2m.. [0m[0m[94;3m been validated.[0m
+[2m47 [0m  [1mpub[0m [1mfn[0m into_user(self) -> [1mUser[0m {       [2m34 [0m  [1mpub[0m [1mfn[0m into_user(self) -> [1mUser[0m {
+[2m48 [0m    [1mlet[0m password_hash = self.password.ha [2m35 [0m    [1mlet[0m password_hash = self.password.ha
+[2m[2m.. [0m[0msh().unwrap();                           [2m[2m.. [0m[0msh().unwrap();
+[2m49 [0m    [1mUser[0m::new(self.username, password_ha [2m36 [0m    [1mUser[0m::new(self.username, password_ha
+[2m[2m.. [0m[0msh, self.email, self.about)              [2m[2m.. [0m[0msh, self.email, self.about)
+[2m50 [0m  }                                      [2m37 [0m  }
+[2m51 [0m                                         [92;1m38 [0m[92;1m}[0m
+[2m.. [0m                                         [92;1m39 [0m
+[2m.. [0m                                         [92;1m40 [0m[92;1mimpl[0m [92;1mUserPayload[0m [92;1m{[0m
+[2m52 [0m  [94;3m/// convenience method for testing[0m     [2m41 [0m  [94;3m/// convenience method for testing[0m
+[2m53 [0m  [1mpub[0m [1mfn[0m new(                            [2m42 [0m  [1mpub[0m [1mfn[0m new(
+[2m54 [0m    username: [1m&[0m[1mstr[0m,                      [2m43 [0m    username: [1m&[0m[1mstr[0m,
+
+[1mapi/src/routes/users/payload.rs[0m[2m --- 4/7 --- Rust[0m
+[2m64 [0m    payload.validate([1m&[0m())?;              [2m53 [0m    payload.validate([1m&[0m())?;
+[2m65 [0m    [1mOk[0m(payload)                          [2m54 [0m    [1mOk[0m(payload)
+[2m66 [0m  }                                      [2m55 [0m  }
+[91;1m67 [0m[91;1m}[0m                                        [92;1m56 [0m[92;1m}[0m
+[2m68 [0m                                         [2m57 [0m
+[2m69 [0m[94;3m/// Update user details.[0m                 [2m58 [0m[94;3m/// Update user details.[0m
+[2m70 [0m#[derive([1mDebug[0m, [1mClone[0m, [1mSerialize[0m, [1mDeseri[0m [2m59 [0m#[derive([1mDebug[0m, [1mClone[0m, [1mSerialize[0m, [1mDeseri[0m
+[2m[2m.. [0m[0m[1malize[0m, [1mValidate[0m, [1mToSchema[0m)]              [2m[2m.. [0m[0m[1malize[0m, [1mValidate[0m, [1mToSchema[0m)]
+[91;1m71 [0m[91m#[0m[91;1m[[0m[91mschema[0m[91;1m([0m[91;1mdefault[0m [91m=[0m [91;1mUserUpdatePayload[0m[91m::[0m[91;1mde[0m [2m.. [0m
+[91;1m[2m.. [0m[0m[91;1mfault[0m[91m,[0m [91mexample[0m[91m=[0m[91mjson[0m[91m![0m[91;1m([0m[91;1mChangePasswordPaylo[0m [2m.. [0m
+[91;1m[2m.. [0m[0m[91;1mad[0m[91m::[0m[91;1mdefault[0m[91;1m([0m[91;1m)[0m[91;1m)[0m[91;1m)[0m[91;1m][0m                         [2m.. [0m
+[2m72 [0m[1mpub[0m [1mstruct[0m [1mUserUpdatePayload[0m {           [2m60 [0m[1mpub[0m [1mstruct[0m [1mUserUpdatePayload[0m {
+[2m73 [0m  #[garde(dive)]                         [2m61 [0m  #[garde(dive)]
+[2m74 [0m  [1mpub[0m username: [1mUsername[0m,                [2m62 [0m  [1mpub[0m username: [1mUsername[0m,
+
+[1mapi/src/routes/users/payload.rs[0m[2m --- 5/7 --- Rust[0m
+[2m78 [0m[2m66 [0m  [1mpub[0m about:    [1mOption[0m<[1mAbout[0m>,
+[2m79 [0m[2m67 [0m}
+[91;1m80 [0m[2m.. [0m
+[91;1m81 [0m[2m.. [0m[91;1mimpl[0m [91;1mDefault[0m [91;1mfor[0m [91;1mUserUpdatePayload[0m [91;1m{[0m
+[91;1m82 [0m[2m.. [0m  [91;1mfn[0m [91mdefault[0m[91;1m([0m[91;1m)[0m [91m->[0m [91;1mSelf[0m [91;1m{[0m
+[91;1m83 [0m[2m.. [0m    [91;1mSelf[0m [91;1m{[0m [91musername[0m[91m:[0m [91;1mUsername[0m[91;1m([0m[91m"alice"[0m[91m.[0m[91mto_string[0m[91;1m([0m[91;1m)[0m[91;1m)[0m[91m,[0m [91memail[0m[91m:[0m [91;1mNone[0m[91m,[0m [91mabout[0m[91m:[0m [91;1mNone[0m [91;1m}[0m
+[91;1m84 [0m[2m.. [0m  [91;1m}[0m
+[91;1m85 [0m[2m.. [0m[91;1m}[0m
+[2m86 [0m[2m68 [0m
+[2m87 [0m[2m69 [0m[1mimpl[0m [1mUserUpdatePayload[0m {
+[2m88 [0m[2m70 [0m  [94;3m/// convenience method for testing[0m
+
+[1mapi/src/routes/users/payload.rs[0m[2m --- 6/7 --- Rust[0m
+[2m101 [0m[2m83 [0m}
+[2m102 [0m[2m84 [0m
+[2m103 [0m[2m85 [0m[94;3m/// Payload for `change_password`[0m
+[91;1m104 [0m[2m86 [0m#[derive([1mDebug[0m, [1mClone[0m, [1mSerialize[0m, [1mDeserialize[0m, [1mValidate[0m, [91mutoipa[0m[91m::[0m[1mToSchema[0m)]
+[91;1m105 [0m[2m.. [0m[91;3m// #[schema(default = UserPayload::default)][0m
+[91;1m106 [0m[2m.. [0m[91;3m// #[schema(default = UserPayload::default)][0m
+[91;1m107 [0m[2m.. [0m[91m#[0m[91;1m[[0m[91mschema[0m[91;1m([0m[91;1mdefault[0m [91m=[0m [91;1mChangePasswordPayload[0m[91m::[0m[91;1mdefault[0m[91m,[0m [91mexample[0m[91m=[0m[91mjson[0m[91m![0m[91;1m([0m[91;1mChangePasswordPayload[0m[91m::[0m[91;1mdefault[0m[91;1m([0m[91;1m)[0m[91;1m)[0m[91;1m)[0m[91;1m][0m
+[2m108 [0m[2m87 [0m[1mpub[0m [1mstruct[0m [1mChangePasswordPayload[0m {
+[2m109 [0m[2m88 [0m  #[garde(dive)]
+[2m110 [0m[2m89 [0m  [1mpub[0m username:         [1mUsername[0m,
+
+[1mapi/src/routes/users/payload.rs[0m[2m --- 7/7 --- Rust[0m
+[2m114 [0m[2m93 [0m  [1mpub[0m new_password:     [1mPassword[0m,
+[2m115 [0m[2m94 [0m}
+[91;1m116 [0m[2m.. [0m
+[91;1m117 [0m[2m.. [0m[91;1mimpl[0m [91;1mDefault[0m [91;1mfor[0m [91;1mChangePasswordPayload[0m [91;1m{[0m
+[91;1m118 [0m[2m.. [0m  [91;1mfn[0m [91mdefault[0m[91;1m([0m[91;1m)[0m [91m->[0m [91;1mSelf[0m [91;1m{[0m
+[91;1m119 [0m[2m.. [0m    [91;1mSelf[0m [91;1m{[0m
+[91;1m120 [0m[2m.. [0m      [91musername[0m[91m:[0m         [91;1mUsername[0m[91;1m([0m[91m"alice"[0m[91m.[0m[91mto_string[0m[91;1m([0m[91;1m)[0m[91;1m)[0m[91m,[0m
+[91;1m121 [0m[2m.. [0m      [91mcurrent_password[0m[91m:[0m [91;1mPassword[0m[91;1m([0m[91m"password"[0m[91m.[0m[91mto_string[0m[91;1m([0m[91;1m)[0m[91;1m)[0m[91m,[0m
+[91;1m122 [0m[2m.. [0m      [91mnew_password[0m[91m:[0m     [91;1mPassword[0m[91;1m([0m[91m"new_password"[0m[91m.[0m[91mto_string[0m[91;1m([0m[91;1m)[0m[91;1m)[0m[91m,[0m
+[91;1m123 [0m[2m.. [0m    [91;1m}[0m
+[91;1m124 [0m[2m.. [0m  [91;1m}[0m
+[91;1m125 [0m[2m.. [0m[91;1m}[0m
+[2m126 [0m[2m95 [0m
+[2m127 [0m[2m96 [0m[1mimpl[0m [1mChangePasswordPayload[0m {
+[2m128 [0m[2m97 [0m  [94;3m/// convenience method for testing[0m
+
+[1m[93mdb/migrations/20240301231033_users.sql[39m[0m[2m --- Text (2 SQL parse errors, exceeded DFT_PARSE_ERROR_LIMIT)[0m
+[2m 7 [0m    auth_token_expiration TIMESTAMP WITH [2m 7 [0m    auth_token_expiration TIMESTAMP WITH
+[2m[2m . [0m[0m TIME ZONE,                              [2m[2m . [0m[0m TIME ZONE,
+[2m 8 [0m    reset_password_token TEXT,           [2m 8 [0m    reset_password_token TEXT,
+[2m 9 [0m    reset_password_token_expiration TIME [2m 9 [0m    reset_password_token_expiration TIME
+[2m[2m . [0m[0mSTAMP WITH TIME ZONE,                    [2m[2m . [0m[0mSTAMP WITH TIME ZONE,
+[91;1m10 [0m[91m [0m[91m [0m[91m [0m[91m [0m[91memail[0m[91m [0m[91mTEXT[0m[91;1m [0m[91;1mNOT[0m[91;1m [0m[91;1mNULL[0m[91;1m [0m[91;1mDEFAULT[0m[91;1m [0m[91;1m'[0m[91;1m'[0m[91m,[0m      [92;1m10 [0m[92m [0m[92m [0m[92m [0m[92m [0m[92memail[0m[92m [0m[92mTEXT[0m[92m,[0m
+[2m11 [0m    created TIMESTAMP WITH TIME ZONE NOT [2m11 [0m    created TIMESTAMP WITH TIME ZONE NOT
+[2m[2m.. [0m[0m NULL DEFAULT CURRENT_TIMESTAMP,         [2m[2m.. [0m[0m NULL DEFAULT CURRENT_TIMESTAMP,
+[2m12 [0m    karma INTEGER DEFAULT 0 CHECK (karma [2m12 [0m    karma INTEGER DEFAULT 0 CHECK (karma
+[2m[2m.. [0m[0m >= 0) NOT NULL,                         [2m[2m.. [0m[0m >= 0) NOT NULL,
+[2m13 [0m    about TEXT,                          [2m13 [0m    about TEXT,
+
+[1m[93mserver/src/main.rs[39m[0m[2m --- Rust[0m
+[2m30 [0m  [1mlet[0m analytics_key = secret_store.get([95m"[0m [2m30 [0m  [1mlet[0m analytics_key = secret_store.get([95m"[0m
+[2m[2m.. [0m[0m[95mANALYTICS_API_KEY"[0m);                     [2m[2m.. [0m[0m[95mANALYTICS_API_KEY"[0m);
+[2m31 [0m  [1mlet[0m router = api::router([1m&[0mpool, analyt [2m31 [0m  [1mlet[0m router = api::router([1m&[0mpool, analyt
+[2m[2m.. [0m[0mics_key).[1mawait[0m.context([95m"failed to build [0m [2m[2m.. [0m[0mics_key).[1mawait[0m.context([95m"failed to build [0m
+[2m[2m.. [0m[0m[95mrouter"[0m).unwrap();                       [2m[2m.. [0m[0m[95mrouter"[0m).unwrap();
+[2m32 [0m                                         [2m32 [0m
+[91;1m33 [0m  info!([91m"🚀🚀🚀"[0m);                       [92;1m33 [0m  info!([92m"🚀🚀🚀 see http://localhost:300[0m
+[91;1m[2m.. [0m[0m                                         [92;1m[2m.. [0m[0m[92m0/docs/rapidoc for api docs 🚀🚀🚀"[0m);
+[2m34 [0m  [1mOk[0m(router.into())                      [2m34 [0m  [1mOk[0m(router.into())
+[2m35 [0m}                                        [2m35 [0m}
+
