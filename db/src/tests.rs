@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use crate::{
   models::{comment::Comment, item::Item, user::User},
-  password::hash_password_scrypt,
+  password::hash_password_argon,
   queries::*,
   About, CommentText, Email, Password, Title, Username,
 };
@@ -33,7 +33,7 @@ failed",
 async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   let mut users = (1i32..).map(|i| async move {
     let password = Password("testpassword".to_string());
-    let password_hash = hash_password_scrypt(&password).await.unwrap();
+    let password_hash = hash_password_argon(&password).await.unwrap();
     User::new(
       Username(format!("testuser{}", i)),
       password_hash,

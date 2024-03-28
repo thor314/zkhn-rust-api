@@ -18,7 +18,7 @@ pub(crate) fn routes(state: SharedState) -> Router {
     .route("/health", routing::get(health))
     .nest("/docs", docs_router())
     .nest("/users", users_router(state.clone()))
-    // .merge(auth_router()) // todo(auth)
+  // .merge(auth_router()) // todo(auth)
   // .nest("/items", items_router(state.clone()))
   // .nest("/comments", comments_router(state.clone()))
   // ..

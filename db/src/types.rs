@@ -8,7 +8,7 @@ use sqlx::{prelude::Type, Decode, Encode};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{password::{hash_password_argon, hash_password_scrypt}, DbResult};
+use crate::{password::hash_password_argon, DbResult};
 
 /// A timestamp wrapper that we can use in our sqlx models.
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
@@ -47,7 +47,6 @@ impl std::fmt::Display for Email {
 pub struct Password(#[garde(ascii, length(min = 8, max = 25))] pub String);
 impl Password {
   pub async fn hash_argon(&self) -> DbResult<PasswordHash> { hash_password_argon(self).await }
-  pub async fn hash_scrypt(&self) -> DbResult<PasswordHash> { hash_password_scrypt(self).await }
 }
 
 /// A hashed password

@@ -23,10 +23,20 @@ pub enum DbError {
 
   // user error
   /// Library error, i.e. Hashing failed (hope to catch in password validation stage)
-  #[error(transparent)]
-  PwError(#[from] scrypt::password_hash::Error),
+  #[error("Password error: {0}")]
+  PwError(String),
+  #[error("Password hashing error: {0}")]
+  PwHashError(String),
   #[error("Entry already exists")]
   Conflict,
   #[error("Entry not found in database")]
   NotFound,
+}
+
+impl From<argon2::password_hash::Error> for DbError {
+  fn from(err: argon2::password_hash::Error) -> Self { DbError::PwError(err.to_string()) }
+}
+
+impl From<argon2::Error> for DbError {
+  fn from(err: argon2::Error) -> Self { DbError::PwError(err.to_string()) }
 }
