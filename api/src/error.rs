@@ -1,20 +1,9 @@
 //! zkhn-rust-api error types
 // https://docs.rs/thiserror/latest/thiserror/
 
-use std::f32::consts::E;
-
-use axum::{
-  http::{status, StatusCode},
-  response::IntoResponse,
-};
+use axum::http::StatusCode;
 use db::DbError;
-use oauth2::{
-  basic::{BasicClient, BasicRequestTokenError},
-  reqwest::{async_http_client, AsyncHttpClientError},
-  url::Url,
-  AuthorizationCode, CsrfToken, TokenResponse,
-};
-use serde::Serialize;
+use oauth2::{basic::BasicRequestTokenError, reqwest::AsyncHttpClientError};
 use tokio::task;
 use utoipa::ToSchema;
 

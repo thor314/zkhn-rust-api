@@ -1,8 +1,5 @@
 use axum::{
-  http::StatusCode,
-  response::{IntoResponse, Redirect},
-  routing::{get, post},
-  Form, Json, Router,
+  http::StatusCode, response::{IntoResponse, Redirect}, routing, Json, Router
 };
 use tower_sessions::Session;
 use tracing::{debug, info};
@@ -20,9 +17,9 @@ pub const NEXT_URL_KEY: &str = "aochuracrhkeo";
 
 pub fn auth_router() -> Router {
   Router::new()
-    .route("/login/password", post(login_password))
-    .route("/login/oauth", post(login_oauth))
-    .route("/logout", post(logout_handler))
+    .route("/login/password", routing::post(login_password))
+    .route("/login/oauth", routing::post(login_oauth))
+    .route("/logout", routing::post(logout_handler))
 }
 
 // ref: https://github.com/maxcountryman/axum-login/blob/main/examples/multi-auth/src/web/auth.rs#L45

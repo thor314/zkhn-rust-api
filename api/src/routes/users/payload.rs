@@ -7,7 +7,7 @@ use crate::{error::ApiError, ApiResult};
 
 /// Username, password, and optionally email, and about.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
-#[schema(default = UserPayload::default, example=json!(UserPayload::default()))]
+#[schema(default = UserPayload::default, example=UserPayload::default)]
 pub struct UserPayload {
   #[garde(dive)]
   pub username: Username,
@@ -56,7 +56,7 @@ impl UserPayload {
 
 /// Update user details.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
-#[schema(default = UserUpdatePayload::default, example=json!(UserUpdatePayload::default()))]
+#[schema(default = UserUpdatePayload::default, example=UserUpdatePayload::default)]
 pub struct UserUpdatePayload {
   #[garde(dive)]
   pub username: Username,
@@ -94,7 +94,7 @@ impl UserUpdatePayload {
 
 /// Payload for `change_password`
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
-#[schema(default = ChangePasswordPayload::default, example=json!(ChangePasswordPayload::default()))]
+#[schema(default = ChangePasswordPayload::default, example=ChangePasswordPayload::default)]
 pub struct ChangePasswordPayload {
   #[garde(dive)]
   pub username:         Username,

@@ -1,6 +1,6 @@
 use db::{models::comment::Comment, CommentText, Title, Username};
-use garde::{Valid, Validate};
-use serde::{Deserialize, Serialize};
+use garde::Validate;
+use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{error::ApiError, ApiResult};
