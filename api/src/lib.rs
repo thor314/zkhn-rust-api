@@ -7,6 +7,7 @@
 #![allow(unused_mut)]
 
 mod auth;
+mod cors;
 pub mod error;
 pub mod routes;
 mod sessions;
@@ -65,6 +66,7 @@ pub async fn router(pool: &DbPool, analytics_key: Option<String>) -> ApiResult<R
     .merge(routes(state))
     // .merge(auth_router()) // todo: move to routes router
     .layer(auth_layer)
+    .layer(cors::cors_layer())
     // NOTE: analytics slowing server down dramatically, removal pending
     // .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth router
     //
