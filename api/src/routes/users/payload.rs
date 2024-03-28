@@ -1,11 +1,13 @@
 use db::{models::user::User, About, Email, Password, Username};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 use crate::{error::ApiError, ApiResult};
 
 /// Username, password, and optionally email, and about.
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[schema(default = UserPayload::default, example=json!(UserPayload::default()))]
 pub struct UserPayload {
   #[garde(dive)]
   pub username: Username,
@@ -15,6 +17,17 @@ pub struct UserPayload {
   pub email:    Option<Email>,
   #[garde(dive)]
   pub about:    Option<About>,
+}
+
+impl Default for UserPayload {
+  fn default() -> Self {
+    Self {
+      username: Username("alice".to_string()),
+      password: Password("password".to_string()),
+      email:    None,
+      about:    None,
+    }
+  }
 }
 
 impl TryFrom<UserPayload> for User {
@@ -35,9 +48,7 @@ impl UserPayload {
     let password_hash = self.password.hash().unwrap();
     User::new(self.username, password_hash, self.email, self.about)
   }
-}
 
-impl UserPayload {
   /// convenience method for testing
   pub fn new(
     username: &str,
@@ -57,6 +68,7 @@ impl UserPayload {
 
 /// Update user details.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[schema(default = UserUpdatePayload::default, example=json!(UserUpdatePayload::default()))]
 pub struct UserUpdatePayload {
   #[garde(dive)]
   pub username: Username,
@@ -64,6 +76,16 @@ pub struct UserUpdatePayload {
   pub email:    Option<Email>,
   #[garde(dive)]
   pub about:    Option<About>,
+}
+
+impl Default for UserUpdatePayload {
+  fn default() -> Self {
+    Self {
+      username: Username("alice".to_string()),
+      email:    Some(Email("email@email.com".to_string())),
+      about:    Some(About("about".to_string())),
+    }
+  }
 }
 
 impl UserUpdatePayload {
@@ -84,6 +106,7 @@ impl UserUpdatePayload {
 
 /// Payload for `change_password`
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[schema(default = ChangePasswordPayload::default, example=json!(ChangePasswordPayload::default()))]
 pub struct ChangePasswordPayload {
   #[garde(dive)]
   pub username:         Username,
@@ -91,6 +114,16 @@ pub struct ChangePasswordPayload {
   pub current_password: Password,
   #[garde(dive)]
   pub new_password:     Password,
+}
+
+impl Default for ChangePasswordPayload {
+  fn default() -> Self {
+    Self {
+      username:         Username("alice".to_string()),
+      current_password: Password("password".to_string()),
+      new_password:     Password("new_password".to_string()),
+    }
+  }
 }
 
 impl ChangePasswordPayload {

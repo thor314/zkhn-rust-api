@@ -62,8 +62,7 @@ pub(super) mod get {
         (status = 422, description = "Invalid username"),
         (status = 500, description = "Database Error"),
         (status = 404, description = "User not found"),
-        // (status = 200, description = "Success", body = User), // todo(define reduced UserResponse body)
-        (status = 200, description = "Success", body = User),
+        (status = 200, description = "Success", body = User),// todo(define reduced UserResponse body)
       ),
   )]
   /// Get user.

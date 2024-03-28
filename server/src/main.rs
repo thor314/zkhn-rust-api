@@ -30,6 +30,6 @@ async fn main(
   let analytics_key = secret_store.get("ANALYTICS_API_KEY");
   let router = api::router(&pool, analytics_key).await.context("failed to build router").unwrap();
 
-  info!("🚀🚀🚀 see http://localhost:3000/docs/rapidoc for api docs 🚀🚀🚀");
+  info!("🚀🚀🚀 see http://localhost:8000/docs/rapidoc for api docs 🚀🚀🚀");
   Ok(router.into())
 }
