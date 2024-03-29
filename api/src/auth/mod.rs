@@ -29,5 +29,17 @@
 mod users;
 mod web;
 
-pub(crate) use users::{AuthBackend, AuthSession};
-pub(crate) use web::app::{get_auth_layer, MyAuthLayer};
+use axum_login::{AuthManagerLayer, AuthManagerLayerBuilder};
+use db::DbPool;
+use tower_sessions::service::SignedCookie;
+use tower_sessions_sqlx_store::PostgresStore;
+
+pub(crate) use self::users::{AuthBackend, AuthSession};
+use crate::MySessionManagerLayer;
+
+pub type MyAuthLayer = AuthManagerLayer<AuthBackend, PostgresStore, SignedCookie>;
+
+pub fn get_auth_layer(pool: DbPool, session_layer: MySessionManagerLayer) -> MyAuthLayer {
+  let backend = AuthBackend::new(pool);
+  AuthManagerLayerBuilder::new(backend, session_layer).build()
+}

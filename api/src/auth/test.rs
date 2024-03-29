@@ -7,27 +7,12 @@ use tower::ServiceExt;
 use tower_sessions::{Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 
-// async fn setup_app(pool: PgPool) -> Result<Router, Box<dyn Error>> {
-//     let session_store = PostgresStore::new(pool.clone());
-//     session_store.migrate().await?;
+use crate::{app, error::ApiError};
 
-//     // Generate a cryptographic key to sign the session cookie.
-//     let key = Key::generate();
-
-//     let session_layer = SessionManagerLayer::new(session_store)
-//         .with_secure(false)
-//         .with_expiry(Expiry::OnInactivity(Duration::days(1)))
-//         .with_signed(key);
-//     let backend = Backend::new(pool);
-//     let auth_layer = AuthManagerLayerBuilder::new(backend, session_layer).build();
-//     let app = protected::router()
-//         .route_layer(login_required!(Backend, login_url = "/login"))
-//         .merge(auth::router())
-//         .layer(MessagesManagerLayer)
-//         .layer(auth_layer);
-
-//     Ok(app)
-// }
+async fn setup(pool: PgPool) -> Result<Router, ApiError> {
+  let app = app(pool).await?;
+  Ok(app)
+}
 
 // // we can fetch the default user, ferris
 // #[sqlx::test]
