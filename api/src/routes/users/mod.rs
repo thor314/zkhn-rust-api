@@ -278,7 +278,7 @@ pub(super) mod put {
     let user = db::queries::users::get_user(&state.pool, &payload.username)
       .await?
       .ok_or(ApiError::DbEntryNotFound("no such user".to_string()))?;
-    if !verify_user_password(&user, &payload.current_password)? {
+    if !verify_user_password(&user, payload.current_password)? {
       return Err(ApiError::IncorrectPassword("incorrect password".to_string()));
     }
 

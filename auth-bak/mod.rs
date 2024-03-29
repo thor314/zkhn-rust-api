@@ -30,3 +30,35 @@ mod web;
 
 pub(crate) use users::AuthBackend;
 pub(crate) use web::app::get_auth_layer;
+// pub(crate) use app::Backend;
+
+// use axum_login::AuthUser;
+// use db::Username;
+// use serde::Deserialize;
+
+// pub mod jank;
+// // mod oauth;
+// mod auth_handlers;
+// pub mod auth_user;
+// pub mod backend;
+// pub mod credentials;
+// mod password;
+
+// pub use auth_handlers::auth_router;
+
+// pub use self::backend::AuthBackend;
+
+// pub type AuthSession = axum_login::AuthSession<AuthBackend>;
+
+// /// This allows us to extract the "next" field from the query string. We use this
+// /// to redirect after log in.
+// #[derive(Debug, Deserialize)]
+// pub struct NextUrl {
+//   next: Option<String>,
+// }
+
+// /// todo: what does this do?
+// #[derive(Debug, Deserialize)]
+// struct UserInfo {
+//   login: String,
+// }

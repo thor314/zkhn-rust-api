@@ -14,6 +14,7 @@ mod sessions;
 #[cfg(test)] mod tests;
 mod utils;
 
+use auth::get_auth_layer;
 use axum::{routing, Router};
 use axum_login::{login_required, AuthManagerLayerBuilder};
 use db::DbPool;
@@ -50,8 +51,9 @@ impl axum::extract::FromRef<SharedState> for () {
 pub async fn router(pool: &DbPool, analytics_key: Option<String>) -> ApiResult<Router> {
   let state = SharedState::new(pool.clone());
   let auth_layer = {
-    let session_layer = get_session_layer(pool).await?;
-    let auth_backend = auth::backend::AuthBackend::new_with_default_client(pool.clone());
+    let session_layer = sessions::get_session_layer(pool).await?;
+    let auth_backend = auth::AuthBackend::new(pool.clone());
+    let auth_layer = auth::get_auth_layer(auth_backend.clone(), session_layer.clone());
     AuthManagerLayerBuilder::new(auth_backend, session_layer).build()
   };
 
