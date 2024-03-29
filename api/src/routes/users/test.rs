@@ -128,7 +128,7 @@ async fn test_login_logout(pool: PgPool) {
   let valid_login_request = make_login_request("alice", "password");
   let login_response = app.clone().oneshot(valid_login_request).await.unwrap();
   dbg!(&login_response);
-  assert_eq!(login_response.status(), StatusCode::SEE_OTHER);
+  assert_eq!(login_response.status(), StatusCode::OK);
 
   let invalid_login_request = make_login_request("ferris", "password");
   let login_response = app.clone().oneshot(invalid_login_request).await.unwrap();
@@ -138,5 +138,5 @@ async fn test_login_logout(pool: PgPool) {
   let logout_request = Request::builder().uri("/users/logout").method("POST").empty_body();
   let logout_response = app.clone().oneshot(logout_request).await.unwrap();
   dbg!(&logout_response);
-  assert_eq!(logout_response.status(), StatusCode::SEE_OTHER);
+  assert_eq!(logout_response.status(), StatusCode::OK);
 }

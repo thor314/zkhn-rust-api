@@ -53,16 +53,9 @@ impl AuthnBackend for AuthBackend {
   ) -> Result<Option<Self::User>, Self::Error> {
     let user: Option<Self::User> = self.get_user(&creds.username).await?;
 
-    // Verifying the password is blocking and potentially slow, so we'll do so via
-    // `spawn_blocking`.
+    // Verifying the password is blocking and slow, so spawn a task
     task::spawn_blocking(|| {
-      // We're using password-based authentication--this works by comparing our form
-      // input with an argon2 password hash.
-      dbg!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", &user);
-      let user = user.filter(|user| verify_password(&user.0.password_hash, creds.password).is_ok());
-      dbg!("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", &user);
-      Ok(user)
-      // Ok(user.filter(|user| verify_password(&user.0.password_hash, creds.password).is_ok()));
+      Ok(user.filter(|user| verify_password(&user.0.password_hash, creds.password).is_ok()))
     })
     .await?
   }

@@ -153,7 +153,7 @@ pub(super) mod post {
   pub async fn login(
     mut auth_session: AuthSession,
     Json(payload): Json<CredentialsPayload>,
-  ) -> ApiResult<Redirect> {
+  ) -> ApiResult<StatusCode> {
     login_post_internal(auth_session, payload).await
   }
 
@@ -170,7 +170,7 @@ pub(super) mod post {
       ),
   )]
   /// User logout.
-  pub async fn logout(auth_session: AuthSession) -> ApiResult<Redirect> {
+  pub async fn logout(auth_session: AuthSession) -> ApiResult<StatusCode> {
     logout_post_internal(auth_session).await
   }
 

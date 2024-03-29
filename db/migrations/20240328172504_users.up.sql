@@ -1,4 +1,6 @@
 -- Add up migration script here
+
+DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     username TEXT PRIMARY KEY,
     password_hash TEXT NOT NULL,
