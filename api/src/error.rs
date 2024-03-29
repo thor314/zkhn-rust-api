@@ -19,6 +19,8 @@ pub enum ApiError {
   Anyhow(#[from] anyhow::Error),
   #[status(StatusCode::INTERNAL_SERVER_ERROR)]
   Session(tower_sessions::session_store::Error),
+  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
+  TowerSessionsSqlxStore(#[from] tower_sessions_sqlx_store::sqlx::Error),
 
   /// OAuth API service is temporarily unavailable due to maintenance, overload, or other reasons
   #[status(StatusCode::SERVICE_UNAVAILABLE)] // 503
@@ -78,6 +80,7 @@ impl std::fmt::Display for ApiError {
       ApiError::DoublySubmittedChange(e) => write!(f, "DoublySubmittedChange: {0}", e),
       ApiError::MissingField(e) => write!(f, "MissingField: {0}", e),
       ApiError::OAuthBadGateway(e) => write!(f, "OAuthBadGateway: {0}", e),
+      ApiError::TowerSessionsSqlxStore(e) => write!(f, "TowerSessionsSqlxStore: {0}", e),
     }
   }
 }

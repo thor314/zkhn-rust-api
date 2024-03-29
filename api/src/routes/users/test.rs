@@ -25,7 +25,7 @@ use crate::{
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_user_crud_cycle(pool: PgPool) {
   setup_test_tracing();
-  let app = crate::router(&pool, None).await.expect("failed to build router");
+  let app = crate::app(pool).await.expect("failed to build router");
 
   let user_payload = UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
 
@@ -108,7 +108,7 @@ async fn test_user_crud_cycle(pool: PgPool) {
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_request_password_reset_link(pool: PgPool) {
-  let app = router_with_user_alice(&pool).await;
+  let app = router_with_user_alice(pool).await;
 
   let request =
     Request::builder().uri("/users/reset-password-link/alice").method("PUT").empty_body();
@@ -127,7 +127,7 @@ async fn test_request_password_reset_link(pool: PgPool) {
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_change_password(pool: PgPool) {
-  let app = router_with_user_alice(&pool).await;
+  let app = router_with_user_alice(pool).await;
 
   // change her password
   let payload = json!(ChangePasswordPayload::new("alice", "password", "new_password").unwrap());

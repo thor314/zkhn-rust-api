@@ -46,11 +46,6 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   let gotten_user = get_user(&pool, &user.username).await.unwrap().unwrap();
   assert_eq!(user.username, gotten_user.username);
 
-  let about = About("testabout".to_string());
-  update_user_about(&pool, &user.username, &about).await.unwrap();
-  let gotten_about = get_user(&pool, &user.username).await.unwrap().unwrap().about.unwrap();
-  assert_eq!(gotten_about.0, about.0);
-
   // let user_items = get_user_items(&pool, &user.username).await.unwrap();
   // assert!(user_items.is_empty());
 

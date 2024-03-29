@@ -25,8 +25,9 @@
 //!     validate the session
 //!   - get_user, which is used to load the user from the backend into the session.
 
+#[cfg(test)] mod test;
 mod users;
 mod web;
 
-pub(crate) use users::AuthBackend;
-pub(crate) use web::app::get_auth_layer;
+pub(crate) use users::{AuthBackend, AuthSession};
+pub(crate) use web::app::{get_auth_layer, MyAuthLayer};

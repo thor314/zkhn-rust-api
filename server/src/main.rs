@@ -11,7 +11,7 @@ mod utils;
 use anyhow::Context;
 use error::ServerError;
 use sqlx::PgPool;
-use tracing::info;
+use tracing::{debug, info};
 
 pub type ServerResult<T> = Result<T, ServerError>;
 
@@ -20,17 +20,14 @@ async fn main(
   #[shuttle_runtime::Secrets] secret_store: shuttle_runtime::SecretStore,
   #[shuttle_shared_db::Postgres] pool: PgPool,
 ) -> shuttle_axum::ShuttleAxum {
+  debug!("pool info: {:?}", pool);
   utils::setup(&secret_store).unwrap();
-  info!("Migrating db...");
-  info!("pool info: {:?}", pool);
   db::migrate(&pool).await.unwrap();
 
-  info!("Initializing router...");
-
-  info!("Building middleware layers...");
-  let analytics_key = secret_store.get("ANALYTICS_API_KEY");
-  let router = api::router(&pool, analytics_key).await.context("failed to build router").unwrap();
+  debug!("Initializing router...");
+  // let analytics_key = secret_store.get("ANALYTICS_API_KEY");
+  let app = api::app(pool).await.expect("failed to build app");
 
   info!("🚀🚀🚀 see http://localhost:8000/docs/rapidoc for api docs 🚀🚀🚀");
-  Ok(router.into())
+  Ok(app.into())
 }

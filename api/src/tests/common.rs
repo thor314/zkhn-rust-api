@@ -44,8 +44,8 @@ impl RequestBuilderExt for request::Builder {
 }
 
 /// create a router with a user named "alice".
-pub async fn router_with_user_alice(pool: &PgPool) -> Router {
-  let app = crate::router(pool, None).await.expect("failed to build router");
+pub async fn router_with_user_alice(pool: PgPool) -> Router {
+  let app = crate::app(pool).await.expect("failed to build router");
 
   let user_payload = UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
 

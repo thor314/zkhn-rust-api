@@ -37,8 +37,7 @@ pub fn users_router(state: SharedState) -> Router {
   Router::new()
     // note - called `/users/get-user-data` in reference
     .route("/:username", routing::get(get::get_user))
-    .route("/about", routing::put(put::update_user_about))
-    .route("/email", routing::put(put::update_user_email))
+    .route("/", routing::put(put::update_user))
     .route("/:username", routing::delete(delete::delete_user))
     .route("/", routing::post(post::create_user))
     .route("/reset-password-link/:username", routing::put(put::request_password_reset_link))
@@ -149,7 +148,7 @@ pub(super) mod put {
 
   #[utoipa::path(
       put,
-      path = "/users/about",
+      path = "/users",
       request_body = UserUpdatePayload,
       responses(
         // todo(auth) auth error
@@ -160,50 +159,24 @@ pub(super) mod put {
         (status = 200, description = "Success"),
       ),
   )]
-  /// Update the user's about.
+  /// Update the user's about or email field.
   ///
   /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L287
-  pub async fn update_user_about(
+  pub async fn update_user(
     State(state): State<SharedState>,
     // auth_session: AuthSession, // todo(auth)
     Json(payload): Json<UserUpdatePayload>,
   ) -> ApiResult<StatusCode> {
     debug!("update_user_about called with payload: {payload:?}");
-    payload.validate(&())?;
     // assert_authenticated(&auth_session)?;
-    let about = payload.about.ok_or(ApiError::MissingField("about missing".to_string()))?;
-    db::queries::users::update_user_about(&state.pool, &payload.username, &about).await?;
+    payload.validate(&())?;
+    if payload.about.is_none() && payload.email.is_none() {
+      return Err(ApiError::MissingField("about or email must be provided".to_string()));
+    }
+
+    db::queries::users::update_user(&state.pool, &payload.username, &payload.about, &payload.email).await?;
 
     info!("updated user about for: {}", payload.username);
-    Ok(StatusCode::OK)
-  }
-
-  #[utoipa::path(
-      put,
-      path = "/users/email",
-      request_body = UserUpdatePayload,
-      responses(
-        // todo(auth) auth error
-        // (status = 401, description = "Unauthorized"),
-        (status = 422, description = "Invalid Payload"),
-        (status = 500, description = "Database Error"),
-        (status = 404, description = "User not found"),
-        (status = 200, description = "Success"),
-      ),
-  )]
-  /// Update the user email.
-  pub async fn update_user_email(
-    State(state): State<SharedState>,
-    // auth_session: AuthSession, // todo(auth)
-    Json(payload): Json<UserUpdatePayload>,
-  ) -> ApiResult<StatusCode> {
-    debug!("update_user_email called with payload: {payload:?}");
-    // assert_authenticated(&auth_session)?;
-    payload.validate(&())?;
-    let email = payload.email.ok_or(ApiError::MissingField("email missing".to_string()))?;
-    db::queries::users::update_user_email(&state.pool, &payload.username, &email).await?;
-
-    info!("updated user {}, email: {}", payload.username, email);
     Ok(StatusCode::OK)
   }
 

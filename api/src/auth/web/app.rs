@@ -4,25 +4,26 @@ use axum_login::{
   tracing::info,
   AuthManagerLayer, AuthManagerLayerBuilder,
 };
+use db::DbPool;
 // use sqlx::Postgres;
 // use axum_messages::MessagesManagerLayer;
 // use sqlx::PgPool;
 // use time::Duration;
 use tokio::{signal, task::AbortHandle};
-// use tower_sessions::cookie::Key;
+use tower_sessions::service::SignedCookie;
 use tower_sessions_sqlx_store::PostgresStore;
 
-use crate::auth::users::AuthBackend;
+use crate::{auth::users::AuthBackend, MySessionManagerLayer};
+
+pub type MyAuthLayer = AuthManagerLayer<AuthBackend, PostgresStore, SignedCookie>;
 
 // use crate::{
 //     users::Backend,
 //     web::{auth, protected},
 // };
 
-pub fn get_auth_layer(
-  backend: AuthBackend,
-  session_layer: SessionManagerLayer<PostgresStore>,
-) -> AuthManagerLayer<AuthBackend, PostgresStore> {
+pub fn get_auth_layer(pool: DbPool, session_layer: MySessionManagerLayer) -> MyAuthLayer {
+  let backend = AuthBackend::new(pool);
   AuthManagerLayerBuilder::new(backend, session_layer).build()
 }
 
