@@ -22,6 +22,9 @@ use self::{auth::get_auth_layer, routes::routes, sessions::create_migrate_sessio
 pub(crate) type ApiResult<T> = Result<T, ApiError>;
 
 pub use self::error::ApiError;
+// todo(refactor): unite payloads
+// export payloads
+pub use self::{auth::CredentialsPayload, routes::users::*};
 
 pub async fn app(pool: DbPool) -> ApiResult<Router> {
   let session_layer = create_migrate_session_layer(pool.clone()).await?;

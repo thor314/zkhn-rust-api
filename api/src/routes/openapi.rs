@@ -25,10 +25,9 @@ use db::models::user::User;
 use utoipa::OpenApi;
 use utoipa_rapidoc::RapiDoc;
 use utoipauto::utoipauto;
-use crate::auth::CredentialsPayload;
 
 use super::users::{delete::*, get::*, post::*, put::*, *};
-use crate::error::ApiError;
+use crate::{auth::CredentialsPayload, error::ApiError};
 
 /// router fragment supplying OpenAPI documentation and ui routes
 /// View rapidoc documentation page at: http://localhost:3000/docs/rapidoc
