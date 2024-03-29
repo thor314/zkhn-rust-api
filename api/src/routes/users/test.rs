@@ -116,12 +116,6 @@ async fn test_change_password(pool: PgPool) {
   assert_eq!(response.status(), StatusCode::OK);
 }
 
-// todo: how to check cookies?
-// ref: https://github.com/maxcountryman/axum-login/blob/main/axum-login/tests/integration-test.rs#L95
-// assert!(res
-//     .cookies()
-//     .find(|c| c.name() == "id")
-//     .is_some_and(|c| c.value() == ""));
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_login_logout(pool: PgPool) {
   let app = router_with_user_alice(pool).await;
@@ -145,9 +139,4 @@ async fn test_login_logout(pool: PgPool) {
   let logout_response = app.clone().oneshot(logout_request).await.unwrap();
   dbg!(&logout_response);
   assert_eq!(logout_response.status(), StatusCode::SEE_OTHER);
-
-  // let logout_request = Request::builder().uri("/users/logout").method("POST").empty_body();
-  // let logout_response = app.clone().oneshot(logout_request).await.unwrap();
-  // dbg!(&logout_response);
-  // assert_eq!(logout_response.status(), StatusCode::SEE_OTHER);
 }

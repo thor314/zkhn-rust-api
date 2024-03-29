@@ -127,7 +127,6 @@ impl ChangePasswordPayload {
   }
 }
 
-
 #[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 #[schema(example = CredentialsPayload::default, default = CredentialsPayload::default)]
 pub struct CredentialsPayload {
