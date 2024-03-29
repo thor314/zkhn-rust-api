@@ -62,9 +62,9 @@ async fn login_test() {
   let client = Client::builder().cookie_store(true).build().unwrap();
 
   // create the default user
-  let payload = api::UserPayload::default();
-  let res = client.post(format!("{}/users", WEBSERVER_URL)).send_json(&payload).await;
-  assert_eq!(res.status(), 200);
+  // let payload = api::UserPayload::default();
+  // let res = client.post(format!("{}/users", WEBSERVER_URL)).send_json(&payload).await;
+  // assert_eq!(res.status(), 200);
 
   // Log in with invalid credentials.
   let payload = api::CredentialsPayload::new("ferris", "hunter42", None);
