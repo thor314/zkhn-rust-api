@@ -96,7 +96,7 @@ pub(super) mod post {
   use axum::response::Redirect;
 
   use super::*;
-  use crate::auth::{login_post_internal, logout_post_internal, AuthSession, CredentialsPayload};
+  use crate::auth::{login_post_internal, logout_post_internal, AuthSession};
 
   #[utoipa::path(
       post,

@@ -8,10 +8,7 @@ use axum::{
 use serde::Deserialize;
 use tracing::debug;
 
-use crate::{
-  auth::users::{AuthSession, CredentialsPayload},
-  ApiError, ApiResult,
-};
+use crate::{auth::users::AuthSession, ApiError, ApiResult, CredentialsPayload};
 
 /// Internal login logic.
 /// Isolate from the login handler to maintain consistency with axum-login style example.

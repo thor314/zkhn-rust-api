@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use tokio::task;
 use utoipa::ToSchema;
 
-use crate::error::ApiError;
+use crate::{error::ApiError, CredentialsPayload};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct UserWrapper(pub User);
@@ -22,25 +22,6 @@ impl AuthUser for UserWrapper {
   // We use the password hash as the auth hash
   // this means when the user changes their password, the auth session becomes invalid.
   fn session_auth_hash(&self) -> &[u8] { self.0.password_hash.0.as_bytes() }
-}
-
-/// todo(refactor): move to user payload
-#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
-#[schema(example = CredentialsPayload::default, default = CredentialsPayload::default)]
-pub struct CredentialsPayload {
-  pub username: Username,
-  pub password: Password,
-  pub next:     Option<String>,
-}
-
-impl Default for CredentialsPayload {
-  fn default() -> Self { Self::new("alice", "password", None) }
-}
-
-impl CredentialsPayload {
-  pub fn new(username: &str, password: &str, next: Option<String>) -> Self {
-    Self { username: Username(username.into()), password: Password(password.into()), next }
-  }
 }
 
 #[derive(Debug, Clone)]

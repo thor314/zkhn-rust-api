@@ -23,7 +23,7 @@ use tower_sessions::{Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 use tracing::info;
 
-use crate::{auth::CredentialsPayload, error::ApiError};
+use crate::{error::ApiError, CredentialsPayload};
 use crate::{
   // auth::credentials::password_creds::PasswordCreds,
   routes::users::{payload::UserUpdatePayload, ChangePasswordPayload, UserPayload},

@@ -9,7 +9,7 @@ use tower_sessions::service::SignedCookie;
 use tower_sessions_sqlx_store::PostgresStore;
 
 pub use self::{
-  users::{AuthBackend, AuthSession, CredentialsPayload},
+  users::{AuthBackend, AuthSession},
   web::{login_post_internal, logout_post_internal},
 };
 use crate::sessions::MySessionManagerLayer;
