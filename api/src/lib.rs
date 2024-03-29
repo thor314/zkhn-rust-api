@@ -8,8 +8,8 @@
 
 mod auth;
 mod cors;
-pub mod error;
-pub mod routes;
+mod error;
+mod routes;
 mod sessions;
 #[cfg(test)] mod tests;
 mod utils;
@@ -17,11 +17,11 @@ mod utils;
 use axum::Router;
 use db::DbPool;
 
-use self::{
-  auth::get_auth_layer, error::ApiError, routes::routes, sessions::create_migrate_session_layer,
-};
+use self::{auth::get_auth_layer, routes::routes, sessions::create_migrate_session_layer};
 
-pub type ApiResult<T> = Result<T, ApiError>;
+pub(crate) type ApiResult<T> = Result<T, ApiError>;
+
+pub use self::error::ApiError;
 
 pub async fn app(pool: DbPool) -> ApiResult<Router> {
   let session_layer = create_migrate_session_layer(pool.clone()).await?;
@@ -31,7 +31,7 @@ pub async fn app(pool: DbPool) -> ApiResult<Router> {
   let router = routes::routes(pool)
     // routes::routes(pool, auth_layer) // todo: remove when verified
     // todo(refactor): cors and analytics could live in server instead
-    .layer(cors::cors_layer()) 
+    .layer(cors::cors_layer())
     // todo(analytics)
     // .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth
     .layer(auth_layer);

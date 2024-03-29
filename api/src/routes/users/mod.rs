@@ -42,8 +42,8 @@ pub fn users_router(state: SharedState) -> Router {
     .route("/", routing::post(post::create_user))
     .route("/reset-password-link/:username", routing::put(put::request_password_reset_link))
     .route("/change-password", routing::put(put::change_password))
-    // .route("/login", routing::post(post::login_user))
-    // .route("/logout", routing::post(post::logout_user))
+    .route("/login", routing::post(post::login))
+    .route("/logout", routing::post(post::logout))
     .with_state(state)
 }
 
@@ -93,7 +93,10 @@ pub(super) mod get {
 
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
 pub(super) mod post {
+  use axum::response::Redirect;
+
   use super::*;
+  use crate::auth::{login_post_internal, logout_post_internal, AuthSession, CredentialsPayload};
 
   #[utoipa::path(
       post,
@@ -126,19 +129,53 @@ pub(super) mod post {
       user
     };
 
-    debug!("2");
     db::queries::users::create_user(&state.pool, &user).await?;
-    debug!("3");
 
     let user_response = UserResponse::from(user);
     info!("created user: {user_response:?}");
     Ok(Json(user_response))
   }
 
-  // login and logout - see auth
+  #[utoipa::path(
+      post,
+      path = "/users/login",
+      request_body = CredentialsPayload,
+      responses(
+        // todo(testing): check documented routes
+        (status = 422, description = "Invalid Payload"),
+        (status = 409, description = "User Conflict"),
+        (status = 500, description = "Database Error"),
+        // todo: what to return?
+        (status = 200, description = "Success", body = Redirect),
+      ),
+  )]
+  /// User login.
+  pub async fn login(
+    mut auth_session: AuthSession,
+    Json(payload): Json<CredentialsPayload>,
+  ) -> ApiResult<Redirect> {
+    login_post_internal(auth_session, payload).await
+  }
+
+  #[utoipa::path(
+      post,
+      path = "/users/logout",
+      responses(
+        // todo(testing): check documented routes
+        (status = 422, description = "Invalid Payload"),
+        (status = 409, description = "User Conflict"),
+        (status = 500, description = "Internal Server Error"),
+        // todo: what to return
+        (status = 200, description = "Success", body = Redirect),
+      ),
+  )]
+  /// User logout.
+  pub async fn logout(auth_session: AuthSession) -> ApiResult<Redirect> {
+    logout_post_internal(auth_session).await
+  }
+
   // todo(auth): authenticate user: blocked
   // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L97
-  // BLOCKED: https://github.com/maxcountryman/axum-login/pull/210
   // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L71
   // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L124
 }

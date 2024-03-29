@@ -10,7 +10,7 @@ pub enum ServerError {
   #[error(transparent)]
   Db(#[from] db::DbError),
   #[error(transparent)]
-  Api(#[from] api::error::ApiError),
+  Api(#[from] api::ApiError),
 
   #[error(transparent)]
   TaskJoin(#[from] tokio::task::JoinError),
