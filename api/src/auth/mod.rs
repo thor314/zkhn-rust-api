@@ -34,7 +34,10 @@ use db::DbPool;
 use tower_sessions::service::SignedCookie;
 use tower_sessions_sqlx_store::PostgresStore;
 
-pub(crate) use self::users::{AuthBackend, AuthSession};
+pub(crate) use self::{
+  users::{AuthBackend, AuthSession, CredentialsPayload},
+  web::{login_post_internal, logout_post_internal},
+};
 use crate::sessions::MySessionManagerLayer;
 
 pub type MyAuthLayer = AuthManagerLayer<AuthBackend, PostgresStore, SignedCookie>;
