@@ -19,12 +19,9 @@ impl AuthUser for UserWrapper {
 
   fn id(&self) -> Self::Id { self.0.username.clone() }
 
-  fn session_auth_hash(&self) -> &[u8] {
-    self.0.password_hash.0.as_bytes() // We use the password hash as the auth
-                                      // hash--what this means
-                                      // is when the user changes their password the
-                                      // auth session becomes invalid.
-  }
+  // We use the password hash as the auth hash
+  // this means when the user changes their password, the auth session becomes invalid.
+  fn session_auth_hash(&self) -> &[u8] { self.0.password_hash.0.as_bytes() }
 }
 
 /// todo(refactor): move to user payload
@@ -80,7 +77,11 @@ impl AuthnBackend for AuthBackend {
     task::spawn_blocking(|| {
       // We're using password-based authentication--this works by comparing our form
       // input with an argon2 password hash.
-      Ok(user.filter(|user| verify_password(&user.0.password_hash, creds.password).is_ok()))
+      dbg!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", &user);
+      let user = user.filter(|user| verify_password(&user.0.password_hash, creds.password).is_ok());
+      dbg!("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", &user);
+      Ok(user)
+      // Ok(user.filter(|user| verify_password(&user.0.password_hash, creds.password).is_ok()));
     })
     .await?
   }

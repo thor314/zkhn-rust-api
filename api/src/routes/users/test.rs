@@ -134,7 +134,6 @@ async fn test_login_logout(pool: PgPool) {
   let valid_login_request = make_login_request("alice", "password");
   let login_response = app.clone().oneshot(valid_login_request).await.unwrap();
   dbg!(&login_response);
-  let cookies = login_response.headers();
   assert_eq!(login_response.status(), StatusCode::SEE_OTHER);
 
   let invalid_login_request = make_login_request("ferris", "password");

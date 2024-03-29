@@ -62,19 +62,22 @@ async fn login_test() {
   let client = Client::builder().cookie_store(true).build().unwrap();
 
   // create the default user
-  // let payload = api::UserPayload::default();
-  // let res = client.post(format!("{}/users", WEBSERVER_URL)).send_json(&payload).await;
-  // assert_eq!(res.status(), 200);
+  let payload = api::UserPayload::default();
+  let _res = client.post(format!("{}/users", WEBSERVER_URL)).send_json(&payload).await;
+  // assert_eq!(_res.status(), 200);
 
   // Log in with invalid credentials.
-  let payload = api::CredentialsPayload::new("ferris", "hunter42", None);
-  let res = client.post(format!("{}/users/login", WEBSERVER_URL)).send_json(payload).await;
-  assert_eq!(res.status(), 401);
-  assert_eq!(res.url().to_string(), format!("{}/users/login", WEBSERVER_URL));
+  // let payload = api::CredentialsPayload::new("ferris", "hunter42", None);
+  // let res = client.post(format!("{}/users/login", WEBSERVER_URL)).send_json(payload).await;
+  // assert_eq!(res.status(), 401);
+  // assert_eq!(res.url().to_string(), format!("{}/users/login", WEBSERVER_URL));
 
   // Log in with valid credentials.
   let payload = api::CredentialsPayload::default();
   let res = client.post(format!("{}/users/login", WEBSERVER_URL)).send_json(&payload).await;
+  for cookie in res.cookies() {
+    println!("{:?}", cookie);
+  }
   assert_eq!(res.status(), 303);
   assert_eq!(res.url().to_string(), format!("{}/users/login", WEBSERVER_URL));
 

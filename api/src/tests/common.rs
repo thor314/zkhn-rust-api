@@ -51,7 +51,6 @@ pub async fn router_with_user_alice(pool: PgPool) -> Router {
 
   let post_request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
   let response = app.clone().oneshot(post_request).await.unwrap();
-  // println!("response: {:?}", response);
   assert_eq!(response.status(), StatusCode::OK);
 
   setup_test_tracing();

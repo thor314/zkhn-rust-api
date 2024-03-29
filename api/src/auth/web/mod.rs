@@ -35,7 +35,7 @@ pub async fn login_post_internal(
       return Err(ApiError::IncorrectPassword("incorrect password".to_string()));
     },
     // internal authentication error
-    Err(_) => return Err(ApiError::OtherISE("authentication logic error".to_string())),
+    Err(e) => return Err(ApiError::OtherISE(format!("authentication logic error: {e:?}"))),
   };
 
   // update the session with the user's login

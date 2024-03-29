@@ -28,7 +28,6 @@ pub(crate) fn routes(pool: DbPool) -> Router {
     .route("/health", routing::get(health))
     .nest("/docs", docs_router())
     .nest("/users", users_router(state.clone()))
-  // .layer(auth_layer) // todo(auth): may not be required here
 }
 
 /// shared state for handlers to access via the State Extractor
