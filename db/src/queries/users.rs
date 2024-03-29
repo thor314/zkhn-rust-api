@@ -157,16 +157,29 @@ pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
 //   .map_err(DbError::from)
 // }
 
-pub async fn update_user_about(
+pub async fn update_user(
   pool: &DbPool,
   username: &Username,
-  about: &About,
-) -> DbResult<PgQueryResult> {
-  debug!("update_user_about with: {username}");
-  sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about.0, username.0)
-    .execute(pool)
-    .await
-    .map_err(DbError::from)
+  about: &Option<About>,
+  email: &Option<Email>,
+) -> DbResult<()> {
+  let mut tx = pool.begin().await?;
+  if let Some(about) = about {
+    sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about.0, username.0)
+      .execute(&mut *tx)
+      .await
+      .map_err(DbError::from)?;
+    // update_user_about(&mut tx, username, about).await?;
+  }
+  if let Some(email) = email {
+    sqlx::query!("UPDATE users SET email = $1 WHERE username = $2", email.0, username.0)
+      .execute(&mut *tx)
+      .await
+      .map_err(DbError::from)?;
+  }
+
+  debug!("update_user with: {username}");
+  Ok(tx.commit().await?)
 }
 
 pub async fn update_user_email(

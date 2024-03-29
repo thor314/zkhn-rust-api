@@ -21,11 +21,11 @@ use payload::*;
 use response::*;
 use tracing::{debug, info, warn};
 
+use super::SharedState;
 use crate::{
   // auth::{self, assert_authenticated},
   error::ApiError,
   ApiResult,
-  SharedState,
 };
 
 // todo(auth)
@@ -37,14 +37,13 @@ pub fn users_router(state: SharedState) -> Router {
   Router::new()
     // note - called `/users/get-user-data` in reference
     .route("/:username", routing::get(get::get_user))
-    .route("/about", routing::put(put::update_user_about))
-    .route("/email", routing::put(put::update_user_email))
+    .route("/", routing::put(put::update_user))
     .route("/:username", routing::delete(delete::delete_user))
     .route("/", routing::post(post::create_user))
     .route("/reset-password-link/:username", routing::put(put::request_password_reset_link))
     .route("/change-password", routing::put(put::change_password))
-    // .route("/login", routing::post(post::login_user))
-    // .route("/logout", routing::post(post::logout_user))
+    .route("/login", routing::post(post::login))
+    .route("/logout", routing::post(post::logout))
     .with_state(state)
 }
 
@@ -94,7 +93,10 @@ pub(super) mod get {
 
 // note to self that put is for updating, post is for creating. Puts should be idempotent.
 pub(super) mod post {
+  use axum::response::Redirect;
+
   use super::*;
+  use crate::auth::{login_post_internal, logout_post_internal, AuthSession};
 
   #[utoipa::path(
       post,
@@ -127,19 +129,53 @@ pub(super) mod post {
       user
     };
 
-    debug!("2");
     db::queries::users::create_user(&state.pool, &user).await?;
-    debug!("3");
 
     let user_response = UserResponse::from(user);
     info!("created user: {user_response:?}");
     Ok(Json(user_response))
   }
 
-  // login and logout - see auth
+  #[utoipa::path(
+      post,
+      path = "/users/login",
+      request_body = CredentialsPayload,
+      responses(
+        // todo(testing): check documented routes
+        (status = 422, description = "Invalid Payload"),
+        (status = 409, description = "User Conflict"),
+        (status = 500, description = "Database Error"),
+        // todo: what to return?
+        (status = 200, description = "Success", body = Redirect),
+      ),
+  )]
+  /// User login.
+  pub async fn login(
+    mut auth_session: AuthSession,
+    Json(payload): Json<CredentialsPayload>,
+  ) -> ApiResult<StatusCode> {
+    login_post_internal(auth_session, payload).await
+  }
+
+  #[utoipa::path(
+      post,
+      path = "/users/logout",
+      responses(
+        // todo(testing): check documented routes
+        (status = 422, description = "Invalid Payload"),
+        (status = 409, description = "User Conflict"),
+        (status = 500, description = "Internal Server Error"),
+        // todo: what to return
+        (status = 200, description = "Success", body = Redirect),
+      ),
+  )]
+  /// User logout.
+  pub async fn logout(auth_session: AuthSession) -> ApiResult<StatusCode> {
+    logout_post_internal(auth_session).await
+  }
+
   // todo(auth): authenticate user: blocked
   // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L97
-  // BLOCKED: https://github.com/maxcountryman/axum-login/pull/210
   // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L71
   // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L124
 }
@@ -149,7 +185,7 @@ pub(super) mod put {
 
   #[utoipa::path(
       put,
-      path = "/users/about",
+      path = "/users",
       request_body = UserUpdatePayload,
       responses(
         // todo(auth) auth error
@@ -160,50 +196,25 @@ pub(super) mod put {
         (status = 200, description = "Success"),
       ),
   )]
-  /// Update the user's about.
+  /// Update the user's about or email field.
   ///
   /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L287
-  pub async fn update_user_about(
+  pub async fn update_user(
     State(state): State<SharedState>,
     // auth_session: AuthSession, // todo(auth)
     Json(payload): Json<UserUpdatePayload>,
   ) -> ApiResult<StatusCode> {
     debug!("update_user_about called with payload: {payload:?}");
-    payload.validate(&())?;
     // assert_authenticated(&auth_session)?;
-    let about = payload.about.ok_or(ApiError::MissingField("about missing".to_string()))?;
-    db::queries::users::update_user_about(&state.pool, &payload.username, &about).await?;
+    payload.validate(&())?;
+    if payload.about.is_none() && payload.email.is_none() {
+      return Err(ApiError::MissingField("about or email must be provided".to_string()));
+    }
+
+    db::queries::users::update_user(&state.pool, &payload.username, &payload.about, &payload.email)
+      .await?;
 
     info!("updated user about for: {}", payload.username);
-    Ok(StatusCode::OK)
-  }
-
-  #[utoipa::path(
-      put,
-      path = "/users/email",
-      request_body = UserUpdatePayload,
-      responses(
-        // todo(auth) auth error
-        // (status = 401, description = "Unauthorized"),
-        (status = 422, description = "Invalid Payload"),
-        (status = 500, description = "Database Error"),
-        (status = 404, description = "User not found"),
-        (status = 200, description = "Success"),
-      ),
-  )]
-  /// Update the user email.
-  pub async fn update_user_email(
-    State(state): State<SharedState>,
-    // auth_session: AuthSession, // todo(auth)
-    Json(payload): Json<UserUpdatePayload>,
-  ) -> ApiResult<StatusCode> {
-    debug!("update_user_email called with payload: {payload:?}");
-    // assert_authenticated(&auth_session)?;
-    payload.validate(&())?;
-    let email = payload.email.ok_or(ApiError::MissingField("email missing".to_string()))?;
-    db::queries::users::update_user_email(&state.pool, &payload.username, &email).await?;
-
-    info!("updated user {}, email: {}", payload.username, email);
     Ok(StatusCode::OK)
   }
 
@@ -278,7 +289,7 @@ pub(super) mod put {
     let user = db::queries::users::get_user(&state.pool, &payload.username)
       .await?
       .ok_or(ApiError::DbEntryNotFound("no such user".to_string()))?;
-    if !verify_user_password(&user, &payload.current_password)? {
+    if !verify_user_password(&user, payload.current_password)? {
       return Err(ApiError::IncorrectPassword("incorrect password".to_string()));
     }
 

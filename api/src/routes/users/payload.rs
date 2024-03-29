@@ -126,3 +126,21 @@ impl ChangePasswordPayload {
     Ok(payload)
   }
 }
+
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
+#[schema(example = CredentialsPayload::default, default = CredentialsPayload::default)]
+pub struct CredentialsPayload {
+  pub username: Username,
+  pub password: Password,
+  pub next:     Option<String>,
+}
+
+impl Default for CredentialsPayload {
+  fn default() -> Self { Self::new("alice", "password", None) }
+}
+
+impl CredentialsPayload {
+  pub fn new(username: &str, password: &str, next: Option<String>) -> Self {
+    Self { username: Username(username.into()), password: Password(password.into()), next }
+  }
+}

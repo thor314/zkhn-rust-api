@@ -19,6 +19,8 @@ pub enum ApiError {
   Anyhow(#[from] anyhow::Error),
   #[status(StatusCode::INTERNAL_SERVER_ERROR)]
   Session(tower_sessions::session_store::Error),
+  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
+  TowerSessionsSqlxStore(#[from] tower_sessions_sqlx_store::sqlx::Error),
 
   /// OAuth API service is temporarily unavailable due to maintenance, overload, or other reasons
   #[status(StatusCode::SERVICE_UNAVAILABLE)] // 503
@@ -51,12 +53,14 @@ pub enum ApiError {
   #[status(StatusCode::CONFLICT)] // 409
   DoublySubmittedChange(String),
   #[status(StatusCode::UNPROCESSABLE_ENTITY)]
-  InvalidPayload(#[from] garde::Report), /* 422
-                                          * don't uncomment - creates circular dependency
-                                          * #[status(StatusCode::UNAUTHORIZED)]
-                                          * AxumLogin(#[from]
-                                          * axum_login::Error<crate::auth::Backend>), */
+  InvalidPayload(#[from] garde::Report), // 422
 }
+
+// 422
+// don't uncomment - creates circular dependency
+// #[status(StatusCode::UNAUTHORIZED)]
+// AxumLogin(#[from]
+// axum_login::Error<crate::auth::Backend>),
 
 impl std::fmt::Display for ApiError {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -78,6 +82,7 @@ impl std::fmt::Display for ApiError {
       ApiError::DoublySubmittedChange(e) => write!(f, "DoublySubmittedChange: {0}", e),
       ApiError::MissingField(e) => write!(f, "MissingField: {0}", e),
       ApiError::OAuthBadGateway(e) => write!(f, "OAuthBadGateway: {0}", e),
+      ApiError::TowerSessionsSqlxStore(e) => write!(f, "TowerSessionsSqlxStore: {0}", e),
     }
   }
 }

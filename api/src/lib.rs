@@ -8,66 +8,36 @@
 
 mod auth;
 mod cors;
-pub mod error;
-pub mod routes;
+mod error;
+mod routes;
 mod sessions;
 #[cfg(test)] mod tests;
 mod utils;
 
-use axum::{routing, Router};
-use axum_login::{login_required, AuthManagerLayerBuilder};
+use axum::Router;
 use db::DbPool;
-use error::ApiError;
-use routes::routes;
-use sessions::get_session_layer;
-use tracing::info;
 
-use crate::auth::AuthBackend;
+use self::{auth::get_auth_layer, routes::routes, sessions::create_migrate_session_layer};
 
-pub type ApiResult<T> = Result<T, ApiError>;
+pub(crate) type ApiResult<T> = Result<T, ApiError>;
 
-/// shared state for handlers to access via the State Extractor
-#[derive(Clone)]
-pub struct SharedState {
-  /// Access to the database
-  pub pool: DbPool,
-}
+pub use self::error::ApiError;
+// todo(refactor): unite payloads
+// export payloads
+pub use self::routes::users::*;
 
-impl SharedState {
-  fn new(pool: DbPool) -> Self { Self { pool } }
-}
+pub async fn app(pool: DbPool) -> ApiResult<Router> {
+  let session_layer = create_migrate_session_layer(pool.clone()).await?;
+  let auth_layer = get_auth_layer(pool.clone(), session_layer);
 
-// () must implement FromRef<SharedState> for `axum_garde` to be able to validate payloads
-// https://docs.rs/axum_garde/latest/axum_garde/index.html#getting-started
-impl axum::extract::FromRef<SharedState> for () {
-  fn from_ref(_: &SharedState) {}
-}
-
-/// Build the routes and add middleware for:
-/// - Session management
-/// - Authentication
-/// - State
-pub async fn router(pool: &DbPool, analytics_key: Option<String>) -> ApiResult<Router> {
-  let state = SharedState::new(pool.clone());
-  let auth_layer = {
-    let session_layer = get_session_layer(pool).await?;
-    let auth_backend = auth::backend::AuthBackend::new_with_default_client(pool.clone());
-    AuthManagerLayerBuilder::new(auth_backend, session_layer).build()
-  };
-
-  let router = Router::new()
-    .route("/dummy", routing::get(|| async { "dummy route" }))
-    // login protected routes go above the login route_layer
-    .route_layer(login_required!(AuthBackend, login_url = "/login"))
-    // unprotected routes (like "/login") go below the login route_layer
-    .merge(routes(state))
-    // .merge(auth_router()) // todo: move to routes router
-    .layer(auth_layer)
+  // serve the router and layer any route-agnostic middleware.
+  let router = routes::routes(pool)
+    // routes::routes(pool, auth_layer) // todo: remove when verified
+    // todo(refactor): cors and analytics could live in server instead
     .layer(cors::cors_layer())
-    // NOTE: analytics slowing server down dramatically, removal pending
-    // .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth router
-    //
-    ;
+    // todo(analytics)
+    // .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth
+    .layer(auth_layer);
 
   Ok(router)
 }

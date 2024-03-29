@@ -34,7 +34,6 @@ use crate::{
   error::ApiError,
   ApiResult,
   DbPool,
-  SharedState,
 };
 
 // /// if user is signed in, check if the user has voted on this comment.
