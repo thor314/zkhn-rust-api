@@ -5,7 +5,7 @@ use tower_sessions_sqlx_store::PostgresStore;
 use tracing::debug;
 
 use self::{comments::comments_router, openapi::docs_router, users::users_router};
-use crate::{auth::MyAuthLayer, SharedState};
+use crate::auth::MyAuthLayer;
 
 // pub mod so that payloads and responses can be accessed by integration tests
 pub mod comments;
@@ -28,9 +28,16 @@ pub(crate) fn routes(pool: DbPool) -> Router {
     .route("/health", routing::get(health))
     .nest("/docs", docs_router())
     .nest("/users", users_router(state.clone()))
-  // .merge(auth_router()) // todo(auth)
-  // .nest("/items", items_router(state.clone()))
-  // .nest("/comments", comments_router(state.clone()))
   // .layer(auth_layer) // todo(auth): may not be required here
-  // ..
+}
+
+/// shared state for handlers to access via the State Extractor
+#[derive(Clone)]
+pub struct SharedState {
+  /// Access to the database
+  pub pool: DbPool,
+}
+
+impl SharedState {
+  fn new(pool: DbPool) -> Self { Self { pool } }
 }

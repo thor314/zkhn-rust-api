@@ -21,11 +21,11 @@ use payload::*;
 use response::*;
 use tracing::{debug, info, warn};
 
+use super::SharedState;
 use crate::{
   // auth::{self, assert_authenticated},
   error::ApiError,
   ApiResult,
-  SharedState,
 };
 
 // todo(auth)
@@ -174,7 +174,8 @@ pub(super) mod put {
       return Err(ApiError::MissingField("about or email must be provided".to_string()));
     }
 
-    db::queries::users::update_user(&state.pool, &payload.username, &payload.about, &payload.email).await?;
+    db::queries::users::update_user(&state.pool, &payload.username, &payload.about, &payload.email)
+      .await?;
 
     info!("updated user about for: {}", payload.username);
     Ok(StatusCode::OK)
