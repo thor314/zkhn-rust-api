@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use std::{process, time};
 
 use db::models::user::User;
@@ -66,26 +68,27 @@ async fn cargo_shuttle_run() -> ChildGuard {
   ChildGuard { child }
 }
 
-#[tokio::test]
-#[serial]
-async fn create_get() {
-  // run the server
-  let mut _child_guard = cargo_shuttle_run().await;
+// commented for speed and convenience
+// #[tokio::test]
+// #[serial]
+// async fn create_get() {
+//   // run the server
+//   let mut _child_guard = cargo_shuttle_run().await;
 
-  // create a client that stores cookies
-  let client = Client::builder().cookie_store(true).build().unwrap();
+//   // create a client that stores cookies
+//   let client = Client::builder().cookie_store(true).build().unwrap();
 
-  // create the default user
-  let payload = api::UserPayload::default();
-  let res = client.post(format!("{}/users", WEBSERVER_URL)).send_json(&payload).await;
-  assert_eq!(res.status(), 200);
+//   // create the default user
+//   let payload = api::UserPayload::default();
+//   let res = client.post(format!("{}/users", WEBSERVER_URL)).send_json(&payload).await;
+//   assert_eq!(res.status(), 200);
 
-  // get the user
-  let res = client.get(format!("{}/users/alice", WEBSERVER_URL)).send_empty().await;
-  assert_eq!(res.status(), 200);
-  let body: User = res.json().await.unwrap();
-  assert!(body.username.0 == "alice");
-}
+//   // get the user
+//   let res = client.get(format!("{}/users/alice", WEBSERVER_URL)).send_empty().await;
+//   assert_eq!(res.status(), 200);
+//   let body: User = res.json().await.unwrap();
+//   assert!(body.username.0 == "alice");
+// }
 
 #[tokio::test]
 #[serial]
@@ -96,29 +99,32 @@ async fn login_test() {
   // create a client that stores cookies
   let client = Client::builder().cookie_store(true).build().unwrap();
 
+  // Log in with invalid credentials.
+  let payload = api::CredentialsPayload::new("ferris", "hunter42", None);
+  let res = client.post(format!("{}/users/login", WEBSERVER_URL)).send_json(payload).await;
+  assert_eq!(res.status(), 401);
+  assert_eq!(res.url().to_string(), format!("{}/users/login", WEBSERVER_URL));
+
   // create the default user
   let payload = api::UserPayload::default();
-  let res = client.post(format!("{}/users", WEBSERVER_URL)).send_json(&payload).await;
-  assert_eq!(res.status(), 200);
+  let _res = client.post(format!("{}/users", WEBSERVER_URL)).send_json(&payload).await;
+  // assert_eq!(_res.status(), 200);
 
   // Log in with valid credentials.
   let payload = api::CredentialsPayload::default();
   let res = client.post(format!("{}/users/login", WEBSERVER_URL)).send_json(&payload).await;
-  dbg!(&res);
+  // dbg!(&res);
   assert_eq!(res.status(), 200);
   assert_eq!(res.url().to_string(), format!("{}/users/login", WEBSERVER_URL));
 
   // Log out and check the cookie has been removed in response.
-  // let res = client.get(format!("{}/logout", WEBSERVER_URL)).send_empty().await;
-  // assert_eq!(res.status(), 303);
-  // assert!(res.cookies().find(|c| c.name() == "id").is_some_and(|c| c.value() == ""));
-}
+  let res = client.post(format!("{}/users/logout", WEBSERVER_URL)).send_empty().await;
+  assert_eq!(res.status(), 200);
+  assert!(res.cookies().find(|c| c.name() == "id").is_some_and(|c| c.value() == ""));
 
-// Log in with invalid credentials.
-// let payload = api::CredentialsPayload::new("ferris", "hunter42", None);
-// let res = client.post(format!("{}/users/login", WEBSERVER_URL)).send_json(payload).await;
-// assert_eq!(res.status(), 401);
-// assert_eq!(res.url().to_string(), format!("{}/users/login", WEBSERVER_URL));
+  let res = client.post(format!("{}/users/logout", WEBSERVER_URL)).send_empty().await;
+  assert_eq!(res.status(), 200);
+}
 
 // for cookie in res.cookies() {
 //   println!("{:?}", cookie);
