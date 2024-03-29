@@ -53,12 +53,14 @@ pub enum ApiError {
   #[status(StatusCode::CONFLICT)] // 409
   DoublySubmittedChange(String),
   #[status(StatusCode::UNPROCESSABLE_ENTITY)]
-  InvalidPayload(#[from] garde::Report), /* 422
-                                          * don't uncomment - creates circular dependency
-                                          * #[status(StatusCode::UNAUTHORIZED)]
-                                          * AxumLogin(#[from]
-                                          * axum_login::Error<crate::auth::Backend>), */
+  InvalidPayload(#[from] garde::Report), // 422
 }
+
+// 422
+// don't uncomment - creates circular dependency
+// #[status(StatusCode::UNAUTHORIZED)]
+// AxumLogin(#[from]
+// axum_login::Error<crate::auth::Backend>),
 
 impl std::fmt::Display for ApiError {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

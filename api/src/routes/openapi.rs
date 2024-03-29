@@ -25,6 +25,7 @@ use db::models::user::User;
 use utoipa::OpenApi;
 use utoipa_rapidoc::RapiDoc;
 use utoipauto::utoipauto;
+use crate::auth::CredentialsPayload;
 
 use super::users::{delete::*, get::*, post::*, put::*, *};
 use crate::error::ApiError;
@@ -43,7 +44,7 @@ pub(super) fn docs_router() -> Router {
 #[openapi(
   info(description = "API documentation for ZKHN"),
   // Schemas that may be returned in the body by the api.
-  components(schemas(UserUpdatePayload, ChangePasswordPayload, UserPayload, UserResponse, User))
+  components(schemas(UserUpdatePayload, ChangePasswordPayload, UserPayload, UserResponse, User, CredentialsPayload))
   // components(schemas(ApiError, UserResponse, ChangePasswordPayload, UserPayload, UserUpdatePayload, UserDeletePayload)),
   // components(schemas(ChangePasswordPayload)),
   // runtime modification, e.g. for jwt: https://docs.rs/utoipa/latest/utoipa/trait.Modify.html

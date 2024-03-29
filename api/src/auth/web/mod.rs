@@ -32,7 +32,7 @@ pub async fn login_post_internal(
         .unwrap_or(login_base_url.to_string());
 
       debug!("login incorrect password for user: {}", creds.username);
-      return Ok(Redirect::to(&login_url));
+      return Err(ApiError::IncorrectPassword("incorrect password".to_string()));
     },
     // internal authentication error
     Err(_) => return Err(ApiError::OtherISE("authentication logic error".to_string())),

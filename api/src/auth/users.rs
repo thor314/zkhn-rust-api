@@ -7,6 +7,7 @@ use db::{
 use serde::{Deserialize, Serialize};
 // use sqlx::{FromRow, PgPool};
 use tokio::task;
+use utoipa::ToSchema;
 
 use crate::error::ApiError;
 
@@ -26,13 +27,23 @@ impl AuthUser for UserWrapper {
   }
 }
 
-// This allows us to extract the authentication fields from forms. We use this
-// to authenticate requests with the backend.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+/// todo(refactor): move to user payload
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
+#[schema(example = CredentialsPayload::default, default = CredentialsPayload::default)]
 pub struct CredentialsPayload {
   pub username: Username,
   pub password: Password,
   pub next:     Option<String>,
+}
+
+impl Default for CredentialsPayload {
+  fn default() -> Self { Self::new("alice", "password", None) }
+}
+
+impl CredentialsPayload {
+  pub fn new(username: &str, password: &str, next: Option<String>) -> Self {
+    Self { username: Username(username.into()), password: Password(password.into()), next }
+  }
 }
 
 #[derive(Debug, Clone)]
