@@ -7,7 +7,6 @@
 #![allow(unused_mut)]
 
 mod auth;
-mod cors;
 mod error;
 mod routes;
 mod sessions;
@@ -32,13 +31,7 @@ pub async fn app(pool: DbPool, session_key: Key) -> ApiResult<Router> {
   let auth_layer = get_auth_layer(pool.clone(), session_layer);
 
   // serve the router and layer any route-agnostic middleware.
-  let router = routes::routes(pool)
-    // routes::routes(pool, auth_layer) // todo: remove when verified
-    // todo(refactor): cors and analytics could live in server instead
-    .layer(cors::cors_layer())
-    // todo(analytics)
-    // .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth
-    .layer(auth_layer);
+  let router = routes::routes(pool).layer(auth_layer);
 
   Ok(router)
 }

@@ -1,14 +1,7 @@
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-#![allow(dead_code)]
-#![allow(unreachable_code)]
-#![allow(non_snake_case)]
-#![allow(clippy::clone_on_copy)]
-
+mod cors;
 mod error;
 mod utils;
 
-use anyhow::Context;
 use error::ServerError;
 use sqlx::PgPool;
 use tower_sessions::cookie::Key;
@@ -33,7 +26,11 @@ async fn main(
       Key::generate()
     });
 
-  let app = api::app(pool, session_key).await.expect("failed to build app");
+  let app = api::app(pool, session_key).await.expect("failed to build app")
+    .layer(cors::cors_layer())
+    // todo(prod)
+    // .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth
+    ;
 
   info!("🚀🚀🚀 see http://localhost:8000/docs/rapidoc for api docs 🚀🚀🚀");
   Ok(app.into())

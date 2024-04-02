@@ -19,5 +19,5 @@ pub(super) fn cors_layer() -> CorsLayer {
     .allow_origin(origins)
     .allow_headers([http::header::CONTENT_TYPE]) // allow json headers
     .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::PUT])
-    .allow_credentials(true) // todo(auth) may change this
+    .allow_credentials(true)
 }
