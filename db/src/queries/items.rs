@@ -1,3 +1,4 @@
+use tracing::{debug, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -5,6 +6,53 @@ use crate::{
   models::{comment::Comment, item::Item},
   DbPool, DbResult, Title, Username,
 };
+
+/// Create a new item in the database.
+pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
+  debug!("create_item with: {item:?}");
+  let mut tx = pool.begin().await?;
+
+  let Item { id, username, title, item_type, url, domain, text, item_category, .. } = item.clone();
+
+  let result = sqlx::query!(
+    "INSERT INTO items
+    ( id,
+    username,
+    title,
+    item_type,
+    url,
+    domain,
+    text,
+    item_category
+  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+    id,
+    username.0,
+    title.0,
+    item_type,
+    url,
+    domain,
+    text,
+    item_category,
+  )
+  .execute(&mut *tx)
+  .await;
+
+  // todo(karma): increment
+
+  if let Err(e) = &result {
+    // unwrap is safe; error is always db error kinded
+    if e.as_database_error().expect("expected db error").is_unique_violation() {
+      tx.rollback().await?;
+      warn!("item already exists");
+      return Err(DbError::Conflict);
+    } else {
+      tracing::error!("error creating item: {e}");
+    }
+  }
+  let _ = result?;
+  tx.commit().await?;
+  Ok(())
+}
 
 // pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
 //   sqlx::query_as!(
@@ -29,63 +77,6 @@ use crate::{
 //   .fetch_optional(pool)
 //   .await
 //   .map_err(DbError::from)
-// }
-
-// pub async fn insert_item(pool: &DbPool, new_item: &Item) -> DbResult<()> {
-//   let mut tx = pool.begin().await?;
-
-//   let Item {
-//     id,
-//     username,
-//     title,
-//     item_type,
-//     url,
-//     domain,
-//     text,
-//     points,
-//     score,
-//     comment_count,
-//     item_category,
-//     created,
-//     dead,
-//   } = new_item.clone();
-
-//   sqlx::query!(
-//     "INSERT INTO items
-//     ( id,
-//     username,
-//     title,
-//     item_type,
-//     url,
-//     domain,
-//     text,
-//     points,
-//     score,
-//     comment_count,
-//     item_category,
-//     created,
-//     dead )
-//     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
-//     id,
-//     username.0,
-//     title.0,
-//     item_type,
-//     url,
-//     domain,
-//     text,
-//     points,
-//     score,
-//     comment_count,
-//     item_category,
-//     created.0,
-//     dead
-//   )
-//   .execute(&mut *tx)
-//   .await?;
-
-//   tx.commit().await?;
-//   // todo
-//   Ok(())
 // }
 
 // pub async fn delete_item(pool: &DbPool, item_id: Uuid) -> DbResult<()> {
