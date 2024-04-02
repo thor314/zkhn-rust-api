@@ -1,13 +1,10 @@
 // use async_trait::async_trait;
 use axum_login::{AuthUser, AuthnBackend, UserId};
-use db::{
-  models::user::User, password::verify_password, queries::get_user, DbPool, Password, Username,
-};
+use db::{models::user::User, password::verify_password, DbPool, Username};
 // use password_auth::verify_password;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 // use sqlx::{FromRow, PgPool};
 use tokio::task;
-use utoipa::ToSchema;
 
 use crate::{error::ApiError, CredentialsPayload};
 

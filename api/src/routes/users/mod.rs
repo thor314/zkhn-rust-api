@@ -8,32 +8,24 @@ pub use response::*;
 
 #[cfg(test)] mod test;
 
-use anyhow::anyhow;
 use axum::{
-  debug_handler,
   extract::{Path, State},
   http::StatusCode,
   routing, Json, Router,
 };
-use db::{models::user::User, password::verify_user_password, AuthToken, DbError, Username};
+use db::{models::user::User, password::verify_user_password, AuthToken, Username};
 use garde::Validate;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 use super::SharedState;
-use crate::{
-  // auth::{self, assert_authenticated},
-  error::ApiError,
-  ApiResult,
-};
+use crate::{error::ApiError, ApiResult};
 
 /// Router to be mounted at "/users"
 pub fn users_router(state: SharedState) -> Router {
   Router::new()
     // note - called `/users/get-user-data` in reference
-    .route("/:username", routing::get(get::get_user))
-    .route("/", routing::put(put::update_user))
-    .route("/:username", routing::delete(delete::delete_user))
-    .route("/", routing::post(post::create_user))
+    .route("/:username", routing::get(get::get_user).delete(delete::delete_user))
+    .route("/", routing::put(put::update_user).post(post::create_user))
     .route("/reset-password-link/:username", routing::put(put::request_password_reset_link))
     .route("/change-password", routing::put(put::change_password))
     .route("/login", routing::post(post::login))
@@ -86,8 +78,6 @@ pub(super) mod get {
 }
 
 pub(super) mod post {
-  use axum::response::Redirect;
-
   use super::*;
   use crate::auth::{login_post_internal, logout_post_internal, AuthSession};
 
@@ -136,7 +126,7 @@ pub(super) mod post {
   )]
   /// User login.
   pub async fn login(
-    mut auth_session: AuthSession,
+    auth_session: AuthSession,
     Json(payload): Json<CredentialsPayload>,
   ) -> ApiResult<StatusCode> {
     login_post_internal(auth_session, payload).await
