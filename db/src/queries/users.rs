@@ -37,7 +37,6 @@ pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<Use
 }
 
 /// Create a new user in the database.
-/// If the username already exists, return Recoverable::DbEntryAlreadyExists.
 pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   debug!("create_user with: {new_user:?}");
   let mut tx = pool.begin().await?;
@@ -75,6 +74,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   .execute(&mut *tx)
   .await;
 
+  // todo(error handling): re-implement in a method for DRY
   if let Err(e) = &result {
     // unwrap is safe; error is always db error kinded
     if e.as_database_error().expect("expected db error").is_unique_violation() {
@@ -88,7 +88,6 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
   let _ = result?;
 
   tx.commit().await?;
-  // todo
   Ok(())
 }
 

@@ -1,6 +1,7 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use super::comment::Comment;
@@ -9,7 +10,8 @@ use crate::{error::DbError, utils::now, Timestamp, Title, Username};
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
 /// Comments on a post
-#[derive(sqlx::FromRow, Debug, Clone)]
+#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[schema(example = Item::default, default = Item::default)]
 pub struct Item {
   pub id:            Uuid,
   pub username:      Username,
@@ -30,6 +32,26 @@ pub struct Item {
   pub dead:          bool,
 }
 
+impl Default for Item {
+  fn default() -> Self {
+    Item {
+      id:            Uuid::new_v4(),
+      username:      Username::default(),
+      title:         Title::default(),
+      item_type:     "news".to_string(),
+      url:           Some("https://example.com".to_string()),
+      domain:        Some("example.com".to_string()),
+      text:          None,
+      points:        1,
+      score:         0,
+      comment_count: 0,
+      item_category: "Tweet".to_string(),
+      created:       now(),
+      dead:          false,
+    }
+  }
+}
+
 impl Item {
   pub fn new(
     username: Username,
@@ -47,21 +69,7 @@ impl Item {
       (Some(url), Some(domain), None)
     };
 
-    Item {
-      id: Uuid::new_v4(),
-      username,
-      title,
-      item_type,
-      url,
-      domain,
-      text,
-      points: 1,
-      score: 0,
-      comment_count: 0,
-      item_category,
-      created: now(),
-      dead: false,
-    }
+    Item { username, title, item_type, url, domain, text, item_category, ..Default::default() }
   }
 }
 

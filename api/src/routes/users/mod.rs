@@ -17,8 +17,6 @@ use axum::{
 };
 use db::{models::user::User, password::verify_user_password, AuthToken, DbError, Username};
 use garde::Validate;
-use payload::*;
-use response::*;
 use tracing::{debug, info, warn};
 
 use super::SharedState;
@@ -28,11 +26,7 @@ use crate::{
   ApiResult,
 };
 
-// todo(auth)
-fn todo_auth_token() -> AuthToken {
-  AuthToken("temporaryytemporaryytemporaryytemporaryy".to_string())
-}
-
+/// Router to be mounted at "/users"
 pub fn users_router(state: SharedState) -> Router {
   Router::new()
     // note - called `/users/get-user-data` in reference
@@ -91,7 +85,6 @@ pub(super) mod get {
   }
 }
 
-// note to self that put is for updating, post is for creating. Puts should be idempotent.
 pub(super) mod post {
   use axum::response::Redirect;
 
@@ -104,7 +97,7 @@ pub(super) mod post {
       request_body = UserPayload,
       responses(
         (status = 422, description = "Invalid Payload"),
-        (status = 409, description = "User Conflict"),
+        (status = 409, description = "Duplication Conflict"),
         (status = 500, description = "Database Error"),
         (status = 200, description = "Success", body = UserResponse),
       ),
@@ -120,14 +113,7 @@ pub(super) mod post {
   ) -> ApiResult<Json<UserResponse>> {
     debug!("create_user called with payload: {payload:?}");
     payload.validate(&())?;
-    let user: User = {
-      let mut user = payload.into_user().await;
-      let auth_token = todo_auth_token();
-      let expiration = crate::utils::default_expiration();
-      user.auth_token = Some(auth_token);
-      user.auth_token_expiration = Some(expiration);
-      user
-    };
+    let user: User = payload.into_user().await;
 
     db::queries::users::create_user(&state.pool, &user).await?;
 
@@ -143,6 +129,7 @@ pub(super) mod post {
       responses(
         // todo(testing): check documented routes
         (status = 422, description = "Invalid Payload"),
+        (status = 401, description = "Incorrect Password"),
         (status = 409, description = "User Conflict"),
         (status = 500, description = "Database Error"),
         // todo: what to return?
@@ -245,7 +232,8 @@ pub(super) mod put {
     let email = user.email.ok_or(ApiError::MissingField("email missing".to_string()))?;
 
     // Generate a reset password token and expiration date for the user. Update the db.
-    let reset_password_token = todo_auth_token();
+    // todo(auth)
+    let reset_password_token = AuthToken("todo(auth)-create reset password token".into());
     let reset_password_token_expiration = crate::utils::default_expiration();
     db::queries::users::update_user_password_token(
       &state.pool,
