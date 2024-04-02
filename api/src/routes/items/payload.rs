@@ -1,53 +1,74 @@
-use db::{models::item::Item, Username};
+use db::{
+  models::item::{self, Item},
+  Title, Username,
+};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::ApiResult;
 
-/// Itemname, password, and optionally email, and about.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
 #[schema(default = ItemPayload::default, example=ItemPayload::default)]
 pub struct ItemPayload {
   #[garde(dive)]
-  pub username: Username,
-  // #[garde(dive)]
-  // pub email:    Option<Email>,
-  // #[garde(dive)]
-  //   pub about:    Option<About>,
+  pub username:        Username,
+  #[garde(dive)]
+  pub title:           Title,
+  #[garde(skip)] // todo(itemtype)
+  item_type: String,
+  #[garde(skip)]
+  is_text:             bool,
+  // todo: could turn this to an enum
+  #[garde(skip)] // todo(itemcontent)
+  text_or_url_content: String,
+  #[garde(skip)] // todo(item_category)
+  item_category: String,
 }
 
 impl Default for ItemPayload {
   fn default() -> Self {
     Self {
-      username: Username("alice".to_string()),
-      // password: Password("password".to_string()),
-      // email:    None,
-      // about:    None,
+      username:            Username::default(),
+      title:               Title::default(),
+      item_type:           "news".into(),
+      is_text:             true,
+      text_or_url_content: "text content".into(),
+      item_category:       "tweet".into(),
     }
   }
 }
 
 impl ItemPayload {
   pub async fn into_item(self) -> Item {
-    // let password_hash = self.password.hash_argon().await.unwrap();
-    // Item::new(self.username, password_hash, self.email, self.about)
-    todo!()
+    Item::new(
+      self.username,
+      self.title,
+      self.item_type,
+      self.is_text,
+      self.text_or_url_content,
+      self.item_category,
+    )
   }
 
   /// convenience method for testing
   pub fn new(
     username: &str,
-    // password: &str,
-    // email: Option<&str>,
-    // about: Option<&str>,
+    title: &str,
+    item_type: &str,
+    is_text: bool,
+    text_or_url_content: &str,
+    item_category: &str,
   ) -> ApiResult<Self> {
     let username = Username(username.to_string());
-    // let password = Password(password.to_string());
-    // let email = email.map(|s| Email(s.to_string()));
-    // let about = about.map(|s| About(s.to_string()));
-    let payload = Self { username };
-    payload.validate(&())?;
-    Ok(payload)
+    let title = Title(title.to_string());
+    let item_type = item_type.to_string();
+    let text_or_url_content = text_or_url_content.to_string();
+    let item_category = item_category.to_string();
+
+    let item_payload =
+      Self { username, title, item_type, is_text, text_or_url_content, item_category };
+    item_payload.validate(&())?;
+    Ok(item_payload)
   }
 }

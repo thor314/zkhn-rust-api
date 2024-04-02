@@ -106,7 +106,7 @@ pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
 }
 
 // pub async fn get_user_comments(pool: &DbPool, username: &Username) -> DbResult<Vec<Comment>> {
-//   debug!("get_user_comments with: {username}");
+// todo   debug!("get_user_comments with: {username}");
 //   sqlx::query_as!(
 //     Comment,
 //     "SELECT
@@ -130,7 +130,7 @@ pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
 //   .map_err(DbError::from)
 // }
 
-// pub async fn get_user_items(pool: &DbPool, username: &Username) -> DbResult<Vec<Item>> {
+// pub async fn get_user_items(pool: &DbPool, username: &Username) -> DbResult<Vec<Item>> { todo
 //   debug!("get_user_items with: {username}");
 //   sqlx::query_as!(
 //     Item,
@@ -168,7 +168,6 @@ pub async fn update_user(
       .execute(&mut *tx)
       .await
       .map_err(DbError::from)?;
-    // update_user_about(&mut tx, username, about).await?;
   }
   if let Some(email) = email {
     sqlx::query!("UPDATE users SET email = $1 WHERE username = $2", email.0, username.0)
@@ -179,18 +178,6 @@ pub async fn update_user(
 
   debug!("update_user with: {username}");
   Ok(tx.commit().await?)
-}
-
-pub async fn update_user_email(
-  pool: &DbPool,
-  username: &Username,
-  email: &Email,
-) -> DbResult<PgQueryResult> {
-  debug!("update_user_email with: {username}");
-  sqlx::query!("UPDATE users SET email = $1 WHERE username = $2", email.0, username.0)
-    .execute(pool)
-    .await
-    .map_err(DbError::from)
 }
 
 /// Set the user's auth token and expiration in the database to `None`.

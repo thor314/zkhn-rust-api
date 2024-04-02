@@ -26,7 +26,7 @@ pub struct Item {
   /// internal algorithmic score to sort items on home page by popularity
   pub score:         i32, // todo: both points and score?
   pub comment_count: i32,
-  /// Tweet, Blog, Paper, Other
+  /// tweet, blog, paper, other
   pub item_category: String, // validate
   pub created:       Timestamp,
   pub dead:          bool,
@@ -45,7 +45,7 @@ impl Default for Item {
       points:        1,
       score:         0,
       comment_count: 0,
-      item_category: "Tweet".to_string(),
+      item_category: "tweet".to_string(),
       created:       now(),
       dead:          false,
     }

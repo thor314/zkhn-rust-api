@@ -37,6 +37,8 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   .execute(&mut *tx)
   .await;
 
+  // todo(karma): increment
+
   if let Err(e) = &result {
     // unwrap is safe; error is always db error kinded
     if e.as_database_error().expect("expected db error").is_unique_violation() {

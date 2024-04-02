@@ -18,8 +18,10 @@ use garde::Validate;
 pub use payload::*;
 pub use response::*;
 use tracing::{debug, info, warn};
+use uuid::Uuid;
 
 use super::SharedState;
+use crate::auth::AuthSession;
 use crate::{
   // auth::{self, assert_authenticated},
   error::ApiError,
@@ -29,7 +31,7 @@ use crate::{
 /// Router to be mounted at "/items"
 pub fn items_router(state: SharedState) -> Router {
   Router::new()
-    .route("/:id", routing::get(get::get_item))
+    .route("/:id", routing::get(get::get_item_simple))
     .route("/", routing::post(post::create_item))
     .with_state(state)
 }
@@ -44,31 +46,27 @@ pub(super) mod get {
       responses(
         // todo(auth) auth error
         // (status = 401, description = "Unauthorized"),
-        (status = 422, description = "Invalid Payload"),
-        (status = 422, description = "Invalid username"),
+        (status = 422, description = "Invalid id"),
         (status = 500, description = "Database Error"),
         (status = 404, description = "User not found"),
         (status = 200, description = "Success", body = User),// todo(define reduced UserResponse body)
       ),
   )]
-  /// Get user.
+  /// Get item.
   ///
-  /// If `username` exists, return the User. Otherwise, return NotFound.
-  ///
-  /// todo(auth): currently, we return the whole user. When auth is implemented, we will want to
-  /// return different user data, per the caller's auth.
+  /// todo(auth): currently, we return the whole item. We actually want to return other stuff.
   ///
   /// ref get_public: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L223
   /// ref get_private: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L244
-  pub async fn get_item(
+  pub async fn get_item_simple(
     State(state): State<SharedState>,
-    Path(username): Path<Username>,
-    // auth_session: AuthSession,  // todo(auth)
+    Path(id): Path<Uuid>,
+    auth_session: AuthSession, // todo(auth)
   ) -> ApiResult<Json<Item>> {
-    debug!("get_item called with username: {username}");
-    // let pool = &state.pool;
+    debug!("get_item called with id: {id}");
+    let pool = &state.pool;
     // username.validate(&())?;
-    // let user = db::queries::users::get_user(pool, &username)
+    // let user = db::queries::users::get_item(pool, &)
     //   .await?
     //   .ok_or(ApiError::DbEntryNotFound("that user does not exist".to_string()))?;
     // // todo(auth): currently, we return the whole user.
@@ -79,10 +77,7 @@ pub(super) mod get {
   }
 }
 pub(super) mod post {
-  use db::models::item::Item;
-
   use super::*;
-  use crate::auth::AuthSession;
 
   #[utoipa::path(
       post,
@@ -95,14 +90,14 @@ pub(super) mod post {
         (status = 422, description = "Invalid Payload"),
         (status = 500, description = "Database Error"),
         (status = 409, description = "Duplication Conflict"),
-        (status = 200, description = "Success", body = ItemResponse), // todo: item response
+        (status = 200, description = "Success"), 
       ),
   )]
   pub async fn create_item(
     State(state): State<SharedState>,
     auth_session: AuthSession,
     Json(payload): Json<ItemPayload>,
-  ) -> ApiResult<Json<Item>> {
+  ) -> ApiResult<StatusCode> {
     debug!(
       "create_item called with payload: {payload:?} by: {}",
       auth_session.user.as_ref().map(|u| &u.0.username.0).unwrap_or(&"".into())
@@ -121,79 +116,54 @@ pub(super) mod post {
     db::queries::items::create_item(&state.pool, &item).await?;
 
     info!("created item: {item:?}");
-    Ok(Json(item))
+    Ok(StatusCode::OK)
   }
-  // database.          Process for the title:
-  //          - trim extra spaces from the beginning and end of the string.
-  //          - run the string through the XSS NPM package.
-  //          Process for the URL:
-  //          - trim extra spaces from the beginning and end of the string.
-  //          - run the string through the XSS NPM package.
-  //          Process for the text:
-  //          - trim extra spaces from the beginning and end of the string.
-  //          - remove all HTML tags from the string.
-  //          - transform all asterisk (*) encapsulated text into <i></i> HTML elements.
-  //          - transform all the URLs in the string into <a href=""> HTML elements.
-  //          - run the string through the XSS NPM package.
-  // Step 3 - Save the new item to the database.
-  // Step 4 - In the database, increment the author's karma count by a value of 1.
-  // Step 5 - Send a success response back to the website.
-  // submitNewItem: async (title, url, text, category, authUser) => {
-  // const isValidUrl = utils.isValidUrl(url);
-  //
-  // if (url && !isValidUrl) {
-  // throw { invalidUrlError: true };
-  // }
-  //
-  // filter content
-  // title = title.trim();
-  // title = xss(title);
-  //
-  // url = url.trim();
-  // url = xss(url);
-  //
-  // if (text) {
-  // text = text.trim();
-  // text = text.replace(/<[^>]+>/g, "");
-  // text = text.replace(/\*([^*]+)\*/g, "<i>$1</i>");
-  // text = linkifyUrls(text);
-  // text = xss(text);
-  // }
-  //
-  // const domain = url ? utils.getDomainFromUrl(url) : "";
-  // const itemType = utils.getItemType(title, url, text);
-  //
-  // submit new post/item
-  // const newItem = new ItemModel({
-  // id: utils.generateUniqueId(12),
-  // by: authUser.username,
-  // title: title,
-  // type: itemType,
-  // url: url,
-  // domain: domain,
-  // text: text,
-  // category: category,
-  // created: moment().unix(),
-  // dead: authUser.shadowBanned ? true : false,
-  // });
-  //
-  // const newItemDoc = await newItem.save();
-  //
-  // await UserModel.findOneAndUpdate(
-  // { username: authUser.username },
-  // { $inc: { karma: 1 } },
-  // ).exec();
-  //
-  // if (!authUser.shadowBanned) {
-  // await searchApi.addNewItem(newItemDoc);
-  // }
-  //
-  // return { success: true };
-  // },
 }
 pub(super) mod put {
   use super::*;
+
+  // todo: we should handle the following updates:
+  // - upvote, downvote, unvote
+  // - favorite, unfavorite
+  // - hide, unhide
+  #[utoipa::path(
+      put,
+      path = "/items/upvote/{id}",
+      request_body = ItemPayload,
+      params( ("id" = Uuid, Path, example = "todo:uuid") ),
+      responses(
+        (status = 401, description = "Unauthorized"),
+        (status = 422, description = "Invalid Payload"),
+        (status = 500, description = "Database Error"),
+        (status = 409, description = "Duplication Conflict"),
+        (status = 200, description = "Success"), 
+      ),
+  )]
+  pub async fn update_item(
+    State(state): State<SharedState>,
+    auth_session: AuthSession,
+    Path(payload): Path<Uuid>,
+  ) -> ApiResult<StatusCode> {
+    // assert authenticated
+    todo!()
+  }
+  // OI includes:
+  // - get_edit_item_page_data - if the item is editable, return it, else error
+  // - edit_item - update title, text, item_category
+  // - get_delete_item_page_data - if the item is deletable, return it, else error
+  // get ranked items by page
 }
 pub(super) mod delete {
   use super::*;
+  // - delete_item
+  pub async fn delete_item(
+    State(state): State<SharedState>,
+    auth_session: AuthSession,
+    Path(payload): Path<Uuid>,
+  ) -> ApiResult<StatusCode> {
+    // assert authenticated
+    // item should not be dead, user should be the owner, delete expration should be unexpired, and
+    // there should be no comments
+    todo!()
+  }
 }
