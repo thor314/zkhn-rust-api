@@ -19,6 +19,7 @@ use serde::Serialize;
 use serde_json::json;
 use sqlx::PgPool;
 use tower::ServiceExt;
+use tower_cookies::Key;
 use tower_sessions::{Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 use tracing::info;
@@ -33,7 +34,7 @@ use crate::{
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_user_crud_cycle(pool: PgPool) {
   setup_test_tracing();
-  let app = crate::app(pool).await.expect("failed to build router");
+  let app = crate::app(pool, Key::generate()).await.expect("failed to build router");
 
   let user_payload = UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
 

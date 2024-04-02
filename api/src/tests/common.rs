@@ -7,6 +7,7 @@ use reqwest::StatusCode;
 use serde_json::json;
 use sqlx::PgPool;
 use tower::ServiceExt;
+use tower_cookies::Key;
 
 use crate::routes::users::UserPayload;
 
@@ -45,7 +46,7 @@ impl RequestBuilderExt for request::Builder {
 
 /// create a router with a user named "alice".
 pub async fn router_with_user_alice(pool: PgPool) -> Router {
-  let app = crate::app(pool).await.expect("failed to build router");
+  let app = crate::app(pool, Key::generate()).await.expect("failed to build router");
 
   let user_payload = UserPayload::new("alice", "password", Some("email@email.com"), None).unwrap();
 

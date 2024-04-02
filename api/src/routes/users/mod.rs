@@ -105,7 +105,6 @@ pub(super) mod post {
   /// Create a new user:
   ///
   /// todo(search): tell the Algolia about the new user
-  /// todo(session): spam prevention?
   /// todo(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
   pub async fn create_user(
     State(state): State<SharedState>,
@@ -132,7 +131,6 @@ pub(super) mod post {
         (status = 401, description = "Incorrect Password"),
         (status = 409, description = "User Conflict"),
         (status = 500, description = "Database Error"),
-        // todo: what to return?
         (status = 200, description = "Success", body = Redirect),
       ),
   )]

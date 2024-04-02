@@ -11,7 +11,8 @@ mod utils;
 use anyhow::Context;
 use error::ServerError;
 use sqlx::PgPool;
-use tracing::{debug, info};
+use tower_sessions::cookie::Key;
+use tracing::{debug, info, warn};
 
 pub type ServerResult<T> = Result<T, ServerError>;
 
@@ -26,7 +27,13 @@ async fn main(
 
   debug!("Initializing router...");
   // let analytics_key = secret_store.get("ANALYTICS_API_KEY");
-  let app = api::app(pool).await.expect("failed to build app");
+  let session_key =
+    secret_store.get("SESSION_KEY").map(|s| Key::from(s.as_bytes())).unwrap_or_else(|| {
+      warn!("using insecure key generation");
+      Key::generate()
+    });
+
+  let app = api::app(pool, session_key).await.expect("failed to build app");
 
   info!("🚀🚀🚀 see http://localhost:8000/docs/rapidoc for api docs 🚀🚀🚀");
   Ok(app.into())
