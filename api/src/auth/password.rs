@@ -4,7 +4,7 @@ use argon2::{
 };
 use db::{Password, PasswordHash};
 use tokio::task::{block_in_place, spawn_blocking};
-use tracing::debug;
+use tracing::trace;
 
 use crate::{ApiError, ApiResult};
 
@@ -28,7 +28,6 @@ impl PasswordExt for Password {
   async fn hash(&self) -> PasswordHash {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
-    debug!("hashing password");
     let password_bytes = self.0.as_bytes().to_owned(); // Clone the password data
     let instant = std::time::Instant::now();
     let password_hash =
@@ -36,7 +35,7 @@ impl PasswordExt for Password {
         .await
         .expect("tokio runtime error");
     let elapsed = instant.elapsed();
-    debug!("hashing password, time elapsed: {:?}", elapsed);
+    trace!("hashing password, time elapsed: {:?}", elapsed);
     PasswordHash(password_hash)
   }
 }

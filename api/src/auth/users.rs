@@ -28,14 +28,6 @@ impl AuthBackend {
   pub fn new(db: DbPool) -> Self { Self { db } }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum AuthError {
-  // #[error(transparent)]
-  // Sqlx(#[from] sqlx::Error),
-  #[error(transparent)]
-  TaskJoin(#[from] task::JoinError),
-}
-
 #[axum::async_trait]
 impl AuthnBackend for AuthBackend {
   type Credentials = CredentialsPayload;

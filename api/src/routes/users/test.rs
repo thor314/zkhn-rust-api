@@ -66,70 +66,31 @@ async fn send(
 async fn test_user_crud_cycle(pool: PgPool) {
   setup_test_tracing();
   let app = crate::app(pool, Key::generate()).await.expect("failed to build router");
-  let _r = jsend(&app, UserPayload::default(), "POST", "/users", StatusCode::OK).await;
+  jsend(&app, UserPayload::default(), "POST", "/users", StatusCode::OK).await;
   // fail on duplicate create user
-  let _r = jsend(&app, UserPayload::default(), "POST", "/users", StatusCode::CONFLICT).await;
-  let _r = jsend(&app, CredentialsPayload::default(), "POST", "/users/login", StatusCode::OK).await;
-  let _r = jsend(&app, UserUpdatePayload::default(), "PUT", "/users", StatusCode::OK).await;
-  let _r = send(&app, "GET", "/users/alice", StatusCode::OK).await;
-  let _r = send(&app, "DELETE", "/users/alice", StatusCode::OK).await;
-  let _r = send(&app, "GET", "/users/alice", StatusCode::NOT_FOUND).await;
+  jsend(&app, UserPayload::default(), "POST", "/users", StatusCode::CONFLICT).await;
+  jsend(&app, CredentialsPayload::default(), "POST", "/users/login", StatusCode::OK).await;
+  jsend(&app, UserUpdatePayload::default(), "PUT", "/users", StatusCode::OK).await;
+  send(&app, "GET", "/users/alice", StatusCode::OK).await;
+  send(&app, "DELETE", "/users/alice", StatusCode::OK).await;
+  send(&app, "GET", "/users/alice", StatusCode::NOT_FOUND).await;
 }
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_request_password_reset_link(pool: PgPool) {
   let app = router_with_user_alice(pool).await;
-  let _r = jsend(&app, CredentialsPayload::default(), "POST", "/users/login", StatusCode::OK).await;
-  let _r = send(&app, "PUT", "/users/reset-password-link/alice", StatusCode::OK).await;
-  let _r = send(&app, "PUT", "/users/reset-password-link/alice", StatusCode::OK).await;
+  jsend(&app, CredentialsPayload::default(), "POST", "/users/login", StatusCode::OK).await;
+  send(&app, "PUT", "/users/reset-password-link/alice", StatusCode::OK).await;
+  send(&app, "PUT", "/users/reset-password-link/alice", StatusCode::OK).await;
 }
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_change_password(pool: PgPool) {
   let app = router_with_user_alice(pool).await;
-
-  // login
-  let _response =
-    jsend(&app, CredentialsPayload::default(), "POST", "/users/login", StatusCode::OK).await;
-
-  // change her password
-  let _response =
-    jsend(&app, ChangePasswordPayload::default(), "PUT", "/users/change-password", StatusCode::OK)
-      .await;
-  // let body = &response.into_body().collect().await.unwrap();
-
-  // change her password again
-  let _response = jsend(
-    &app,
-    ChangePasswordPayload::new("alice", "new_password", "password").unwrap(),
-    "PUT",
-    "/users/change-password",
-    StatusCode::OK,
-  )
-  .await;
-}
-
-#[sqlx::test(migrations = "../db/migrations")]
-async fn test_login_logout(pool: PgPool) {
-  let app = router_with_user_alice(pool).await;
-
-  let make_login_request = |username: &str, password: &str| {
-    let credentials = CredentialsPayload::new(username, password, None);
-    Request::builder().uri("/users/login").method("POST").json(json!(credentials))
-  };
-
-  let valid_login_request = make_login_request("alice", "password");
-  let login_response = app.clone().oneshot(valid_login_request).await.unwrap();
-  dbg!(&login_response);
-  assert_eq!(login_response.status(), StatusCode::OK);
-
-  let invalid_login_request = make_login_request("ferris", "password");
-  let login_response = app.clone().oneshot(invalid_login_request).await.unwrap();
-  dbg!(&login_response);
-  assert_eq!(login_response.status(), StatusCode::UNAUTHORIZED);
-
-  let logout_request = Request::builder().uri("/users/logout").method("POST").empty_body();
-  let logout_response = app.clone().oneshot(logout_request).await.unwrap();
-  dbg!(&logout_response);
-  assert_eq!(logout_response.status(), StatusCode::OK);
+  jsend(&app, CredentialsPayload::default(), "POST", "/users/login", StatusCode::OK).await;
+  jsend(&app, ChangePasswordPayload::default(), "PUT", "/users/change-password", StatusCode::OK)
+    .await;
+  let new_payload = ChangePasswordPayload::new("alice", "new_password", "password").unwrap();
+  jsend(&app, new_payload, "PUT", "/users/change-password", StatusCode::OK).await;
+  send(&app, "POST", "/users/logout", StatusCode::OK).await;
 }

@@ -1,4 +1,4 @@
-// todo(cookie) - remove user cookie data - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L142
+// hack(cookie) - remove user cookie data - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L142
 
 mod payload;
 mod response;
@@ -10,7 +10,7 @@ use axum::{
 };
 use db::{models::user::User, queries::users, AuthToken, Username};
 use garde::Validate;
-use tracing::{debug, info};
+use tracing::{trace, info};
 
 pub use self::{payload::*, response::*};
 use super::SharedState;
@@ -57,7 +57,7 @@ pub(super) mod get {
     Path(username): Path<Username>,
     auth_session: AuthSession,
   ) -> ApiResult<Json<User>> {
-    debug!("get_user called with username: {username}");
+    trace!("get_user called with username: {username}");
     // / todo(auth): currently, we return the whole user. When auth is implemented, we will want to
     // / return different user data, per the caller's auth.
     if auth_session.is_authenticated() {
@@ -93,13 +93,13 @@ pub(super) mod post {
   )]
   /// Create a new user:
   ///
-  /// todo(search): tell the Algolia about the new user
-  /// todo(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
+  /// prod(search): tell the Algolia about the new user
+  /// hack(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
   pub async fn create_user(
     State(state): State<SharedState>,
     Json(payload): Json<UserPayload>,
   ) -> ApiResult<Json<UserResponse>> {
-    debug!("create_user called with payload: {payload:?}");
+    trace!("create_user called with payload: {payload:?}");
     payload.validate(&())?;
     let user: User = payload.into_user().await;
     users::create_user(&state.pool, &user).await?;
@@ -142,8 +142,8 @@ pub(super) mod post {
 
   // maybe: authenticate user:
   // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L97
-  // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L71
-  // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L124
+  // hack(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L71
+  // hack(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L124
 }
 
 pub(super) mod put {
@@ -172,7 +172,7 @@ pub(super) mod put {
     auth_session: AuthSession,
     Json(payload): Json<UserUpdatePayload>,
   ) -> ApiResult<StatusCode> {
-    debug!("update_user_about called with payload: {payload:?}");
+    trace!("update_user_about called with payload: {payload:?}");
     auth_session.caller_matches_payload(&payload.username)?;
     payload.validate(&())?;
     if payload.about.is_none() && payload.email.is_none() {
@@ -204,14 +204,14 @@ pub(super) mod put {
     Path(username): Path<Username>,
     auth_session: AuthSession,
   ) -> ApiResult<StatusCode> {
-    debug!("request-password-reset-link called with username: {:?}", username);
+    trace!("request-password-reset-link called with username: {:?}", username);
     auth_session.caller_matches_payload(&username)?;
     username.validate(&())?;
     let user = users::get_user(&state.pool, &username).await?;
     let email = user.email.ok_or(ApiError::BadRequest("email missing".to_string()))?;
 
     // Generate a reset password token and expiration date for the user. Update the db.
-    // todo(email)
+    // prod(email)
     let reset_password_token = AuthToken("create reset password token".into());
     let reset_password_token_expiration = Timestamp::default_expiration();
     users::update_user_password_token(
@@ -223,7 +223,7 @@ pub(super) mod put {
     .await?;
 
     // blocked: mailgun-email-feature
-    // todo(email): use the email api to send a reset password email
+    // prod(email): use the email api to send a reset password email
     // send_reset_email(&email, &reset_password_token).await?;
 
     info!("sent password reset email to: {email}");
@@ -244,19 +244,19 @@ pub(super) mod put {
   )]
   /// Change user password.
   ///
-  /// todo(cookie) ref - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L267
+  /// hack(cookie) ref - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L267
   pub async fn change_password(
     State(state): State<SharedState>,
     auth_session: AuthSession,
     Json(payload): Json<ChangePasswordPayload>,
   ) -> ApiResult<StatusCode> {
-    debug!("change_password called with payload: {payload:?}");
+    trace!("change_password called with payload: {payload:?}");
     payload.validate(&())?;
     auth_session.caller_matches_payload(&payload.username)?;
     let user = users::get_user(&state.pool, &payload.username).await?;
     let password_hash = payload.current_password.hash_and_verify(&user.password_hash).await?;
     users::update_user_password(&state.pool, &payload.username, &password_hash).await?;
-    // todo(email) - send an email to the user that their password has changed
+    // prod(email) - send an email to the user that their password has changed
 
     info!("changed password for user: {}", payload.username);
     Ok(StatusCode::OK)
@@ -284,7 +284,7 @@ pub(super) mod delete {
     Path(username): Path<Username>,
     auth_session: AuthSession,
   ) -> ApiResult<StatusCode> {
-    debug!("delete_user called with username: {username}");
+    trace!("delete_user called with username: {username}");
     auth_session.caller_matches_payload(&username)?;
     username.validate(&())?;
     users::delete_user(&state.pool, &username).await?;
