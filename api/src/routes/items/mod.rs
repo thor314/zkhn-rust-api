@@ -47,7 +47,6 @@ pub(super) mod get {
         // todo(auth) auth error
         // (status = 401, description = "Unauthorized"),
         (status = 422, description = "Invalid id"),
-        (status = 500, description = "Database Error"),
         (status = 404, description = "User not found"),
         (status = 200, description = "Success", body = User),// todo(define reduced UserResponse body)
       ),
@@ -88,7 +87,6 @@ pub(super) mod post {
         // todo(auth) auth error
         (status = 401, description = "Unauthorized"),
         (status = 422, description = "Invalid Payload"),
-        (status = 500, description = "Database Error"),
         (status = 409, description = "Duplication Conflict"),
         (status = 200, description = "Success"), 
       ),
@@ -134,7 +132,6 @@ pub(super) mod put {
       responses(
         (status = 401, description = "Unauthorized"),
         (status = 422, description = "Invalid Payload"),
-        (status = 500, description = "Database Error"),
         (status = 409, description = "Duplication Conflict"),
         (status = 200, description = "Success"), 
       ),

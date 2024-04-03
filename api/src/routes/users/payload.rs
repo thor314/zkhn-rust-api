@@ -126,11 +126,14 @@ impl ChangePasswordPayload {
   }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema, Validate)]
 #[schema(example = CredentialsPayload::default, default = CredentialsPayload::default)]
 pub struct CredentialsPayload {
+  #[garde(dive)]
   pub username: Username,
+  #[garde(dive)]
   pub password: Password,
+  #[garde(skip)]
   pub next:     Option<String>,
 }
 

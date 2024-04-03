@@ -1,6 +1,8 @@
 //! zkhn-rust-api error types
 // https://docs.rs/thiserror/latest/thiserror/
 
+use std::fmt::write;
+
 use axum::http::StatusCode;
 use db::DbError;
 use oauth2::{basic::BasicRequestTokenError, reqwest::AsyncHttpClientError};
@@ -48,6 +50,9 @@ pub enum ApiError {
   /// server is refusing to give the requested resource.
   #[status(StatusCode::FORBIDDEN)] // 403
   Forbidden(String),
+  /// Caller must be a moderator
+  #[status(StatusCode::FORBIDDEN)] // 403
+  ForbiddenModeratorRequired(String),
   /// Garde payload validation failure.
   #[status(StatusCode::UNPROCESSABLE_ENTITY)] // 422
   InvalidPayload(#[from] garde::Report),
@@ -69,6 +74,7 @@ impl std::fmt::Display for ApiError {
       ApiError::BadRequest(e) => write!(f, "Invalid request submitted: {0}", e),
       ApiError::Unauthorized(e) => write!(f, "Unauthorized: {0}", e),
       ApiError::Forbidden(e) => write!(f, "Forbidden: {0}", e),
+      ApiError::ForbiddenModeratorRequired(e) => write!(f, "Forbidden, Moderator only: {0}", e),
       ApiError::InvalidPayload(e) => write!(f, "Invalid Payload: {0}", e.to_string().trim()),
     }
   }

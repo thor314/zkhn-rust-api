@@ -42,9 +42,8 @@ pub(super) mod get {
       params( ("username" = String, Path, example = "alice") ),
       responses(
         (status = 422, description = "Invalid username"),
-        (status = 500, description = "Database Error"),
         (status = 404, description = "User not found"),
-        (status = 200, description = "Success", body = User),// todo(define reduced UserResponse body)
+        (status = 200, body = User), // todo(define reduced UserResponse body)
       ),
   )]
   /// Get user.
@@ -66,8 +65,6 @@ pub(super) mod get {
     let user = db::queries::users::get_user(pool, &username)
       .await?
       .ok_or(ApiError::DbEntryNotFound("that user does not exist".to_string()))?;
-    // todo(auth): currently, we return the whole user.
-    // When auth is implemented, we will want to return different user data, per the caller's auth.
     info!("found user: {user:?}");
     Ok(Json(user))
   }
@@ -84,7 +81,6 @@ pub(super) mod post {
       responses(
         (status = 422, description = "Invalid Payload"),
         (status = 409, description = "Duplication Conflict"),
-        (status = 500, description = "Database Error"),
         (status = 200, description = "Success", body = UserResponse),
       ),
   )]
@@ -112,11 +108,9 @@ pub(super) mod post {
       path = "/users/login",
       request_body = CredentialsPayload,
       responses(
-        // todo(testing): check documented routes
         (status = 422, description = "Invalid Payload"),
         (status = 401, description = "Incorrect Password"),
         (status = 409, description = "User Conflict"),
-        (status = 500, description = "Database Error"),
         (status = 200, description = "Success", body = Redirect),
       ),
   )]
@@ -125,6 +119,7 @@ pub(super) mod post {
     auth_session: AuthSession,
     Json(payload): Json<CredentialsPayload>,
   ) -> ApiResult<StatusCode> {
+    payload.validate(&())?;
     login_post_internal(auth_session, payload).await
   }
 
@@ -135,9 +130,8 @@ pub(super) mod post {
         // todo(testing): check documented routes
         (status = 422, description = "Invalid Payload"),
         (status = 409, description = "User Conflict"),
-        (status = 500, description = "Internal Server Error"),
         // todo: what to return
-        (status = 200, description = "Success", body = Redirect),
+        (status = 200, body = Redirect),
       ),
   )]
   /// User logout.
@@ -162,9 +156,8 @@ pub(super) mod put {
         // todo(auth) auth error
         // (status = 401, description = "Unauthorized"),
         (status = 422, description = "Invalid Payload"),
-        (status = 500, description = "Database Error"),
         (status = 404, description = "User not found"),
-        (status = 200, description = "Success"),
+        (status = 200),
       ),
   )]
   /// Update the user's about or email field.
@@ -197,10 +190,9 @@ pub(super) mod put {
         // todo(auth) auth error
         // (status = 401, description = "Unauthorized", body = ApiError::Unauthorized),
         (status = 422, description = "Invalid username"),
-        (status = 500, description = "Database Error"),
         (status = 404, description = "User not found"),
         (status = 404, description = "No email found"),
-        (status = 200, description = "Success"),
+        (status = 200),
       ),
   )]
   /// Request a password reset link.
@@ -241,12 +233,11 @@ pub(super) mod put {
       request_body = ChangePasswordPayload,
       responses(
         // todo(auth) auth error
-        // (status = 401, description = "Unauthorized", body = ApiError::Unauthorized),
+        (status = 401, description = "Unauthorized"),
         (status = 422, description = "Payload Validation Error"),
-        (status = 500, description = "Database Error"),
         (status = 404, description = "User not found"),
         (status = 401, description = "Incorrect Password"),
-        (status = 200, description = "Success"),
+        (status = 200),
       ),
   )]
   /// Change user password.
@@ -286,18 +277,18 @@ pub(super) mod delete {
         // todo(auth) auth error
         // (status = 401, description = "Unauthorized", body = ApiError::Unauthorized),
         (status = 422, description = "Invalid username"),
-        (status = 500, description = "Database Error"),
         (status = 404, description = "User not found"),
-        (status = 200, description = "Success"),
+        (status = 200),
       ),
   )]
   /// Delete a user.
   pub async fn delete_user(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
-    // auth_session: AuthSession, // todo(auth), todo(mods)
+    auth_session: AuthSession, // todo(mods)
   ) -> ApiResult<StatusCode> {
     debug!("delete_user called with username: {username}");
+    // todo(auth)
     // assert_authenticated(&auth_session)?;
     username.validate(&())?;
     db::queries::users::delete_user(&state.pool, &username).await?;
