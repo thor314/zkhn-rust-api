@@ -34,6 +34,11 @@ impl AuthnBackend for AuthBackend {
   type Error = ApiError;
   type User = UserWrapper;
 
+  /// Authenticate a user.
+  ///
+  /// Ok(Some(User)) - If the user exists, and the password is correct
+  /// Ok(None) - Never
+  /// Err(ApiError) - If the user doesn't exist, or the password is incorrect.
   async fn authenticate(
     &self,
     creds: Self::Credentials,
@@ -42,6 +47,7 @@ impl AuthnBackend for AuthBackend {
 
     if let Some(user) = user {
       if creds.password.hash_and_verify(&user.0.password_hash).await.is_err() {
+        tracing::error!("Incorrect password: {:?}", creds);
         Err(ApiError::Unauthorized("Incorrect password".to_string())) // wrong password
       } else {
         Ok(Some(user)) // right password

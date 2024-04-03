@@ -1,13 +1,15 @@
 use axum::{
-  body::Body,
-  http::{request, Request},
+  body::{self, Body},
+  http::{request, Request, Response},
   Router,
 };
 use reqwest::StatusCode;
+use serde::Serialize;
 use serde_json::json;
 use sqlx::PgPool;
 use tower::ServiceExt;
 use tower_cookies::Key;
+use tracing_subscriber::EnvFilter;
 
 use crate::routes::users::UserPayload;
 
@@ -18,8 +20,12 @@ pub fn setup_test_tracing() {
   use tracing_subscriber::FmtSubscriber;
 
   INIT.call_once(|| {
-    let subscriber =
-      FmtSubscriber::builder().with_max_level(Level::DEBUG).with_test_writer().finish();
+    let filter = EnvFilter::from_default_env()
+      .add_directive("api=debug".parse().unwrap())
+      .add_directive("db=debug".parse().unwrap())
+      .add_directive("server=debug".parse().unwrap())
+      .add_directive("sqlx=info".parse().unwrap());
+    let subscriber = FmtSubscriber::builder().with_env_filter(filter).with_test_writer().finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
   });
 }
@@ -56,4 +62,30 @@ pub async fn router_with_user_alice(pool: PgPool) -> Router {
 
   setup_test_tracing();
   app
+}
+
+/// convenience method to send a json payload to a route and assert the status code
+pub async fn jsend<P: Serialize>(
+  app: &Router,
+  payload: P,
+  method: &str,
+  uri: &str,
+  status_code: StatusCode,
+) -> Response<body::Body> {
+  let request = Request::builder().uri(uri).method(method).json(json!(payload));
+  let response = app.clone().oneshot(request).await.unwrap();
+  assert_eq!(response.status(), status_code);
+  response
+}
+/// convenince method to send an empty body to a route and assert the status code
+pub async fn send(
+  app: &Router,
+  method: &str,
+  uri: &str,
+  status_code: StatusCode,
+) -> Response<body::Body> {
+  let request = Request::builder().uri(uri).method(method).body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(request).await.unwrap();
+  assert_eq!(response.status(), status_code);
+  response
 }

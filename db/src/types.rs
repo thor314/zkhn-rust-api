@@ -33,7 +33,7 @@ impl Timestamp {
 #[repr(transparent)]
 pub struct About(#[garde(ascii, length(min = 0, max = 400))] pub String);
 impl Default for About {
-  fn default() -> Self { About("about ipsum dolor".to_string()) }
+  fn default() -> Self { "about ipsum dolor".into() }
 }
 impl From<&str> for About {
   fn from(s: &str) -> Self { About(s.to_string()) }
@@ -50,7 +50,7 @@ impl fmt::Display for Username {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", self.0) }
 }
 impl Default for Username {
-  fn default() -> Self { Username("alice".to_string()) }
+  fn default() -> Self { "alice".into() }
 }
 impl From<&str> for Username {
   fn from(s: &str) -> Self { Username(s.to_string()) }
@@ -61,7 +61,7 @@ impl From<&str> for Username {
 #[repr(transparent)]
 pub struct Email(#[garde(email)] pub String);
 impl Default for Email {
-  fn default() -> Self { Email("email@email.com".to_string()) }
+  fn default() -> Self { "email@email.com".into() }
 }
 impl std::fmt::Display for Email {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "{}", self.0) }
@@ -75,10 +75,7 @@ impl From<&str> for Email {
 #[garde(transparent)]
 pub struct Password(#[garde(ascii, length(min = 8, max = 25))] pub String);
 impl Default for Password {
-  fn default() -> Self {
-    warn!("instantiating the insecure default password");
-    Password("password".to_string())
-  }
+  fn default() -> Self { "password".into() }
 }
 impl From<&str> for Password {
   fn from(s: &str) -> Self { Password(s.to_string()) }
@@ -108,7 +105,10 @@ impl Default for ResetPasswordToken {
 #[repr(transparent)]
 pub struct Title(#[garde(ascii, length(min = 8, max = 100))] pub String);
 impl Default for Title {
-  fn default() -> Self { Title("title".to_string()) }
+  fn default() -> Self { "title".into() }
+}
+impl From<&str> for Title {
+  fn from(s: &str) -> Self { Title(s.to_string()) }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Validate)]
@@ -116,5 +116,8 @@ impl Default for Title {
 #[repr(transparent)]
 pub struct CommentText(#[garde(ascii, length(min = 8, max = 2000))] pub String);
 impl Default for CommentText {
-  fn default() -> Self { CommentText("comment ipsum dolor".to_string()) }
+  fn default() -> Self { "comment ipsum dolor".into() }
+}
+impl From<&str> for CommentText {
+  fn from(s: &str) -> Self { CommentText(s.to_string()) }
 }

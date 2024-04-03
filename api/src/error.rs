@@ -9,6 +9,8 @@ use oauth2::{basic::BasicRequestTokenError, reqwest::AsyncHttpClientError};
 use tokio::task;
 use utoipa::ToSchema;
 
+use crate::auth::AuthBackend;
+
 // ref: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 // note: use 401 Unauthorized if the client is unknown,
 // and 403 Forbidden if the client is known but privilege restricted.
@@ -90,6 +92,16 @@ impl From<DbError> for ApiError {
       DbError::NotFound => ApiError::DbEntryNotFound("Entry not found".to_string()),
       DbError::Other(e) => ApiError::OtherDbError(e),
       _ => ApiError::OtherDbError(e.to_string()),
+    }
+  }
+}
+
+impl From<axum_login::Error<AuthBackend>> for ApiError {
+  fn from(e: axum_login::Error<AuthBackend>) -> Self {
+    match e {
+      axum_login::Error::Session(e) =>
+        ApiError::OtherISE("Unknown axum_login session error".to_string()),
+      axum_login::Error::Backend(e) => e,
     }
   }
 }

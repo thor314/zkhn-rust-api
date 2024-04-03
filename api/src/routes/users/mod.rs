@@ -10,7 +10,7 @@ use axum::{
 };
 use db::{models::user::User, queries::users, AuthToken, Username};
 use garde::Validate;
-use tracing::{trace, info};
+use tracing::{debug, trace};
 
 pub use self::{payload::*, response::*};
 use super::SharedState;
@@ -72,7 +72,7 @@ pub(super) mod get {
     username.validate(&())?;
     let user = users::get_user(pool, &username).await?;
 
-    info!("found user: {user:?}");
+    debug!("found user: {user:?}");
     Ok(Json(user))
   }
 }
@@ -105,7 +105,7 @@ pub(super) mod post {
     users::create_user(&state.pool, &user).await?;
     let user_response = UserResponse::from(user);
 
-    info!("created user: {user_response:?}");
+    debug!("created user: {user_response:?}");
     Ok(Json(user_response))
   }
 
@@ -181,7 +181,7 @@ pub(super) mod put {
 
     users::update_user(&state.pool, &payload.username, &payload.about, &payload.email).await?;
 
-    info!("updated user about for: {}", payload.username);
+    debug!("updated user about for: {}", payload.username);
     Ok(StatusCode::OK)
   }
 
@@ -226,7 +226,7 @@ pub(super) mod put {
     // prod(email): use the email api to send a reset password email
     // send_reset_email(&email, &reset_password_token).await?;
 
-    info!("sent password reset email to: {email}");
+    debug!("sent password reset email to: {email}");
     Ok(StatusCode::OK)
   }
 
@@ -258,7 +258,7 @@ pub(super) mod put {
     users::update_user_password(&state.pool, &payload.username, &password_hash).await?;
     // prod(email) - send an email to the user that their password has changed
 
-    info!("changed password for user: {}", payload.username);
+    debug!("changed password for user: {}", payload.username);
     Ok(StatusCode::OK)
   }
 }
@@ -289,7 +289,7 @@ pub(super) mod delete {
     username.validate(&())?;
     users::delete_user(&state.pool, &username).await?;
 
-    info!("deleted user: {}", username);
+    debug!("deleted user: {}", username);
     Ok(StatusCode::OK)
   }
 }
