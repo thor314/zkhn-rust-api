@@ -28,8 +28,8 @@ async fn main(
 
   let app = api::app(pool, session_key).await.expect("failed to build app")
     .layer(cors::cors_layer())
-    // todo(prod)
-    // .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth
+    // prod(analytics)
+    // .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) 
     ;
 
   info!("🚀🚀🚀 see http://localhost:8000/docs/rapidoc for api docs 🚀🚀🚀");

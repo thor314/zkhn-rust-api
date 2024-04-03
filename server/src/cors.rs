@@ -15,7 +15,7 @@ pub(super) fn cors_layer() -> CorsLayer {
     .collect();
 
   CorsLayer::new()
-  // todo(prod): set to env var setting dev/prod 
+  // prod(env): set to env var setting dev/prod 
     .allow_origin(origins)
     .allow_headers([http::header::CONTENT_TYPE]) // allow json headers
     .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::PUT])
