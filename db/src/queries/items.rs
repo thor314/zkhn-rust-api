@@ -14,7 +14,7 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
 
   let Item { id, username, title, item_type, url, domain, text, item_category, .. } = item.clone();
 
-  let result = sqlx::query!(
+  sqlx::query!(
     "INSERT INTO items
     ( id,
     username,
@@ -35,21 +35,10 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
     item_category,
   )
   .execute(&mut *tx)
-  .await;
+  .await?;
 
   // todo(karma): increment
 
-  if let Err(e) = &result {
-    // unwrap is safe; error is always db error kinded
-    if e.as_database_error().expect("expected db error").is_unique_violation() {
-      tx.rollback().await?;
-      warn!("item already exists");
-      return Err(DbError::Conflict);
-    } else {
-      tracing::error!("error creating item: {e}");
-    }
-  }
-  let _ = result?;
   tx.commit().await?;
   Ok(())
 }

@@ -26,8 +26,7 @@ use utoipa::OpenApi;
 use utoipa_rapidoc::RapiDoc;
 use utoipauto::utoipauto;
 
-use super::users::{delete::*, get::*, post::*, put::*, *};
-use crate::error::ApiError;
+use super::users::{get::*, post::*, put::*, *};
 
 /// router fragment supplying OpenAPI documentation and ui routes
 /// View rapidoc documentation page at: http://localhost:3000/docs/rapidoc

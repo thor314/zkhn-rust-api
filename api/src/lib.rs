@@ -7,17 +7,16 @@
 #![allow(unused_mut)]
 
 mod auth;
-mod cors;
 mod error;
 mod routes;
 mod sessions;
-#[cfg(test)] mod tests;
 mod utils;
 
 use axum::Router;
 use db::DbPool;
+use tower_cookies::Key;
 
-use self::{auth::get_auth_layer, routes::routes, sessions::create_migrate_session_layer};
+use self::{auth::get_auth_layer, sessions::create_migrate_session_layer};
 
 pub(crate) type ApiResult<T> = Result<T, ApiError>;
 
@@ -26,18 +25,12 @@ pub use self::error::ApiError;
 // export payloads
 pub use self::routes::users::*;
 
-pub async fn app(pool: DbPool) -> ApiResult<Router> {
-  let session_layer = create_migrate_session_layer(pool.clone()).await?;
+pub async fn app(pool: DbPool, session_key: Key) -> ApiResult<Router> {
+  let session_layer = create_migrate_session_layer(pool.clone(), session_key).await;
   let auth_layer = get_auth_layer(pool.clone(), session_layer);
 
   // serve the router and layer any route-agnostic middleware.
-  let router = routes::routes(pool)
-    // routes::routes(pool, auth_layer) // todo: remove when verified
-    // todo(refactor): cors and analytics could live in server instead
-    .layer(cors::cors_layer())
-    // todo(analytics)
-    // .layer(Analytics::new(analytics_key.unwrap_or("".to_string()))) // must precede auth
-    .layer(auth_layer);
+  let router = routes::routes(pool).layer(auth_layer);
 
   Ok(router)
 }

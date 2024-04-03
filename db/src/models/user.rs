@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use sqlx::PgConnection;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -9,9 +8,7 @@ use super::{
   user_vote::{UserVote, VoteState},
 };
 use crate::{
-  error::DbError,
-  utils::{self, now},
-  About, AuthToken, DbPool, Email, Password, PasswordHash, ResetPasswordToken, Timestamp, Username,
+  utils::now, About, AuthToken, Email, PasswordHash, ResetPasswordToken, Timestamp, Username,
 };
 
 #[derive(sqlx::FromRow, Serialize, Deserialize, Clone, ToSchema)]
@@ -97,7 +94,7 @@ impl User {
     vote_state: VoteState,
     upvote: bool,
   ) -> UserVote {
-    let downvote = !upvote;
+    let _downvote = !upvote;
     UserVote {
       username: self.username.clone(),
       vote_type,

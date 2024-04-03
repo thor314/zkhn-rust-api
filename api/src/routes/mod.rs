@@ -4,7 +4,7 @@ use db::DbPool;
 use tower_sessions_sqlx_store::PostgresStore;
 use tracing::debug;
 
-use self::{comments::comments_router, openapi::docs_router, users::users_router};
+use self::{openapi::docs_router, users::users_router};
 use crate::auth::MyAuthLayer;
 
 // pub mod so that payloads and responses can be accessed by integration tests

@@ -1,14 +1,9 @@
-// use async_trait::async_trait;
 use axum_login::{AuthUser, AuthnBackend, UserId};
-use db::{
-  models::user::User, password::verify_password, queries::get_user, DbPool, Password, Username,
-};
-// use password_auth::verify_password;
-use serde::{Deserialize, Serialize};
-// use sqlx::{FromRow, PgPool};
+use db::{models::user::User, DbPool, Username};
+use serde::Serialize;
 use tokio::task;
-use utoipa::ToSchema;
 
+use super::PasswordExt;
 use crate::{error::ApiError, CredentialsPayload};
 
 #[derive(Debug, Clone, Serialize)]
@@ -33,37 +28,30 @@ impl AuthBackend {
   pub fn new(db: DbPool) -> Self { Self { db } }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum AuthError {
-  // #[error(transparent)]
-  // Sqlx(#[from] sqlx::Error),
-  #[error(transparent)]
-  TaskJoin(#[from] task::JoinError),
-}
-
 #[axum::async_trait]
 impl AuthnBackend for AuthBackend {
   type Credentials = CredentialsPayload;
   type Error = ApiError;
   type User = UserWrapper;
 
+  /// Authenticate a user.
+  ///
+  /// Ok(Some(User)) - If the user exists, and the password is correct
+  /// Ok(None) - Never
+  /// Err(ApiError) - If the user doesn't exist, or the password is incorrect.
   async fn authenticate(
     &self,
     creds: Self::Credentials,
   ) -> Result<Option<Self::User>, Self::Error> {
-    let user: Option<Self::User> = self.get_user(&creds.username).await?;
-
-    // Verifying the password is blocking and slow, so spawn a task
-    task::spawn_blocking(|| {
-      Ok(user.filter(|user| verify_password(&user.0.password_hash, creds.password).is_ok()))
-    })
-    .await?
+    // safety - get_user errors on None, always some
+    let user = self.get_user(&creds.username).await?.unwrap();
+    creds.password.hash_and_verify(&user.0.password_hash).await?;
+    Ok(Some(user))
   }
 
   async fn get_user(&self, username: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    let user = db::queries::users::get_user(&self.db, username).await?.map(UserWrapper);
-
-    Ok(user)
+    let user = db::queries::users::get_user(&self.db, username).await?;
+    Ok(Some(UserWrapper(user)))
   }
 }
 
