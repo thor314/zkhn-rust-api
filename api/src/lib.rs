@@ -21,8 +21,7 @@ use self::{auth::get_auth_layer, sessions::create_migrate_session_layer};
 pub(crate) type ApiResult<T> = Result<T, ApiError>;
 
 pub use self::error::ApiError;
-// todo(refactor): unite payloads
-// export payloads
+// export payloads and responses
 pub use self::routes::users::*;
 
 pub async fn app(pool: DbPool, session_key: Key) -> ApiResult<Router> {

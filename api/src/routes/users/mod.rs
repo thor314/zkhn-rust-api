@@ -2,7 +2,6 @@
 
 mod payload;
 mod response;
-
 use axum::{
   extract::{Path, State},
   http::StatusCode,
@@ -16,12 +15,11 @@ pub use self::{payload::*, response::*};
 use super::SharedState;
 use crate::{
   auth::{AuthSession, AuthenticationExt, PasswordExt},
-  error::ApiError,
-  ApiResult,
+  ApiError, ApiResult,
 };
 
 /// Router to be mounted at "/users"
-pub fn users_router(state: SharedState) -> Router {
+pub(super) fn users_router(state: SharedState) -> Router {
   Router::new()
     // note - called `/users/get-user-data` in reference
     .route("/:username", routing::get(get::get_user))
