@@ -27,7 +27,7 @@ pub use self::error::ApiError;
 pub use self::routes::users::*;
 
 pub async fn app(pool: DbPool, session_key: Key) -> ApiResult<Router> {
-  let session_layer = create_migrate_session_layer(pool.clone(), session_key).await?;
+  let session_layer = create_migrate_session_layer(pool.clone(), session_key).await;
   let auth_layer = get_auth_layer(pool.clone(), session_layer);
 
   // serve the router and layer any route-agnostic middleware.

@@ -16,7 +16,7 @@ async fn main(
 ) -> shuttle_axum::ShuttleAxum {
   debug!("pool info: {:?}", pool);
   utils::setup(&secret_store).unwrap();
-  db::migrate(&pool).await.unwrap();
+  db::migrate(&pool).await;
 
   debug!("Initializing router...");
   // let analytics_key = secret_store.get("ANALYTICS_API_KEY");

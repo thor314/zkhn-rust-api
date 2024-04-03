@@ -80,7 +80,7 @@ impl UserUpdatePayload {
   pub fn new(username: &str, email: Option<&str>, about: Option<&str>) -> ApiResult<Self> {
     let username = Username(username.to_string());
     if email.is_none() && about.is_none() {
-      return Err(ApiError::MissingField("email or about must be provided".to_string()));
+      return Err(ApiError::BadRequest("email or about must be provided".to_string()));
     }
     let email = email.map(|s| Email(s.to_string()));
     let about = about.map(|s| About(s.to_string()));

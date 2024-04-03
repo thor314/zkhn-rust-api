@@ -18,7 +18,7 @@ use garde::Validate;
 use tracing::{debug, info};
 
 use super::SharedState;
-use crate::{error::ApiError, ApiResult};
+use crate::{auth::AuthSession, error::ApiError, ApiResult};
 
 /// Router to be mounted at "/users"
 pub fn users_router(state: SharedState) -> Router {
@@ -41,9 +41,6 @@ pub(super) mod get {
       path = "/users/{username}",
       params( ("username" = String, Path, example = "alice") ),
       responses(
-        // todo(auth) auth error
-        // (status = 401, description = "Unauthorized"),
-        (status = 422, description = "Invalid Payload"),
         (status = 422, description = "Invalid username"),
         (status = 500, description = "Database Error"),
         (status = 404, description = "User not found"),
@@ -54,17 +51,16 @@ pub(super) mod get {
   ///
   /// If `username` exists, return the User. Otherwise, return NotFound.
   ///
-  /// todo(auth): currently, we return the whole user. When auth is implemented, we will want to
-  /// return different user data, per the caller's auth.
-  ///
   /// ref get_public: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L223
   /// ref get_private: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L244
   pub async fn get_user(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
-    // auth_session: AuthSession,  // todo(auth)
+    auth_session: AuthSession,
   ) -> ApiResult<Json<User>> {
     debug!("get_user called with username: {username}");
+    // / todo(auth): currently, we return the whole user. When auth is implemented, we will want to
+    // / return different user data, per the caller's auth.
     let pool = &state.pool;
     username.validate(&())?;
     let user = db::queries::users::get_user(pool, &username)
@@ -183,7 +179,7 @@ pub(super) mod put {
     // assert_authenticated(&auth_session)?;
     payload.validate(&())?;
     if payload.about.is_none() && payload.email.is_none() {
-      return Err(ApiError::MissingField("about or email must be provided".to_string()));
+      return Err(ApiError::BadRequest("about or email must be provided".to_string()));
     }
 
     db::queries::users::update_user(&state.pool, &payload.username, &payload.about, &payload.email)
@@ -217,7 +213,7 @@ pub(super) mod put {
     let user = db::queries::users::get_user(&state.pool, &username)
       .await?
       .ok_or(ApiError::DbEntryNotFound("no such user".to_string()))?;
-    let email = user.email.ok_or(ApiError::MissingField("email missing".to_string()))?;
+    let email = user.email.ok_or(ApiError::BadRequest("email missing".to_string()))?;
 
     // Generate a reset password token and expiration date for the user. Update the db.
     // todo(auth)
@@ -265,8 +261,8 @@ pub(super) mod put {
     let user = db::queries::users::get_user(&state.pool, &payload.username)
       .await?
       .ok_or(ApiError::DbEntryNotFound("no such user".to_string()))?;
-    if !verify_user_password(&user, payload.current_password)? {
-      return Err(ApiError::IncorrectPassword("incorrect password".to_string()));
+    if !verify_user_password(&user, payload.current_password) {
+      return Err(ApiError::Unauthorized("incorrect password".to_string()));
     }
 
     let password_hash = db::password::hash_password_argon(&payload.new_password).await?;

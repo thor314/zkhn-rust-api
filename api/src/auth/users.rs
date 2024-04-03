@@ -52,7 +52,7 @@ impl AuthnBackend for AuthBackend {
 
     // Verifying the password is blocking and slow, so spawn a task
     task::spawn_blocking(|| {
-      Ok(user.filter(|user| verify_password(&user.0.password_hash, creds.password).is_ok()))
+      Ok(user.filter(|user| verify_password(&user.0.password_hash, creds.password)))
     })
     .await?
   }

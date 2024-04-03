@@ -8,81 +8,68 @@ use tokio::task;
 use utoipa::ToSchema;
 
 // ref: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+// note: use 401 Unauthorized if the client is unknown,
+// and 403 Forbidden if the client is known but privilege restricted.
 #[derive(thiserror::Error, axum_derive_error::ErrorResponse, ToSchema)]
 pub enum ApiError {
-  // 500s
+  // return a 500 when my backend screwed up
+  /// General error to return when I'm not sure what went wrong
   #[status(StatusCode::INTERNAL_SERVER_ERROR)]
   OtherISE(String),
+  /// Merge concurrent tasks error
   #[status(StatusCode::INTERNAL_SERVER_ERROR)]
   TaskJoin(#[from] task::JoinError),
-  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
-  Anyhow(#[from] anyhow::Error),
-  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
-  Session(tower_sessions::session_store::Error),
-  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
-  TowerSessionsSqlxStore(#[from] tower_sessions_sqlx_store::sqlx::Error),
 
-  /// OAuth API service is temporarily unavailable due to maintenance, overload, or other reasons
-  #[status(StatusCode::SERVICE_UNAVAILABLE)] // 503
-  OAuthRequestFailure(#[from] reqwest::Error),
-  /// received an invalid response from the OAuth server
-  #[status(StatusCode::BAD_GATEWAY)] // 503
-  OAuthBadGateway(String),
-
-  // Db errors
+  // db errors
+  /// New entry conflicts with another entry in the db
+  #[status(StatusCode::CONFLICT)]
+  UniqueViolation(String),
+  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
+  ForeignKeyViolation(String),
+  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
+  NotNullViolation(String),
+  #[status(StatusCode::INTERNAL_SERVER_ERROR)]
+  CheckViolation(String),
+  /// Entry does not exist in the db
   #[status(StatusCode::NOT_FOUND)]
   DbEntryNotFound(String),
-  #[status(StatusCode::CONFLICT)]
-  DbConflict(String),
   #[status(StatusCode::INTERNAL_SERVER_ERROR)]
   OtherDbError(String),
 
-  // 400s
+  // other client errors
+  /// The server cannot or will not process the request due to  client error
+  /// (malformed request syntax, invalid request message framing, deceptive request routing, ...).
   #[status(StatusCode::BAD_REQUEST)] // 400
   BadRequest(String),
-  #[status(StatusCode::BAD_REQUEST)] // 400
-  OAuth2(BasicRequestTokenError<AsyncHttpClientError>),
+  /// The client must authenticate itself to get the requested response
   #[status(StatusCode::UNAUTHORIZED)] // 401
   Unauthorized(String),
-  #[status(StatusCode::UNAUTHORIZED)] // 401
-  IncorrectPassword(String),
-  /// for when a required field is missing in the table
-  #[status(StatusCode::NOT_FOUND)] // 404
-  MissingField(String),
-  /// for when e.g. an upvote or favorite is doubly submitted
-  #[status(StatusCode::CONFLICT)] // 409
-  DoublySubmittedChange(String),
-  #[status(StatusCode::UNPROCESSABLE_ENTITY)]
-  InvalidPayload(#[from] garde::Report), // 422
+  /// The client does not have access rights to the content; that is, it is unauthorized, so the
+  /// server is refusing to give the requested resource.
+  #[status(StatusCode::FORBIDDEN)] // 403
+  Forbidden(String),
+  /// Garde payload validation failure.
+  #[status(StatusCode::UNPROCESSABLE_ENTITY)] // 422
+  InvalidPayload(#[from] garde::Report),
 }
-
-// 422
-// don't uncomment - creates circular dependency
-// #[status(StatusCode::UNAUTHORIZED)]
-// AxumLogin(#[from]
-// axum_login::Error<crate::auth::Backend>),
 
 impl std::fmt::Display for ApiError {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
-      ApiError::OtherISE(e) => write!(f, "OtherISE: {0}", e),
-      ApiError::TaskJoin(e) => write!(f, "TaskJoin: {0}", e),
-      ApiError::Anyhow(e) => write!(f, "Anyhow: {0}", e),
-      ApiError::IncorrectPassword(e) => write!(f, "Incorrect Password: {0}", e),
-      ApiError::OtherDbError(e) => write!(f, "DbError: {0}", e),
-      ApiError::Session(e) => write!(f, "Session: {0}", e),
-      // ApiError::Payload(e) => write!(f, "Payload {0}", e),
+      ApiError::OtherISE(e) => write!(f, "Thor did a bad thing, ISE: {0}", e),
+      ApiError::TaskJoin(e) => write!(f, "Concurrency Error: {0}", e),
+      // db errors
+      ApiError::UniqueViolation(e) => write!(f, "DbEntryAlreadyExists: {0}", e),
+      ApiError::ForeignKeyViolation(e) => write!(f, "DbForeignKeyViolation: {0}", e),
+      ApiError::NotNullViolation(e) => write!(f, "DbNotNullViolation: {0}", e),
+      ApiError::CheckViolation(e) => write!(f, "DbCheckViolation: {0}", e),
       ApiError::DbEntryNotFound(e) => write!(f, "NotFound: {0}", e),
-      ApiError::Unauthorized(e) => write!(f, "Unauthorized: {0}", e),
-      ApiError::InvalidPayload(e) => write!(f, "Invalid Payload: {0}", e.to_string().trim()),
-      ApiError::DbConflict(e) => write!(f, "DbEntryAlreadyExists: {0}", e),
+      ApiError::OtherDbError(e) => write!(f, "DbError: {0}", e),
+      // other client errors
       ApiError::BadRequest(e) => write!(f, "Invalid request submitted: {0}", e),
-      ApiError::OAuthRequestFailure(e) => write!(f, "AuthReqwest: {0}", e),
-      ApiError::OAuth2(e) => write!(f, "OAuth2: {0}", e),
-      ApiError::DoublySubmittedChange(e) => write!(f, "DoublySubmittedChange: {0}", e),
-      ApiError::MissingField(e) => write!(f, "MissingField: {0}", e),
-      ApiError::OAuthBadGateway(e) => write!(f, "OAuthBadGateway: {0}", e),
-      ApiError::TowerSessionsSqlxStore(e) => write!(f, "TowerSessionsSqlxStore: {0}", e),
+      ApiError::Unauthorized(e) => write!(f, "Unauthorized: {0}", e),
+      ApiError::Forbidden(e) => write!(f, "Forbidden: {0}", e),
+      ApiError::InvalidPayload(e) => write!(f, "Invalid Payload: {0}", e.to_string().trim()),
     }
   }
 }
@@ -90,12 +77,28 @@ impl std::fmt::Display for ApiError {
 impl From<DbError> for ApiError {
   fn from(e: DbError) -> Self {
     match e {
-      DbError::Conflict => ApiError::DbConflict(e.to_string()),
-      DbError::NotFound => ApiError::DbEntryNotFound(e.to_string()),
-      // keep PwError commented - db password error is internal library failure
-      // DbError::PwError(e) => ApiError::IncorrectPassword(e.to_string()),
-      // DbError::PayloadValidation(e) => ApiError::(e.to_string()),
+      DbError::UniqueViolation(e) => ApiError::UniqueViolation(e),
+      DbError::ForeignKeyViolation(e) => ApiError::ForeignKeyViolation(e),
+      DbError::NotNullViolation(e) => ApiError::NotNullViolation(e),
+      DbError::CheckViolation(e) => ApiError::CheckViolation(e),
+      DbError::NotFound => ApiError::DbEntryNotFound("Entry not found".to_string()),
+      DbError::Other(e) => ApiError::OtherDbError(e),
       _ => ApiError::OtherDbError(e.to_string()),
     }
   }
 }
+
+// /// OAuth API service is temporarily unavailable due to maintenance, overload, or other reasons
+// #[status(StatusCode::SERVICE_UNAVAILABLE)] // 503
+// OAuthRequestFailure(#[from] reqwest::Error),
+// /// received an invalid response from the OAuth server
+// #[status(StatusCode::BAD_GATEWAY)] // 503
+// OAuthBadGateway(String),
+
+// don't uncomment - creates circular dependency
+// #[status(StatusCode::UNAUTHORIZED)]
+// AxumLogin(#[from]
+// axum_login::Error<crate::auth::Backend>),
+
+// #[status(StatusCode::BAD_REQUEST)] // 400
+// OAuth2(BasicRequestTokenError<AsyncHttpClientError>),

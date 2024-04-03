@@ -1,6 +1,6 @@
 use futures::TryFutureExt;
 use sqlx::postgres::PgQueryResult;
-use tracing::{debug, info, instrument, warn};
+use tracing::{debug, error, info, instrument, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -53,7 +53,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     ..
   } = new_user.clone();
 
-  let result = sqlx::query!(
+  sqlx::query!(
     "INSERT INTO users
     ( username,
     password_hash,
@@ -72,37 +72,124 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     email.map(|s| s.0),
   )
   .execute(&mut *tx)
-  .await;
-
-  // todo(error handling): re-implement in a method for DRY
-  if let Err(e) = &result {
-    // unwrap is safe; error is always db error kinded
-    if e.as_database_error().expect("expected db error").is_unique_violation() {
-      tx.rollback().await?;
-      warn!("user already exists");
-      return Err(DbError::Conflict);
-    } else {
-      tracing::error!("error creating user: {e}");
-    }
-  }
-  let _ = result?;
+  .await
+  .map_err(DbError::from)?;
 
   tx.commit().await?;
   Ok(())
 }
 
+pub async fn update_user(
+  pool: &DbPool,
+  username: &Username,
+  about: &Option<About>,
+  email: &Option<Email>,
+) -> DbResult<()> {
+  let mut tx = pool.begin().await?;
+  if let Some(about) = about {
+    sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about.0, username.0)
+      .execute(&mut *tx)
+      .await
+      .map_err(DbError::from)?;
+  }
+  if let Some(email) = email {
+    sqlx::query!("UPDATE users SET email = $1 WHERE username = $2", email.0, username.0)
+      .execute(&mut *tx)
+      .await
+      .map_err(DbError::from)?;
+  }
+
+  debug!("update_user with: {username}");
+  Ok(tx.commit().await?)
+}
+
+pub async fn update_user_password_token(
+  pool: &DbPool,
+  username: &Username,
+  reset_password_token: &AuthToken,
+  reset_password_token_expiration: &Timestamp,
+) -> DbResult<()> {
+  debug!("update_user_password_token with: {username}");
+  sqlx::query!(
+    "UPDATE users SET 
+    reset_password_token = $1, 
+    reset_password_token_expiration = $2 
+    WHERE username = $3",
+    reset_password_token.0,
+    reset_password_token_expiration.0,
+    username.0
+  )
+  .execute(pool)
+  .await
+  .map_err(DbError::from)?;
+
+  Ok(())
+}
+
+pub async fn update_user_password(
+  pool: &DbPool,
+  username: &Username,
+  new_password_hash: &PasswordHash,
+) -> DbResult<()> {
+  debug!("update_user_password with: {username}");
+  sqlx::query!(
+    "UPDATE users SET 
+    password_hash = $1, 
+    auth_token = NULL, 
+    auth_token_expiration = NULL 
+    WHERE username = $2",
+    new_password_hash.0,
+    username.0,
+  )
+  .execute(pool)
+  .await
+  .map_err(DbError::from)?;
+
+  Ok(())
+}
+
+// /// Set the user's auth token and expiration in the database to `None`.
+// pub async fn logout_user(pool: &DbPool, username: &Username) -> DbResult<PgQueryResult> {
+//   debug!("logout_user with: {username}");
+//   sqlx::query!(
+//     "UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE username = $1",
+//     username.0
+//   )
+//   .execute(pool)
+//   .await
+//   .map_err(DbError::from)
+// }
+
+// pub async fn update_user_auth_token(
+//   pool: &DbPool,
+//   username: &Username,
+//   auth_token: &AuthToken,
+//   auth_token_expiration: &Timestamp,
+// ) -> DbResult<()> {
+//   debug!("update_user_auth_token with: {username}");
+//   sqlx::query!(
+//     "UPDATE users SET auth_token = $1, auth_token_expiration = $2 WHERE username =
+//   $3",
+//     auth_token.0,
+//     auth_token_expiration.0,
+//     username.0
+//   )
+//   .execute(pool)
+//   .await
+//   .map_err(DbError::from)?;
+
+//   Ok(())
+// }
+
 pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
   debug!("delete_user with: {username}");
-  let result =
-    sqlx::query!("DELETE FROM users WHERE username = $1", username.0).execute(pool).await?;
+  let result = sqlx::query!("DELETE FROM users WHERE username = $1", username.0)
+    .execute(pool)
+    .await
+    .map(|r| if r.rows_affected() == 0 { Err(DbError::NotFound) } else { Ok(()) })?;
 
-  if result.rows_affected() == 0 {
-    warn!("user {username} does not exist");
-    Err(DbError::NotFound)
-  } else {
-    info!("user {username} deleted");
-    Ok(())
-  }
+  info!("user {username} deleted");
+  Ok(())
 }
 
 // pub async fn get_user_comments(pool: &DbPool, username: &Username) -> DbResult<Vec<Comment>> {
@@ -155,102 +242,3 @@ pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
 //   .await
 //   .map_err(DbError::from)
 // }
-
-pub async fn update_user(
-  pool: &DbPool,
-  username: &Username,
-  about: &Option<About>,
-  email: &Option<Email>,
-) -> DbResult<()> {
-  let mut tx = pool.begin().await?;
-  if let Some(about) = about {
-    sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about.0, username.0)
-      .execute(&mut *tx)
-      .await
-      .map_err(DbError::from)?;
-  }
-  if let Some(email) = email {
-    sqlx::query!("UPDATE users SET email = $1 WHERE username = $2", email.0, username.0)
-      .execute(&mut *tx)
-      .await
-      .map_err(DbError::from)?;
-  }
-
-  debug!("update_user with: {username}");
-  Ok(tx.commit().await?)
-}
-
-/// Set the user's auth token and expiration in the database to `None`.
-pub async fn logout_user(pool: &DbPool, username: &Username) -> DbResult<PgQueryResult> {
-  debug!("logout_user with: {username}");
-  sqlx::query!(
-    "UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE username = $1",
-    username.0
-  )
-  .execute(pool)
-  .await
-  .map_err(DbError::from)
-}
-
-pub async fn update_user_auth_token(
-  pool: &DbPool,
-  username: &Username,
-  auth_token: &AuthToken,
-  auth_token_expiration: &Timestamp,
-) -> DbResult<()> {
-  debug!("update_user_auth_token with: {username}");
-  sqlx::query!(
-    "UPDATE users SET auth_token = $1, auth_token_expiration = $2 WHERE username =
-  $3",
-    auth_token.0,
-    auth_token_expiration.0,
-    username.0
-  )
-  .execute(pool)
-  .await
-  .map_err(DbError::from)?;
-
-  Ok(())
-}
-
-pub async fn update_user_password_token(
-  pool: &DbPool,
-  username: &Username,
-  reset_password_token: &AuthToken,
-  reset_password_token_expiration: &Timestamp,
-) -> DbResult<()> {
-  debug!("update_user_password_token with: {username}");
-  sqlx::query!(
-    "UPDATE users SET reset_password_token = $1, reset_password_token_expiration = $2 WHERE \
-     username =
-  $3",
-    reset_password_token.0,
-    reset_password_token_expiration.0,
-    username.0
-  )
-  .execute(pool)
-  .await
-  .map_err(DbError::from)?;
-
-  Ok(())
-}
-
-pub async fn update_user_password(
-  pool: &sqlx::Pool<sqlx::Postgres>,
-  username: &Username,
-  new_password_hash: &PasswordHash,
-) -> DbResult<()> {
-  debug!("update_user_password with: {username}");
-  sqlx::query!(
-    "UPDATE users SET password_hash = $1, auth_token = NULL, auth_token_expiration = NULL WHERE \
-     username =
-  $2",
-    new_password_hash.0,
-    username.0,
-  )
-  .execute(pool)
-  .await
-  .map_err(DbError::from)?;
-
-  Ok(())
-}
