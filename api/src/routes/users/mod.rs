@@ -43,12 +43,12 @@ pub(super) mod get {
       responses(
         (status = 422, description = "Invalid username"),
         (status = 404, description = "User not found"),
-        (status = 200, body = User),
+        (status = 200, body = GetUserResponse),
       ),
   )]
   /// Get user.
   ///
-  /// If `username` exists, return the User. Otherwise, return NotFound.
+  /// If `username` exists, return the `UserResponse`. Otherwise, return NotFound.
   ///
   /// ref get_public: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L223
   /// ref get_private: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L244
@@ -56,24 +56,15 @@ pub(super) mod get {
     State(state): State<SharedState>,
     Path(username): Path<Username>,
     auth_session: AuthSession,
-  ) -> ApiResult<Json<User>> {
+  ) -> ApiResult<Json<GetUserResponse>> {
     trace!("get_user called with username: {username}");
-    // / todo(auth): currently, we return the whole user. When auth is implemented, we will want to
-    // / return different user data, per the caller's auth.
-    // if auth_session.is_authenticated() {
-    // todo(auth) - return reduced user data
-    // let user = users::get_user(&state.pool, &username).await?;
-    // let user = user.map(|user| UserResponse::from(user));
-    // return Ok(Json(user));
-    // } else {
-    // todo
-    // }
-    let pool = &state.pool;
+    let is_authenticated = auth_session.is_authenticated_as(&username);
     username.validate(&())?;
-    let user = users::get_user(pool, &username).await?;
+    let user = users::get_user(&state.pool, &username).await?;
+    let user_response = GetUserResponse::new(user, is_authenticated);
 
-    debug!("found user: {user:?}");
-    Ok(Json(user))
+    debug!("user response: {user_response:?}");
+    Ok(Json(user_response))
   }
 }
 
@@ -88,7 +79,7 @@ pub(super) mod post {
       responses(
         (status = 422, description = "Invalid Payload"),
         (status = 409, description = "Duplication Conflict"),
-        (status = 200, body = UserResponse),
+        (status = 200, body = CreateUserResponse),
       ),
   )]
   /// Create a new user:
@@ -98,12 +89,12 @@ pub(super) mod post {
   pub async fn create_user(
     State(state): State<SharedState>,
     Json(payload): Json<UserPayload>,
-  ) -> ApiResult<Json<UserResponse>> {
+  ) -> ApiResult<Json<CreateUserResponse>> {
     trace!("create_user called with payload: {payload:?}");
     payload.validate(&())?;
     let user: User = payload.into_user().await;
     users::create_user(&state.pool, &user).await?;
-    let user_response = UserResponse::from(user);
+    let user_response = CreateUserResponse::from(user);
 
     debug!("created user: {user_response:?}");
     Ok(Json(user_response))

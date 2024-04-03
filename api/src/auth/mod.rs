@@ -25,9 +25,7 @@ pub fn get_auth_layer(pool: DbPool, session_layer: MySessionManagerLayer) -> MyA
 
 pub(crate) trait AuthenticationExt {
   /// Assert that the caller is logged in.
-  fn assert_authenticated(&self) -> ApiResult<()>;
-  /// Is the caller logged in?
-  fn is_authenticated(&self) -> bool;
+  fn is_authenticated_as(&self, username: &Username) -> bool;
   /// Return Ok(()) if the caller is authenticated as the given user.
   ///
   /// Return Err(ApiError::Forbidden) if the caller is not authenticated.
@@ -35,15 +33,9 @@ pub(crate) trait AuthenticationExt {
 }
 
 impl AuthenticationExt for AuthSession {
-  fn assert_authenticated(&self) -> ApiResult<()> {
-    if self.user.is_none() {
-      return Err(crate::ApiError::Forbidden("login required".to_string()));
-    }
-
-    Ok(())
+  fn is_authenticated_as(&self, username: &Username) -> bool {
+    self.user.as_ref().map(|user| user.0.username == *username).unwrap_or(false)
   }
-
-  fn is_authenticated(&self) -> bool { self.user.is_some() }
 
   fn caller_matches_payload(&self, username: &Username) -> ApiResult<()> {
     self
