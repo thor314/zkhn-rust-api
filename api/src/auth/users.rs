@@ -1,11 +1,9 @@
-// use async_trait::async_trait;
 use axum_login::{AuthUser, AuthnBackend, UserId};
-use db::{models::user::User, password::verify_password, DbPool, Username};
-// use password_auth::verify_password;
+use db::{models::user::User, DbPool, Username};
 use serde::Serialize;
-// use sqlx::{FromRow, PgPool};
 use tokio::task;
 
+use super::PasswordExt;
 use crate::{error::ApiError, CredentialsPayload};
 
 #[derive(Debug, Clone, Serialize)]
@@ -49,17 +47,11 @@ impl AuthnBackend for AuthBackend {
     creds: Self::Credentials,
   ) -> Result<Option<Self::User>, Self::Error> {
     let user: Option<Self::User> = self.get_user(&creds.username).await?;
-
-    // Verifying the password is blocking and slow, so spawn a task
-    task::spawn_blocking(|| {
-      Ok(user.filter(|user| verify_password(&user.0.password_hash, creds.password)))
-    })
-    .await?
+    Ok(user.filter(|user| creds.password.hash_and_verify(&user.0.password_hash).is_ok()))
   }
 
   async fn get_user(&self, username: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
     let user = db::queries::users::get_user(&self.db, username).await?;
-
     Ok(Some(UserWrapper(user)))
   }
 }

@@ -1,6 +1,6 @@
 use db::{models::user::User, AuthToken, Timestamp, Username};
 use serde::{Deserialize, Serialize};
-use utoipa::{OpenApi, ToSchema};
+use utoipa::ToSchema;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 #[schema(default = UserResponse::default, example=UserResponse::default)]

@@ -3,20 +3,19 @@
 mod payload;
 mod response;
 #[cfg(test)] mod test;
-
 use axum::{
   extract::{Path, State},
   http::StatusCode,
   routing, Json, Router,
 };
-use db::{models::user::User, password::verify_user_password, AuthToken, Username};
+use db::{models::user::User, queries::users, AuthToken, Username};
 use garde::Validate;
 use tracing::{debug, info};
 
 pub use self::{payload::*, response::*};
 use super::SharedState;
 use crate::{
-  auth::{AuthSession, AuthenticationExt},
+  auth::{AuthSession, AuthenticationExt, PasswordExt},
   error::ApiError,
   ApiResult,
 };
@@ -63,7 +62,7 @@ pub(super) mod get {
     // / return different user data, per the caller's auth.
     if auth_session.is_authenticated() {
       // todo(auth) - return reduced user data
-      // let user = db::queries::users::get_user(&state.pool, &username).await?;
+      // let user = users::get_user(&state.pool, &username).await?;
       // let user = user.map(|user| UserResponse::from(user));
       // return Ok(Json(user));
     } else {
@@ -71,7 +70,7 @@ pub(super) mod get {
     }
     let pool = &state.pool;
     username.validate(&())?;
-    let user = db::queries::users::get_user(pool, &username).await?;
+    let user = users::get_user(pool, &username).await?;
 
     info!("found user: {user:?}");
     Ok(Json(user))
@@ -104,7 +103,7 @@ pub(super) mod post {
     payload.validate(&())?;
     let user: User = payload.into_user().await;
 
-    db::queries::users::create_user(&state.pool, &user).await?;
+    users::create_user(&state.pool, &user).await?;
 
     let user_response = UserResponse::from(user);
     info!("created user: {user_response:?}");
@@ -142,7 +141,7 @@ pub(super) mod post {
     logout_post_internal(auth_session).await
   }
 
-  // todo(auth): authenticate user:
+  // maybe: authenticate user:
   // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L97
   // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L71
   // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L124
@@ -179,8 +178,7 @@ pub(super) mod put {
       return Err(ApiError::BadRequest("about or email must be provided".to_string()));
     }
 
-    db::queries::users::update_user(&state.pool, &payload.username, &payload.about, &payload.email)
-      .await?;
+    users::update_user(&state.pool, &payload.username, &payload.about, &payload.email).await?;
 
     info!("updated user about for: {}", payload.username);
     Ok(StatusCode::OK)
@@ -208,14 +206,14 @@ pub(super) mod put {
     debug!("request-password-reset-link called with username: {:?}", username);
     auth_session.caller_matches_payload(&username)?;
     username.validate(&())?;
-    let user = db::queries::users::get_user(&state.pool, &username).await?;
+    let user = users::get_user(&state.pool, &username).await?;
     let email = user.email.ok_or(ApiError::BadRequest("email missing".to_string()))?;
 
     // Generate a reset password token and expiration date for the user. Update the db.
     // todo(email)
     let reset_password_token = AuthToken("create reset password token".into());
     let reset_password_token_expiration = crate::utils::default_expiration();
-    db::queries::users::update_user_password_token(
+    users::update_user_password_token(
       &state.pool,
       &username,
       &reset_password_token,
@@ -254,15 +252,9 @@ pub(super) mod put {
     debug!("change_password called with payload: {payload:?}");
     payload.validate(&())?;
     auth_session.caller_matches_payload(&payload.username)?;
-    let user = db::queries::users::get_user(&state.pool, &payload.username).await?;
-    // todo(password) - refactor to propagate error
-    if !verify_user_password(&user, payload.current_password) {
-      return Err(ApiError::Unauthorized("incorrect password".to_string()));
-    }
-
-    let password_hash = db::password::hash_password_argon(&payload.new_password).await?;
-    db::queries::users::update_user_password(&state.pool, &payload.username, &password_hash)
-      .await?;
+    let user = users::get_user(&state.pool, &payload.username).await?;
+    let password_hash = payload.current_password.hash_and_verify(&user.password_hash)?;
+    users::update_user_password(&state.pool, &payload.username, &password_hash).await?;
     // todo(email) - send an email to the user that their password has changed
 
     info!("changed password for user: {}", payload.username);
@@ -289,12 +281,12 @@ pub(super) mod delete {
   pub async fn delete_user(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
-    auth_session: AuthSession, // todo(mods)
+    auth_session: AuthSession,
   ) -> ApiResult<StatusCode> {
     debug!("delete_user called with username: {username}");
     auth_session.caller_matches_payload(&username)?;
     username.validate(&())?;
-    db::queries::users::delete_user(&state.pool, &username).await?;
+    users::delete_user(&state.pool, &username).await?;
 
     info!("deleted user: {}", username);
     Ok(StatusCode::OK)

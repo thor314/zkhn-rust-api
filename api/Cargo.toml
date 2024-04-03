@@ -42,6 +42,7 @@ utoipauto = "0.1.10"
 utoipa-rapidoc = { version = "3.0.0", features = ["axum"] }
 tower-http = { version = "0.5.2", features = ["cors"] }
 tower-cookies = { version = "0.10.0", features = ["signed"] }
+argon2 = "0.5.3"
 
 [dev-dependencies]
 axum-test = "14.5.0"

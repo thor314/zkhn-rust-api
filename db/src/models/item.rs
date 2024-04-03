@@ -1,11 +1,8 @@
-use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::PgConnection;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use super::comment::Comment;
-use crate::{error::DbError, utils::now, Timestamp, Title, Username};
+use crate::{utils::now, Timestamp, Title, Username};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.

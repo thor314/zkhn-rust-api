@@ -3,7 +3,7 @@ use garde::Validate;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::{error::ApiError, ApiResult};
+use crate::{auth::PasswordExt, error::ApiError, ApiResult};
 
 /// Username, password, and optionally email, and about.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
@@ -32,7 +32,7 @@ impl Default for UserPayload {
 
 impl UserPayload {
   pub async fn into_user(self) -> User {
-    let password_hash = self.password.hash_argon().await.unwrap();
+    let password_hash = self.password.hash();
     User::new(self.username, password_hash, self.email, self.about)
   }
 

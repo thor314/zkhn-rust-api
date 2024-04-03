@@ -7,9 +7,7 @@
 
 mod error;
 pub mod models;
-pub mod password;
 pub mod queries;
-#[cfg(test)] mod tests;
 mod types;
 mod utils;
 

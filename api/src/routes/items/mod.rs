@@ -11,7 +11,6 @@ use axum::{
 };
 use db::{
   models::{item::Item, user::User},
-  password::verify_user_password,
   AuthToken, DbError, Username,
 };
 use garde::Validate;
