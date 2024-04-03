@@ -14,28 +14,28 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
 
   let Item { id, username, title, item_type, url, domain, text, item_category, .. } = item.clone();
 
-  // sqlx::query!(
-  //   "INSERT INTO items
-  //   ( id,
-  //   username,
-  //   title,
-  //   item_type,
-  //   url,
-  //   domain,
-  //   text,
-  //   item_category
-  // ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-  //   id,
-  //   username.0,
-  //   title.0,
-  //   item_type,
-  //   url,
-  //   domain,
-  //   text,
-  //   item_category,
-  // )
-  // .execute(&mut *tx)
-  // .await?;
+  sqlx::query!(
+    "INSERT INTO items
+    ( id,
+    username,
+    title,
+    item_type,
+    url,
+    domain,
+    text,
+    item_category
+  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+    id,
+    username.0,
+    title.0,
+    item_type,
+    url,
+    domain,
+    text,
+    item_category,
+  )
+  .execute(&mut *tx)
+  .await?;
 
   // todo(karma): increment
 
