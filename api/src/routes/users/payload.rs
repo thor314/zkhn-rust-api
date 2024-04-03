@@ -6,7 +6,7 @@ use utoipa::ToSchema;
 use crate::{auth::PasswordExt, error::ApiError, ApiResult};
 
 /// Username, password, and optionally email, and about.
-#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, Validate, ToSchema)]
 #[schema(default = UserPayload::default, example=UserPayload::default)]
 pub struct UserPayload {
   #[garde(dive)]
@@ -17,17 +17,6 @@ pub struct UserPayload {
   pub email:    Option<Email>,
   #[garde(dive)]
   pub about:    Option<About>,
-}
-
-impl Default for UserPayload {
-  fn default() -> Self {
-    Self {
-      username: Username("alice".to_string()),
-      password: Password("password".to_string()),
-      email:    None,
-      about:    None,
-    }
-  }
 }
 
 impl UserPayload {
@@ -54,7 +43,7 @@ impl UserPayload {
 }
 
 /// Update user details.
-#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema, Default)]
 #[schema(default = UserUpdatePayload::default, example=UserUpdatePayload::default)]
 pub struct UserUpdatePayload {
   #[garde(dive)]
@@ -63,16 +52,6 @@ pub struct UserUpdatePayload {
   pub email:    Option<Email>,
   #[garde(dive)]
   pub about:    Option<About>,
-}
-
-impl Default for UserUpdatePayload {
-  fn default() -> Self {
-    Self {
-      username: Username("alice".to_string()),
-      email:    Some(Email("email@email.com".to_string())),
-      about:    Some(About("about".to_string())),
-    }
-  }
 }
 
 impl UserUpdatePayload {
@@ -92,7 +71,7 @@ impl UserUpdatePayload {
 }
 
 /// Payload for `change_password`
-#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, Validate, ToSchema)]
 #[schema(default = ChangePasswordPayload::default, example=ChangePasswordPayload::default)]
 pub struct ChangePasswordPayload {
   #[garde(dive)]
@@ -101,16 +80,6 @@ pub struct ChangePasswordPayload {
   pub current_password: Password,
   #[garde(dive)]
   pub new_password:     Password,
-}
-
-impl Default for ChangePasswordPayload {
-  fn default() -> Self {
-    Self {
-      username:         Username("alice".to_string()),
-      current_password: Password("password".to_string()),
-      new_password:     Password("new_password".to_string()),
-    }
-  }
 }
 
 impl ChangePasswordPayload {
@@ -126,7 +95,7 @@ impl ChangePasswordPayload {
   }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, ToSchema, Validate)]
+#[derive(Debug, Default, Clone, Deserialize, Serialize, ToSchema, Validate)]
 #[schema(example = CredentialsPayload::default, default = CredentialsPayload::default)]
 pub struct CredentialsPayload {
   #[garde(dive)]
@@ -135,10 +104,6 @@ pub struct CredentialsPayload {
   pub password: Password,
   #[garde(skip)]
   pub next:     Option<String>,
-}
-
-impl Default for CredentialsPayload {
-  fn default() -> Self { Self::new("alice", "password", None) }
 }
 
 impl CredentialsPayload {
