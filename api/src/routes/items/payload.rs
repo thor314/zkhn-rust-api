@@ -12,8 +12,6 @@ use crate::ApiResult;
 #[schema(default = ItemPayload::default, example=ItemPayload::default)]
 pub struct ItemPayload {
   #[garde(dive)]
-  pub username:        Username,
-  #[garde(dive)]
   pub title:           Title,
   #[garde(skip)] // todo(itemtype)
   item_type: String,
