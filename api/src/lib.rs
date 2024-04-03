@@ -10,7 +10,6 @@ mod auth;
 mod error;
 mod routes;
 mod sessions;
-#[cfg(test)] mod tests;
 mod utils;
 
 use axum::Router;

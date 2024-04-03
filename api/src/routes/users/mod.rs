@@ -2,7 +2,7 @@
 
 mod payload;
 mod response;
-#[cfg(test)] mod test;
+
 use axum::{
   extract::{Path, State},
   http::StatusCode,

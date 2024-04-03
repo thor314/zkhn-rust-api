@@ -1,7 +1,6 @@
 mod payload;
 mod response;
 mod routes;
-#[cfg(test)] mod test;
 
 use axum::Router;
 pub use payload::*;

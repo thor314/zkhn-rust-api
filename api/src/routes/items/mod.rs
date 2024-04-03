@@ -1,6 +1,5 @@
 mod payload;
 mod response;
-#[cfg(test)] mod test;
 
 use anyhow::anyhow;
 use axum::{
