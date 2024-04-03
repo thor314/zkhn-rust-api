@@ -47,7 +47,16 @@ impl AuthnBackend for AuthBackend {
     creds: Self::Credentials,
   ) -> Result<Option<Self::User>, Self::Error> {
     let user: Option<Self::User> = self.get_user(&creds.username).await?;
-    Ok(user.filter(|user| creds.password.hash_and_verify(&user.0.password_hash).is_ok()))
+
+    if let Some(user) = user {
+      if creds.password.hash_and_verify(&user.0.password_hash).await.is_err() {
+        Err(ApiError::Unauthorized("Incorrect password".to_string())) // wrong password
+      } else {
+        Ok(Some(user)) // right password
+      }
+    } else {
+      Err(ApiError::DbEntryNotFound("Couldn't find user".to_string()))
+    }
   }
 
   async fn get_user(&self, username: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {

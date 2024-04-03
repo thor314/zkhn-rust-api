@@ -32,7 +32,7 @@ impl Default for UserPayload {
 
 impl UserPayload {
   pub async fn into_user(self) -> User {
-    let password_hash = self.password.hash();
+    let password_hash = self.password.hash().await;
     User::new(self.username, password_hash, self.email, self.about)
   }
 

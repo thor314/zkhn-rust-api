@@ -253,7 +253,7 @@ pub(super) mod put {
     payload.validate(&())?;
     auth_session.caller_matches_payload(&payload.username)?;
     let user = users::get_user(&state.pool, &payload.username).await?;
-    let password_hash = payload.current_password.hash_and_verify(&user.password_hash)?;
+    let password_hash = payload.current_password.hash_and_verify(&user.password_hash).await?;
     users::update_user_password(&state.pool, &payload.username, &password_hash).await?;
     // todo(email) - send an email to the user that their password has changed
 
