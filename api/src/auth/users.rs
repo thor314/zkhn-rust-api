@@ -58,9 +58,9 @@ impl AuthnBackend for AuthBackend {
   }
 
   async fn get_user(&self, username: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    let user = db::queries::users::get_user(&self.db, username).await?.map(UserWrapper);
+    let user = db::queries::users::get_user(&self.db, username).await?;
 
-    Ok(user)
+    Ok(Some(UserWrapper(user)))
   }
 }
 

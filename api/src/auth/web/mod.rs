@@ -1,5 +1,5 @@
 use axum::http::StatusCode;
-use tracing::debug;
+use tracing::{debug, error};
 
 use crate::{auth::users::AuthSession, ApiError, ApiResult, CredentialsPayload};
 
@@ -13,15 +13,14 @@ pub async fn login_post_internal(
   let user = match auth_session.authenticate(creds.clone()).await {
     // login success
     Ok(Some(user)) => user,
-    // login incorrect password - reroute to login page
     Ok(None) => {
-      let login_base_url = "/users/login";
-      let login_url = creds
-        .next
-        .map(|next| format!("{}?next={}", login_base_url, next))
-        .unwrap_or(login_base_url.to_string());
+      // let login_base_url = "/users/login";
+      // let login_url = creds
+      //   .next
+      //   .map(|next| format!("{}?next={}", login_base_url, next))
+      //   .unwrap_or(login_base_url.to_string());
 
-      debug!("login incorrect password for user: {}", creds.username);
+      error!("login incorrect password for user: {}", creds.username);
       return Err(ApiError::Unauthorized("incorrect password".to_string()));
     },
     // internal authentication error
@@ -41,9 +40,10 @@ pub async fn login_post_internal(
 
 /// Internal logout logic.
 /// Isolate from the login handler to maintain consistency with axum-login style example.
+///
+/// Will only error if db fails to flush the session.
 pub async fn logout_post_internal(mut auth_session: AuthSession) -> ApiResult<StatusCode> {
   match auth_session.logout().await {
-    // Ok(_r) => Ok(Redirect::to("/users/login")),
     Ok(_r) => Ok(StatusCode::OK),
     Err(_e) => Err(ApiError::OtherISE("logout error: {_e:?}".to_string())),
   }

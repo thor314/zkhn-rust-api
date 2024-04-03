@@ -43,7 +43,7 @@ async fn user_item_comment_round_trip(pool: PgPool) -> sqlx::Result<()> {
   });
   let user = users.next().unwrap().await;
   create_user(&pool, &user).await.unwrap();
-  let gotten_user = get_user(&pool, &user.username).await.unwrap().unwrap();
+  let gotten_user = get_user(&pool, &user.username).await.unwrap();
   assert_eq!(user.username, gotten_user.username);
 
   // let user_items = get_user_items(&pool, &user.username).await.unwrap();

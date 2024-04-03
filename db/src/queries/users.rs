@@ -10,7 +10,7 @@ use crate::{
   ResetPasswordToken, Timestamp, Title, Username,
 };
 
-pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<User>> {
+pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<User> {
   debug!("get_user function called w username: {username}");
   sqlx::query_as!(
     User,
@@ -33,6 +33,7 @@ pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<Use
   )
   .fetch_optional(pool)
   .await
+  .map(|r| r.ok_or(DbError::NotFound))?
   .map_err(DbError::from)
 }
 

@@ -2,10 +2,6 @@
 
 mod payload;
 mod response;
-
-pub use payload::*;
-pub use response::*;
-
 #[cfg(test)] mod test;
 
 use axum::{
@@ -17,8 +13,13 @@ use db::{models::user::User, password::verify_user_password, AuthToken, Username
 use garde::Validate;
 use tracing::{debug, info};
 
+pub use self::{payload::*, response::*};
 use super::SharedState;
-use crate::{auth::AuthSession, error::ApiError, ApiResult};
+use crate::{
+  auth::{AuthSession, AuthenticationExt},
+  error::ApiError,
+  ApiResult,
+};
 
 /// Router to be mounted at "/users"
 pub fn users_router(state: SharedState) -> Router {
@@ -60,11 +61,17 @@ pub(super) mod get {
     debug!("get_user called with username: {username}");
     // / todo(auth): currently, we return the whole user. When auth is implemented, we will want to
     // / return different user data, per the caller's auth.
+    if auth_session.is_authenticated() {
+      // todo(auth) - return reduced user data
+      // let user = db::queries::users::get_user(&state.pool, &username).await?;
+      // let user = user.map(|user| UserResponse::from(user));
+      // return Ok(Json(user));
+    } else {
+      // todo
+    }
     let pool = &state.pool;
     username.validate(&())?;
-    let user = db::queries::users::get_user(pool, &username)
-      .await?
-      .ok_or(ApiError::DbEntryNotFound("that user does not exist".to_string()))?;
+    let user = db::queries::users::get_user(pool, &username).await?;
     info!("found user: {user:?}");
     Ok(Json(user))
   }
@@ -72,7 +79,7 @@ pub(super) mod get {
 
 pub(super) mod post {
   use super::*;
-  use crate::auth::{login_post_internal, logout_post_internal, AuthSession};
+  use crate::auth::{login_post_internal, logout_post_internal};
 
   #[utoipa::path(
       post,
@@ -81,7 +88,7 @@ pub(super) mod post {
       responses(
         (status = 422, description = "Invalid Payload"),
         (status = 409, description = "Duplication Conflict"),
-        (status = 200, description = "Success", body = UserResponse),
+        (status = 200, body = UserResponse),
       ),
   )]
   /// Create a new user:
@@ -109,9 +116,8 @@ pub(super) mod post {
       request_body = CredentialsPayload,
       responses(
         (status = 422, description = "Invalid Payload"),
-        (status = 401, description = "Incorrect Password"),
-        (status = 409, description = "User Conflict"),
-        (status = 200, description = "Success", body = Redirect),
+        (status = 401, description = "Unauthorized: Incorrect Password"),
+        (status = 200),
       ),
   )]
   /// User login.
@@ -127,11 +133,7 @@ pub(super) mod post {
       post,
       path = "/users/logout",
       responses(
-        // todo(testing): check documented routes
-        (status = 422, description = "Invalid Payload"),
-        (status = 409, description = "User Conflict"),
-        // todo: what to return
-        (status = 200, body = Redirect),
+        (status = 200),
       ),
   )]
   /// User logout.
@@ -139,7 +141,7 @@ pub(super) mod post {
     logout_post_internal(auth_session).await
   }
 
-  // todo(auth): authenticate user: blocked
+  // todo(auth): authenticate user:
   // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L97
   // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L71
   // todo(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L124
@@ -153,8 +155,9 @@ pub(super) mod put {
       path = "/users",
       request_body = UserUpdatePayload,
       responses(
-        // todo(auth) auth error
-        // (status = 401, description = "Unauthorized"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden"),
+        (status = 400, description = "Bad Request"),
         (status = 422, description = "Invalid Payload"),
         (status = 404, description = "User not found"),
         (status = 200),
@@ -165,11 +168,11 @@ pub(super) mod put {
   /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L287
   pub async fn update_user(
     State(state): State<SharedState>,
-    // auth_session: AuthSession, // todo(auth)
+    auth_session: AuthSession,
     Json(payload): Json<UserUpdatePayload>,
   ) -> ApiResult<StatusCode> {
     debug!("update_user_about called with payload: {payload:?}");
-    // assert_authenticated(&auth_session)?;
+    auth_session.caller_matches_payload(&payload.username)?;
     payload.validate(&())?;
     if payload.about.is_none() && payload.email.is_none() {
       return Err(ApiError::BadRequest("about or email must be provided".to_string()));
@@ -187,8 +190,8 @@ pub(super) mod put {
       path = "/users/reset-password-link/{username}",
       params( ("username" = String, Path, example = "alice") ),
       responses(
-        // todo(auth) auth error
-        // (status = 401, description = "Unauthorized", body = ApiError::Unauthorized),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden"),
         (status = 422, description = "Invalid username"),
         (status = 404, description = "User not found"),
         (status = 404, description = "No email found"),
@@ -199,12 +202,12 @@ pub(super) mod put {
   pub async fn request_password_reset_link(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
+    auth_session: AuthSession,
   ) -> ApiResult<StatusCode> {
-    debug!("request_password_reset_link called with username: {:?}", username);
+    debug!("request-password-reset-link called with username: {:?}", username);
+    auth_session.caller_matches_payload(&username)?;
     username.validate(&())?;
-    let user = db::queries::users::get_user(&state.pool, &username)
-      .await?
-      .ok_or(ApiError::DbEntryNotFound("no such user".to_string()))?;
+    let user = db::queries::users::get_user(&state.pool, &username).await?;
     let email = user.email.ok_or(ApiError::BadRequest("email missing".to_string()))?;
 
     // Generate a reset password token and expiration date for the user. Update the db.
@@ -249,9 +252,7 @@ pub(super) mod put {
   ) -> ApiResult<StatusCode> {
     debug!("change_password called with payload: {payload:?}");
     payload.validate(&())?;
-    let user = db::queries::users::get_user(&state.pool, &payload.username)
-      .await?
-      .ok_or(ApiError::DbEntryNotFound("no such user".to_string()))?;
+    let user = db::queries::users::get_user(&state.pool, &payload.username).await?;
     if !verify_user_password(&user, payload.current_password) {
       return Err(ApiError::Unauthorized("incorrect password".to_string()));
     }
