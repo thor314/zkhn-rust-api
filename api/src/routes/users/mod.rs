@@ -43,7 +43,7 @@ pub(super) mod get {
       responses(
         (status = 422, description = "Invalid username"),
         (status = 404, description = "User not found"),
-        (status = 200, body = User), 
+        (status = 200, body = User),
       ),
   )]
   /// Get user.
@@ -102,10 +102,9 @@ pub(super) mod post {
     debug!("create_user called with payload: {payload:?}");
     payload.validate(&())?;
     let user: User = payload.into_user().await;
-
     users::create_user(&state.pool, &user).await?;
-
     let user_response = UserResponse::from(user);
+
     info!("created user: {user_response:?}");
     Ok(Json(user_response))
   }
@@ -148,6 +147,8 @@ pub(super) mod post {
 }
 
 pub(super) mod put {
+  use db::Timestamp;
+
   use super::*;
 
   #[utoipa::path(
@@ -212,7 +213,7 @@ pub(super) mod put {
     // Generate a reset password token and expiration date for the user. Update the db.
     // todo(email)
     let reset_password_token = AuthToken("create reset password token".into());
-    let reset_password_token_expiration = crate::utils::default_expiration();
+    let reset_password_token_expiration = Timestamp::default_expiration();
     users::update_user_password_token(
       &state.pool,
       &username,

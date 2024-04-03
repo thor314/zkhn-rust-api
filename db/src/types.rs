@@ -1,7 +1,7 @@
 //! Newtype wrappers for input validation and type-safety
 use std::fmt;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeDelta, Utc};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 use sqlx::{prelude::Type, Decode, Encode};
@@ -16,7 +16,16 @@ use crate::DbResult;
 #[sqlx(transparent)]
 pub struct Timestamp(pub DateTime<Utc>);
 impl Default for Timestamp {
-  fn default() -> Self { Timestamp(Utc::now()) }
+  fn default() -> Self { Self::now() }
+}
+impl Timestamp {
+  pub fn now() -> Self { Timestamp(Utc::now()) }
+
+  /// generate an expiration date
+  pub fn default_expiration() -> Timestamp {
+    let timestamp = Utc::now().to_utc() + TimeDelta::try_days(30).unwrap();
+    Timestamp(timestamp)
+  }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
@@ -25,6 +34,9 @@ impl Default for Timestamp {
 pub struct About(#[garde(ascii, length(min = 0, max = 400))] pub String);
 impl Default for About {
   fn default() -> Self { About("about ipsum dolor".to_string()) }
+}
+impl From<&str> for About {
+  fn from(s: &str) -> Self { About(s.to_string()) }
 }
 
 // NOTE: deriving ToSchema doesn't appear to make the docs clearer
@@ -40,6 +52,9 @@ impl fmt::Display for Username {
 impl Default for Username {
   fn default() -> Self { Username("alice".to_string()) }
 }
+impl From<&str> for Username {
+  fn from(s: &str) -> Self { Username(s.to_string()) }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
 #[garde(transparent)]
@@ -51,6 +66,9 @@ impl Default for Email {
 impl std::fmt::Display for Email {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "{}", self.0) }
 }
+impl From<&str> for Email {
+  fn from(s: &str) -> Self { Email(s.to_string()) }
+}
 
 /// A raw, unhashed password
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
@@ -61,6 +79,9 @@ impl Default for Password {
     warn!("instantiating the insecure default password");
     Password("password".to_string())
   }
+}
+impl From<&str> for Password {
+  fn from(s: &str) -> Self { Password(s.to_string()) }
 }
 
 /// A hashed password

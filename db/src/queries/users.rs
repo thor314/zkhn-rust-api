@@ -1,6 +1,6 @@
 use futures::TryFutureExt;
 use sqlx::postgres::PgQueryResult;
-use tracing::{debug, error, info, instrument, warn};
+use tracing::{debug, error, info, instrument, trace, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -11,7 +11,7 @@ use crate::{
 };
 
 pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<User> {
-  debug!("get_user function called w username: {username}");
+  trace!("get_user function called w username: {username}");
   sqlx::query_as!(
     User,
     "SELECT username as \"username: Username\", 
@@ -39,7 +39,7 @@ pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<User> {
 
 /// Create a new user in the database.
 pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
-  debug!("create_user with: {new_user:?}");
+  trace!("create_user with: {new_user:?}");
   let mut tx = pool.begin().await?;
 
   let User {
@@ -100,7 +100,7 @@ pub async fn update_user(
       .map_err(DbError::from)?;
   }
 
-  debug!("update_user with: {username}");
+  trace!("update_user with: {username}");
   Ok(tx.commit().await?)
 }
 
@@ -110,7 +110,7 @@ pub async fn update_user_password_token(
   reset_password_token: &AuthToken,
   reset_password_token_expiration: &Timestamp,
 ) -> DbResult<()> {
-  debug!("update_user_password_token with: {username}");
+  trace!("update_user_password_token with: {username}");
   sqlx::query!(
     "UPDATE users SET 
     reset_password_token = $1, 
@@ -132,7 +132,7 @@ pub async fn update_user_password(
   username: &Username,
   new_password_hash: &PasswordHash,
 ) -> DbResult<()> {
-  debug!("update_user_password with: {username}");
+  trace!("update_user_password with: {username}");
   sqlx::query!(
     "UPDATE users SET 
     password_hash = $1, 
@@ -151,7 +151,7 @@ pub async fn update_user_password(
 
 // /// Set the user's auth token and expiration in the database to `None`.
 // pub async fn logout_user(pool: &DbPool, username: &Username) -> DbResult<PgQueryResult> {
-//   debug!("logout_user with: {username}");
+//   trace!("logout_user with: {username}");
 //   sqlx::query!(
 //     "UPDATE users SET auth_token = NULL, auth_token_expiration = NULL WHERE username = $1",
 //     username.0
@@ -167,7 +167,7 @@ pub async fn update_user_password(
 //   auth_token: &AuthToken,
 //   auth_token_expiration: &Timestamp,
 // ) -> DbResult<()> {
-//   debug!("update_user_auth_token with: {username}");
+//   trace!("update_user_auth_token with: {username}");
 //   sqlx::query!(
 //     "UPDATE users SET auth_token = $1, auth_token_expiration = $2 WHERE username =
 //   $3",
@@ -183,18 +183,16 @@ pub async fn update_user_password(
 // }
 
 pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
-  debug!("delete_user with: {username}");
+  trace!("delete_user with: {username}");
   let result = sqlx::query!("DELETE FROM users WHERE username = $1", username.0)
     .execute(pool)
     .await
     .map(|r| if r.rows_affected() == 0 { Err(DbError::NotFound) } else { Ok(()) })?;
-
-  info!("user {username} deleted");
   Ok(())
 }
 
 // pub async fn get_user_comments(pool: &DbPool, username: &Username) -> DbResult<Vec<Comment>> {
-// todo   debug!("get_user_comments with: {username}");
+// todo   trace!("get_user_comments with: {username}");
 //   sqlx::query_as!(
 //     Comment,
 //     "SELECT
@@ -219,7 +217,7 @@ pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
 // }
 
 // pub async fn get_user_items(pool: &DbPool, username: &Username) -> DbResult<Vec<Item>> { todo
-//   debug!("get_user_items with: {username}");
+//   trace!("get_user_items with: {username}");
 //   sqlx::query_as!(
 //     Item,
 //     "SELECT

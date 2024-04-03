@@ -35,9 +35,3 @@ pub fn sanitize_text(text: &str) -> String {
   text = ammonia::clean(&text);
   text
 }
-
-/// generate an expiration date
-pub(crate) fn default_expiration() -> db::Timestamp {
-  let timestamp = Utc::now().to_utc() + TimeDelta::try_days(30).unwrap();
-  Timestamp(timestamp)
-}

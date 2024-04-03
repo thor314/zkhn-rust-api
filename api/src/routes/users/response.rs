@@ -5,7 +5,7 @@ use utoipa::ToSchema;
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = UserResponse::default, example=UserResponse::default)]
 pub struct UserResponse {
-  // todo(refactor): success is redundant
+  // hack(refactor): success is redundant
   pub success: bool,
   pub username: Username,
   pub auth_token: AuthToken,
@@ -28,8 +28,10 @@ impl From<User> for UserResponse {
     Self {
       success: true,
       username: user.username,
-      auth_token: user.auth_token.unwrap(),
-      auth_token_expiration_timestamp: user.auth_token_expiration.unwrap(),
+      auth_token: user.auth_token.unwrap_or_default(),
+      auth_token_expiration_timestamp: user
+        .auth_token_expiration
+        .unwrap_or_else(Timestamp::default_expiration),
     }
   }
 }

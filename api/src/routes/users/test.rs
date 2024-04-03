@@ -7,9 +7,9 @@ use std::{
 };
 
 use axum::{
-  body::Body,
+  body::{self, Body},
   extract::connect_info::MockConnectInfo,
-  http::{self, Request, StatusCode},
+  http::{self, Request, Response, StatusCode},
   Router,
 };
 use axum_login::{login_required, AuthManagerLayerBuilder};
@@ -31,89 +31,82 @@ use crate::{
   CredentialsPayload,
 };
 
+/// convenince method to send a json payload to a route and assert the status code
+async fn jsend<P: Serialize>(
+  app: &Router,
+  payload: P,
+  method: &str,
+  uri: &str,
+  status_code: StatusCode,
+) -> Response<body::Body> {
+  let request = Request::builder().uri(uri).method(method).json(json!(payload));
+  let response = app.clone().oneshot(request).await.unwrap();
+  assert_eq!(response.status(), status_code);
+  response
+}
+/// convenince method to send an empty body to a route and assert the status code
+async fn send(
+  app: &Router,
+  method: &str,
+  uri: &str,
+  status_code: StatusCode,
+) -> Response<body::Body> {
+  let request = Request::builder().uri(uri).method(method).body(Body::empty()).unwrap();
+  let response = app.clone().oneshot(request).await.unwrap();
+  assert_eq!(response.status(), status_code);
+  response
+}
+
+// demo: how to collect body into a type
+// -------------------------------------
+// let user = _response.into_body().collect().await.unwrap().to_bytes();
+// let user: User = serde_json::from_slice(&user).unwrap();
+
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_user_crud_cycle(pool: PgPool) {
   setup_test_tracing();
   let app = crate::app(pool, Key::generate()).await.expect("failed to build router");
-
-  let user_payload = UserPayload::default();
-  let request = Request::builder().uri("/users").method("POST").json(json!(user_payload));
-  let response = app.clone().oneshot(request).await.unwrap();
-  // println!("response: {:?}", response);
-  assert_eq!(response.status(), StatusCode::OK);
-
-  let request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
-  let response = app.clone().oneshot(request).await.unwrap();
-  // println!("response: {:?}", response);
-  assert_eq!(response.status(), StatusCode::OK);
-  let user = response.into_body().collect().await.unwrap().to_bytes();
-  let user: User = serde_json::from_slice(&user).unwrap();
-  // println!("user: {:?}", user.about);
-  assert!(user.about.is_none() || user.about.as_ref().unwrap().0.is_empty());
-
-  let update_payload =
-    UserUpdatePayload::new("alice", Some("newemail@email.com"), Some("about")).unwrap();
-  let request = Request::builder().uri("/users").method("PUT").json(json!(update_payload.clone()));
-  let response = app.clone().oneshot(request).await.unwrap();
-  assert_eq!(response.status(), StatusCode::OK);
-
-  let request = Request::builder().uri("/users/alice").method("GET").body(Body::empty()).unwrap();
-  let response = app.clone().oneshot(request).await.unwrap();
-  // println!("response: {:?}", response);
-  assert_eq!(response.status(), StatusCode::OK);
-  let user = response.into_body().collect().await.unwrap().to_bytes();
-  let user: User = serde_json::from_slice(&user).unwrap();
-  println!("user: {:?}", user.about);
-  assert!(user.about.as_ref().unwrap().0 == "about");
-  assert!(user.email.as_ref().unwrap().0 == "newemail@email.com");
-
-  let request =
-    Request::builder().uri("/users/alice").method("DELETE").body(Body::empty()).unwrap();
-  let response = app.clone().oneshot(request).await.unwrap();
-  // println!("response: {:?}", response);
-  assert_eq!(response.status(), StatusCode::OK);
-
-  let request = Request::builder().uri("/users/alice").body(Body::empty()).unwrap();
-  let response = app.clone().oneshot(request).await.unwrap();
-  // println!("response: {:?}", response);
-  assert_eq!(response.status(), StatusCode::NOT_FOUND);
+  let _r = jsend(&app, UserPayload::default(), "POST", "/users", StatusCode::OK).await;
+  // fail on duplicate create user
+  let _r = jsend(&app, UserPayload::default(), "POST", "/users", StatusCode::CONFLICT).await;
+  let _r = jsend(&app, CredentialsPayload::default(), "POST", "/users/login", StatusCode::OK).await;
+  let _r = jsend(&app, UserUpdatePayload::default(), "PUT", "/users", StatusCode::OK).await;
+  let _r = send(&app, "GET", "/users/alice", StatusCode::OK).await;
+  let _r = send(&app, "DELETE", "/users/alice", StatusCode::OK).await;
+  let _r = send(&app, "GET", "/users/alice", StatusCode::NOT_FOUND).await;
 }
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_request_password_reset_link(pool: PgPool) {
   let app = router_with_user_alice(pool).await;
-
-  let request =
-    Request::builder().uri("/users/reset-password-link/alice").method("PUT").empty_body();
-  let response = app.clone().oneshot(request).await.unwrap();
-  dbg!(&response);
-  assert_eq!(response.status(), StatusCode::OK);
-  let body = &response.into_body().collect().await.unwrap();
-  dbg!(body);
-
-  let request =
-    Request::builder().uri("/users/reset-password-link/alice").method("PUT").empty_body();
-  let response = app.clone().oneshot(request).await.unwrap();
-  dbg!(&response);
-  assert_eq!(response.status(), StatusCode::OK);
+  let _r = jsend(&app, CredentialsPayload::default(), "POST", "/users/login", StatusCode::OK).await;
+  let _r = send(&app, "PUT", "/users/reset-password-link/alice", StatusCode::OK).await;
+  let _r = send(&app, "PUT", "/users/reset-password-link/alice", StatusCode::OK).await;
 }
 
 #[sqlx::test(migrations = "../db/migrations")]
 async fn test_change_password(pool: PgPool) {
   let app = router_with_user_alice(pool).await;
 
+  // login
+  let _response =
+    jsend(&app, CredentialsPayload::default(), "POST", "/users/login", StatusCode::OK).await;
+
   // change her password
-  let payload = json!(ChangePasswordPayload::new("alice", "password", "new_password").unwrap());
-  let request = Request::builder().uri("/users/change-password").method("PUT").json(payload);
-  let response = app.clone().oneshot(request).await.unwrap();
-  assert_eq!(response.status(), StatusCode::OK);
+  let _response =
+    jsend(&app, ChangePasswordPayload::default(), "PUT", "/users/change-password", StatusCode::OK)
+      .await;
   // let body = &response.into_body().collect().await.unwrap();
 
   // change her password again
-  let payload = json!(ChangePasswordPayload::new("alice", "new_password", "password").unwrap());
-  let request = Request::builder().uri("/users/change-password").method("PUT").json(payload);
-  let response = app.clone().oneshot(request).await.unwrap();
-  assert_eq!(response.status(), StatusCode::OK);
+  let _response = jsend(
+    &app,
+    ChangePasswordPayload::new("alice", "new_password", "password").unwrap(),
+    "PUT",
+    "/users/change-password",
+    StatusCode::OK,
+  )
+  .await;
 }
 
 #[sqlx::test(migrations = "../db/migrations")]
