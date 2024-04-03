@@ -72,6 +72,7 @@ pub(super) mod get {
     let pool = &state.pool;
     username.validate(&())?;
     let user = db::queries::users::get_user(pool, &username).await?;
+
     info!("found user: {user:?}");
     Ok(Json(user))
   }
@@ -194,7 +195,7 @@ pub(super) mod put {
         (status = 403, description = "Forbidden"),
         (status = 422, description = "Invalid username"),
         (status = 404, description = "User not found"),
-        (status = 404, description = "No email found"),
+        (status = 404, description = "No email stored for user"),
         (status = 200),
       ),
   )]
@@ -211,8 +212,8 @@ pub(super) mod put {
     let email = user.email.ok_or(ApiError::BadRequest("email missing".to_string()))?;
 
     // Generate a reset password token and expiration date for the user. Update the db.
-    // todo(auth)
-    let reset_password_token = AuthToken("todo(auth)-create reset password token".into());
+    // todo(email)
+    let reset_password_token = AuthToken("create reset password token".into());
     let reset_password_token_expiration = crate::utils::default_expiration();
     db::queries::users::update_user_password_token(
       &state.pool,
@@ -235,11 +236,10 @@ pub(super) mod put {
       path = "/users/change-password",
       request_body = ChangePasswordPayload,
       responses(
-        // todo(auth) auth error
         (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden"),
         (status = 422, description = "Payload Validation Error"),
         (status = 404, description = "User not found"),
-        (status = 401, description = "Incorrect Password"),
         (status = 200),
       ),
   )]
@@ -248,11 +248,14 @@ pub(super) mod put {
   /// todo(cookie) ref - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L267
   pub async fn change_password(
     State(state): State<SharedState>,
+    auth_session: AuthSession,
     Json(payload): Json<ChangePasswordPayload>,
   ) -> ApiResult<StatusCode> {
     debug!("change_password called with payload: {payload:?}");
     payload.validate(&())?;
+    auth_session.caller_matches_payload(&payload.username)?;
     let user = db::queries::users::get_user(&state.pool, &payload.username).await?;
+    // todo(password) - refactor to propagate error
     if !verify_user_password(&user, payload.current_password) {
       return Err(ApiError::Unauthorized("incorrect password".to_string()));
     }
@@ -275,8 +278,8 @@ pub(super) mod delete {
       path = "/users/{username}",
       params( ("username" = String, Path, example = "alice") ),
       responses(
-        // todo(auth) auth error
-        // (status = 401, description = "Unauthorized", body = ApiError::Unauthorized),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden"),
         (status = 422, description = "Invalid username"),
         (status = 404, description = "User not found"),
         (status = 200),
@@ -289,8 +292,7 @@ pub(super) mod delete {
     auth_session: AuthSession, // todo(mods)
   ) -> ApiResult<StatusCode> {
     debug!("delete_user called with username: {username}");
-    // todo(auth)
-    // assert_authenticated(&auth_session)?;
+    auth_session.caller_matches_payload(&username)?;
     username.validate(&())?;
     db::queries::users::delete_user(&state.pool, &username).await?;
 
