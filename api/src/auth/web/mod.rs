@@ -11,9 +11,7 @@ pub async fn login_post_internal(
   creds: CredentialsPayload,
 ) -> ApiResult<StatusCode> {
   // safety - authenticate never returns None
-  tracing::warn!("creds {:?}", creds);
   let user = auth_session.authenticate(creds.clone()).await?.unwrap();
-  tracing::warn!("user {:?}", user);
   auth_session.login(&user).await?;
   debug!("login success for user: {}", creds.username);
   Ok(StatusCode::OK)

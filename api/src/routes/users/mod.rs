@@ -24,7 +24,7 @@ use crate::{
 pub fn users_router(state: SharedState) -> Router {
   Router::new()
     // note - called `/users/get-user-data` in reference
-    .route("/:username", routing::get(get::get_user).delete(delete::delete_user))
+    .route("/:username", routing::get(get::get_user))
     .route("/", routing::put(put::update_user).post(post::create_user))
     .route("/reset-password-link/:username", routing::put(put::request_password_reset_link))
     .route("/change-password", routing::put(put::change_password))
@@ -60,14 +60,14 @@ pub(super) mod get {
     trace!("get_user called with username: {username}");
     // / todo(auth): currently, we return the whole user. When auth is implemented, we will want to
     // / return different user data, per the caller's auth.
-    if auth_session.is_authenticated() {
-      // todo(auth) - return reduced user data
-      // let user = users::get_user(&state.pool, &username).await?;
-      // let user = user.map(|user| UserResponse::from(user));
-      // return Ok(Json(user));
-    } else {
-      // todo
-    }
+    // if auth_session.is_authenticated() {
+    // todo(auth) - return reduced user data
+    // let user = users::get_user(&state.pool, &username).await?;
+    // let user = user.map(|user| UserResponse::from(user));
+    // return Ok(Json(user));
+    // } else {
+    // todo
+    // }
     let pool = &state.pool;
     username.validate(&())?;
     let user = users::get_user(pool, &username).await?;
@@ -263,33 +263,33 @@ pub(super) mod put {
   }
 }
 
-pub(super) mod delete {
-  use super::*;
+// pub(super) mod delete {
+//   use super::*;
 
-  #[utoipa::path(
-      delete,
-      path = "/users/{username}",
-      params( ("username" = String, Path, example = "alice") ),
-      responses(
-        (status = 401, description = "Unauthorized"),
-        (status = 403, description = "Forbidden"),
-        (status = 422, description = "Invalid username"),
-        (status = 404, description = "User not found"),
-        (status = 200),
-      ),
-  )]
-  /// Delete a user.
-  pub async fn delete_user(
-    State(state): State<SharedState>,
-    Path(username): Path<Username>,
-    auth_session: AuthSession,
-  ) -> ApiResult<StatusCode> {
-    trace!("delete_user called with username: {username}");
-    auth_session.caller_matches_payload(&username)?;
-    username.validate(&())?;
-    users::delete_user(&state.pool, &username).await?;
+//   #[utoipa::path(
+//       delete,
+//       path = "/users/{username}",
+//       params( ("username" = String, Path, example = "alice") ),
+//       responses(
+//         (status = 401, description = "Unauthorized"),
+//         (status = 403, description = "Forbidden"),
+//         (status = 422, description = "Invalid username"),
+//         (status = 404, description = "User not found"),
+//         (status = 200),
+//       ),
+//   )]
+//   /// Delete a user.
+//   pub async fn delete_user(
+//     State(state): State<SharedState>,
+//     Path(username): Path<Username>,
+//     auth_session: AuthSession,
+//   ) -> ApiResult<StatusCode> {
+//     trace!("delete_user called with username: {username}");
+//     auth_session.caller_matches_payload(&username)?;
+//     username.validate(&())?;
+//     users::delete_user(&state.pool, &username).await?;
 
-    debug!("deleted user: {}", username);
-    Ok(StatusCode::OK)
-  }
-}
+//     debug!("deleted user: {}", username);
+//     Ok(StatusCode::OK)
+//   }
+// }

@@ -26,7 +26,7 @@ pub enum ApiError {
 
   // db errors
   /// New entry conflicts with another entry in the db
-  #[status(StatusCode::CONFLICT)]
+  #[status(StatusCode::CONFLICT)] // 409
   UniqueViolation(String),
   #[status(StatusCode::INTERNAL_SERVER_ERROR)]
   ForeignKeyViolation(String),
@@ -35,7 +35,7 @@ pub enum ApiError {
   #[status(StatusCode::INTERNAL_SERVER_ERROR)]
   CheckViolation(String),
   /// Entry does not exist in the db
-  #[status(StatusCode::NOT_FOUND)]
+  #[status(StatusCode::NOT_FOUND)] // 404
   DbEntryNotFound(String),
   #[status(StatusCode::INTERNAL_SERVER_ERROR)]
   OtherDbError(String),

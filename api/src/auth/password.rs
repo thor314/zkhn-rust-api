@@ -27,7 +27,7 @@ impl PasswordExt for Password {
     Ok(())
   }
 
-  /// Hashes the password using argon2. 
+  /// Hashes the password using argon2.
   async fn hash(&self) -> PasswordHash {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
@@ -38,7 +38,7 @@ impl PasswordExt for Password {
         .await
         .expect("tokio runtime error");
     let elapsed = instant.elapsed();
-    trace!("hashing password, time elapsed: {:?}", elapsed); // ~400ms 
+    trace!("hashing password, time elapsed: {:?}", elapsed); // ~400ms
     PasswordHash(password_hash)
   }
 }

@@ -182,14 +182,14 @@ pub async fn update_user_password(
 //   Ok(())
 // }
 
-pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
-  trace!("delete_user with: {username}");
-  let result = sqlx::query!("DELETE FROM users WHERE username = $1", username.0)
-    .execute(pool)
-    .await
-    .map(|r| if r.rows_affected() == 0 { Err(DbError::NotFound) } else { Ok(()) })?;
-  Ok(())
-}
+// pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
+//   trace!("delete_user with: {username}");
+//   let result = sqlx::query!("DELETE FROM users WHERE username = $1", username.0)
+//     .execute(pool)
+//     .await
+//     .map(|r| if r.rows_affected() == 0 { Err(DbError::NotFound) } else { Ok(()) })?;
+//   Ok(())
+// }
 
 // pub async fn get_user_comments(pool: &DbPool, username: &Username) -> DbResult<Vec<Comment>> {
 // todo   trace!("get_user_comments with: {username}");

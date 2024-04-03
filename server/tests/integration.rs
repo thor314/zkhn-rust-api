@@ -2,12 +2,13 @@
 
 use std::{process, time};
 
+use api::*;
 use db::models::user::User;
 use reqwest::{Client, RequestBuilder, Response};
 use serial_test::serial;
 use tracing::info;
 
-use self::integration_utils::{cargo_shuttle_run, setup, ChildGuard, ClientExt};
+use self::integration_utils::{cargo_shuttle_run, db_setup, ChildGuard, ClientExt};
 
 const WEBSERVER_URL: &str = "http://localhost:8000";
 
@@ -30,36 +31,39 @@ mod integration_utils {
     pub child: process::Child,
   }
 
-  // note - this drops the process, but not the docker container
+  // hack - this drops the process, but not the docker container
+  // hack - it only maybe drops the process, you may get a broken pipe error
   impl Drop for ChildGuard {
     fn drop(&mut self) {
       self.child.kill().expect("Failed to kill child process");
       self.child.wait().expect("Failed to wait for child process to exit");
-      cleanup();
       println!("💀 Killed child process 💀");
     }
   }
 
   /// remove any artifacts of previous tests
-  pub fn cleanup() {
+  pub fn server_cleanup() {
     process::Command::new("pkill").arg("server").spawn().expect("Failed to kill server");
-    info!("Killed server");
+    println!("Killed test server");
   }
 
   /// migrate the db to the newest schema
-  pub fn setup() {
+  pub fn db_setup() {
     process::Command::new("sqlx")
       .arg("db")
       .arg("reset")
       .arg("-y")
       .current_dir("../db")
       .spawn()
-      .expect("Failed to kill server");
+      .expect("failed to reset database");
+    println!("test database setup");
   }
 
   /// Run the shuttle server
   pub async fn cargo_shuttle_run() -> ChildGuard {
-    setup();
+    // todo: how to rm the docker container
+    db_setup();
+    server_cleanup();
     let child = process::Command::new("cargo")
       .arg("shuttle")
       .arg("run")
@@ -86,63 +90,46 @@ mod integration_utils {
   }
 }
 
-#[tokio::test]
-#[serial]
-async fn create_get() {
-  // run the server
-  let mut _child_guard = cargo_shuttle_run().await;
-
-  // create a client that stores cookies
-  let client = Client::builder().cookie_store(true).build().unwrap();
-
-  // create the default user
-  let payload = api::UserPayload::default();
-  let res = client.post(format!("{}/users", WEBSERVER_URL)).send_json(&payload).await;
-  assert_eq!(res.status(), 200);
-
-  // get the user
-  let res = client.get(format!("{}/users/alice", WEBSERVER_URL)).send_empty().await;
-  assert_eq!(res.status(), 200);
-  let body: User = res.json().await.unwrap();
-  assert!(body.username.0 == "alice");
+/// convenience function to send a request and check the response status
+pub async fn send(
+  client: &Client,
+  payload: impl serde::Serialize,
+  method: &str,
+  path: &str,
+  status: u16,
+  tag: &str,
+) {
+  let res = match method {
+    "POST" => client.post(format!("{}/{}", WEBSERVER_URL, path)).send_json(payload).await,
+    "PUT" => client.put(format!("{}/{}", WEBSERVER_URL, path)).send_json(payload).await,
+    "PUT_EMPTY" => client.put(format!("{}/{}", WEBSERVER_URL, path)).send_empty().await,
+    "GET" => client.get(format!("{}/{}", WEBSERVER_URL, path)).send_empty().await,
+    "DELETE" => client.delete(format!("{}/{}", WEBSERVER_URL, path)).send_empty().await,
+    _ => panic!("Invalid method"),
+  };
+  assert_eq!(res.status(), status, "Test {} failed", tag);
 }
 
 #[tokio::test]
 #[serial]
-async fn login_test() {
-  // run the server
+async fn user_crud() {
   let mut _child_guard = cargo_shuttle_run().await;
+  let c = Client::builder().cookie_store(true).build().unwrap();
 
-  // create a client that stores cookies
-  let client = Client::builder().cookie_store(true).build().unwrap();
-
-  // Log in with invalid credentials.
-  let payload = api::CredentialsPayload::new("ferris", "hunter42", None);
-  let res = client.post(format!("{}/users/login", WEBSERVER_URL)).send_json(payload).await;
-  assert_eq!(res.status(), 401);
-  assert_eq!(res.url().to_string(), format!("{}/users/login", WEBSERVER_URL));
-
-  // create the default user
-  let payload = api::UserPayload::default();
-  let _res = client.post(format!("{}/users", WEBSERVER_URL)).send_json(&payload).await;
-  // assert_eq!(_res.status(), 200);
-
-  // Log in with valid credentials.
-  let payload = api::CredentialsPayload::default();
-  let res = client.post(format!("{}/users/login", WEBSERVER_URL)).send_json(&payload).await;
-  // dbg!(&res);
-  assert_eq!(res.status(), 200);
-  assert_eq!(res.url().to_string(), format!("{}/users/login", WEBSERVER_URL));
-
-  // Log out and check the cookie has been removed in response.
-  let res = client.post(format!("{}/users/logout", WEBSERVER_URL)).send_empty().await;
-  assert_eq!(res.status(), 200);
-  assert!(res.cookies().find(|c| c.name() == "id").is_some_and(|c| c.value() == ""));
-
-  let res = client.post(format!("{}/users/logout", WEBSERVER_URL)).send_empty().await;
-  assert_eq!(res.status(), 200);
+  send(&c, "", "GET", "users/alice", 404, "00").await;
+  send(&c, UserPayload::default(), "POST", "users", 200, "1").await;
+  send(&c, UserPayload::default(), "POST", "users", 409, "2").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "3").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "4").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "5").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "6").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "7").await;
+  send(&c, UserUpdatePayload::default(), "PUT", "users", 200, "8").await;
+  send(&c, UserUpdatePayload::default(), "PUT", "users", 200, "9").await;
+  send(&c, UserUpdatePayload::default(), "PUT", "users", 200, "0").await;
+  send(&c, "", "PUT_EMPTY", "users/reset-password-link/alice", 200, "a").await;
+  send(&c, "", "PUT_EMPTY", "users/reset-password-link/alice", 200, "b").await;
+  send(&c, ChangePasswordPayload::default(), "PUT", "users/change-password", 200, "c").await;
+  send(&c, ChangePasswordPayload::default(), "PUT", "users/change-password", 200, "d").await;
+  send(&c, "", "GET", "users/alice", 200, "e").await;
 }
-
-// for cookie in res.cookies() {
-//   println!("{:?}", cookie);
-// }
