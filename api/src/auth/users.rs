@@ -43,18 +43,10 @@ impl AuthnBackend for AuthBackend {
     &self,
     creds: Self::Credentials,
   ) -> Result<Option<Self::User>, Self::Error> {
-    let user: Option<Self::User> = self.get_user(&creds.username).await?;
-
-    if let Some(user) = user {
-      if creds.password.hash_and_verify(&user.0.password_hash).await.is_err() {
-        tracing::error!("Incorrect password: {:?}", creds);
-        Err(ApiError::Unauthorized("Incorrect password".to_string())) // wrong password
-      } else {
-        Ok(Some(user)) // right password
-      }
-    } else {
-      Err(ApiError::DbEntryNotFound("Couldn't find user".to_string()))
-    }
+    // safety - get_user errors on None, always some
+    let user = self.get_user(&creds.username).await?.unwrap();
+    creds.password.hash_and_verify(&user.0.password_hash).await?;
+    Ok(Some(user))
   }
 
   async fn get_user(&self, username: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {

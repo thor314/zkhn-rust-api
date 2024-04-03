@@ -23,7 +23,6 @@ async fn test_user_crud_cycle(pool: PgPool) {
   jsend(&app, UserPayload::default(), "POST", "/users", StatusCode::OK).await;
   // fail on duplicate create user
   jsend(&app, UserPayload::default(), "POST", "/users", StatusCode::CONFLICT).await;
-  // debug:
   jsend(&app, CredentialsPayload::default(), "POST", "/users/login", StatusCode::OK).await;
   jsend(&app, UserUpdatePayload::default(), "PUT", "/users", StatusCode::OK).await;
   send(&app, "GET", "/users/alice", StatusCode::OK).await;
