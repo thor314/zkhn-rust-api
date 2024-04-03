@@ -21,12 +21,12 @@ impl From<DateTime<Utc>> for Timestamp {
   fn from(dt: DateTime<Utc>) -> Self { Timestamp(dt) }
 }
 
-// todo: test. Most of this should probably be done with a crate like ammonia, plus latex rendering?
+// todo(sanitize) 
 /// Sanitize text:
 /// - Trim whitespace
 /// - Remove HTML tags
 /// - Parse Markdown
-/// - Parse Latex todo
+/// - Parse Latex - todo(latex)
 /// - Linkify URLs
 /// - Prevent XSS attacks with `ammonia`
 pub fn sanitize_text(text: &str) -> String {

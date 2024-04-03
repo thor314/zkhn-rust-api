@@ -17,7 +17,6 @@ pub struct User {
   pub username: Username,
   /// Hashed password
   pub password_hash: PasswordHash,
-  // todo: oauth
   /// Authentication token
   pub auth_token: Option<AuthToken>,
   /// Expiration of auth token
@@ -75,35 +74,32 @@ impl User {
     User { username, password_hash, email, about, ..Default::default() }
   }
 
-  // todo: probably move
-  pub fn favorite(&self, item_type: String, item_id: Uuid) -> UserFavorite {
-    UserFavorite { username: self.username.clone(), item_type, item_id, date: now() }
-  }
+  // pub fn favorite(&self, item_type: String, item_id: Uuid) -> UserFavorite {
+  //   UserFavorite { username: self.username.clone(), item_type, item_id, date: now() }
+  // }
 
-  // todo: probably move
-  pub fn hide(&self, item_id: Uuid, item_creation_date: Timestamp) -> UserHidden {
-    UserHidden { username: self.username.clone(), item_id, date: now(), item_creation_date }
-  }
+  // pub fn hide(&self, item_id: Uuid, item_creation_date: Timestamp) -> UserHidden {
+  //   UserHidden { username: self.username.clone(), item_id, date: now(), item_creation_date }
+  // }
 
-  // todo: probably move
-  pub fn vote(
-    &self,
-    vote_type: String,
-    content_id: Uuid,
-    parent_item_id: Option<Uuid>,
-    vote_state: VoteState,
-    upvote: bool,
-  ) -> UserVote {
-    let _downvote = !upvote;
-    UserVote {
-      username: self.username.clone(),
-      vote_type,
-      content_id,
-      parent_item_id,
-      vote_state,
-      created: now(),
-    }
-  }
+  // pub fn vote(
+  //   &self,
+  //   vote_type: String,
+  //   content_id: Uuid,
+  //   parent_item_id: Option<Uuid>,
+  //   vote_state: VoteState,
+  //   upvote: bool,
+  // ) -> UserVote {
+  //   let _downvote = !upvote;
+  //   UserVote {
+  //     username: self.username.clone(),
+  //     vote_type,
+  //     content_id,
+  //     parent_item_id,
+  //     vote_state,
+  //     created: now(),
+  //   }
+  // }
 }
 
 // explicitly redact sensitive info
