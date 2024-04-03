@@ -1,3 +1,4 @@
+//! auth layer depends on this, don't move to server
 use axum_login::tower_sessions::{cookie::time::Duration, Expiry, SessionManagerLayer};
 use db::DbPool;
 use tower_sessions::{cookie::Key, service::SignedCookie, ExpiredDeletion};

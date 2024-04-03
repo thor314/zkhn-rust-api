@@ -5,80 +5,85 @@ use std::{process, time};
 use db::models::user::User;
 use reqwest::{Client, RequestBuilder, Response};
 use serial_test::serial;
+use tracing::info;
+
+use self::integration_utils::{cargo_shuttle_run, setup, ChildGuard, ClientExt};
 
 const WEBSERVER_URL: &str = "http://localhost:8000";
 
-trait ClientExt {
-  async fn send_json(self, payload: impl serde::Serialize) -> Response;
-  async fn send_empty(self) -> Response;
-}
-
-impl ClientExt for RequestBuilder {
-  async fn send_json(self, payload: impl serde::Serialize) -> Response {
-    self.json(&payload).send().await.unwrap()
+mod integration_utils {
+  use super::*;
+  pub trait ClientExt {
+    async fn send_json(self, payload: impl serde::Serialize) -> Response;
+    async fn send_empty(self) -> Response;
   }
 
-  async fn send_empty(self) -> Response { self.send().await.unwrap() }
-}
-
-struct ChildGuard {
-  child: process::Child,
-}
-
-// todo: need to drop the server, this child guard ain't getting it done
-// hacky solution:
-// $ ps # look for "server"
-// $ kill <pid> # or pkill server
-//
-// failing to drop the shuttle server:
-// drop(_child_guard);
-impl Drop for ChildGuard {
-  fn drop(&mut self) {
-    self.child.kill().expect("Failed to kill child process");
-    self.child.wait().expect("Failed to wait for child process to exit");
-    // todo(lies!)
-    println!("💀 Killed child process 💀");
-  }
-}
-
-/// remove any artifacts of previous tests
-fn cleanup() {
-  process::Command::new("pkill").arg("server").spawn().expect("Failed to kill server");
-  process::Command::new("sqlx")
-    .arg("db")
-    .arg("reset")
-    .arg("-y")
-    .current_dir("../db")
-    .spawn()
-    .expect("Failed to kill server");
-}
-
-/// Run the shuttle server
-async fn cargo_shuttle_run() -> ChildGuard {
-  cleanup();
-  let child = process::Command::new("cargo")
-    .arg("shuttle")
-    .arg("run")
-    .spawn()
-    .expect("Failed to start example binary");
-
-  let start_time = time::Instant::now();
-  let mut is_server_ready = false;
-
-  while start_time.elapsed() < time::Duration::from_secs(300) {
-    if reqwest::get(WEBSERVER_URL).await.is_ok() {
-      is_server_ready = true;
-      println!("Server ready, elapsed time: {:?}", start_time.elapsed());
-      break;
+  impl ClientExt for RequestBuilder {
+    async fn send_json(self, payload: impl serde::Serialize) -> Response {
+      self.json(&payload).send().await.unwrap()
     }
-    tokio::time::sleep(time::Duration::from_secs(1)).await;
+
+    async fn send_empty(self) -> Response { self.send().await.unwrap() }
   }
 
-  if !is_server_ready {
-    panic!("The web server did not become ready within the expected time.");
+  pub struct ChildGuard {
+    pub child: process::Child,
   }
 
-  ChildGuard { child }
+  // note - this drops the process, but not the docker container
+  impl Drop for ChildGuard {
+    fn drop(&mut self) {
+      self.child.kill().expect("Failed to kill child process");
+      self.child.wait().expect("Failed to wait for child process to exit");
+      cleanup();
+      println!("💀 Killed child process 💀");
+    }
+  }
+
+  /// remove any artifacts of previous tests
+  pub fn cleanup() {
+    process::Command::new("pkill").arg("server").spawn().expect("Failed to kill server");
+    info!("Killed server");
+  }
+
+  /// migrate the db to the newest schema
+  pub fn setup() {
+    process::Command::new("sqlx")
+      .arg("db")
+      .arg("reset")
+      .arg("-y")
+      .current_dir("../db")
+      .spawn()
+      .expect("Failed to kill server");
+  }
+
+  /// Run the shuttle server
+  pub async fn cargo_shuttle_run() -> ChildGuard {
+    setup();
+    let child = process::Command::new("cargo")
+      .arg("shuttle")
+      .arg("run")
+      .spawn()
+      .expect("Failed to start example binary");
+
+    let start_time = time::Instant::now();
+    let mut is_server_ready = false;
+
+    while start_time.elapsed() < time::Duration::from_secs(300) {
+      if reqwest::get(WEBSERVER_URL).await.is_ok() {
+        is_server_ready = true;
+        println!("Server ready, elapsed time: {:?}", start_time.elapsed());
+        break;
+      }
+      tokio::time::sleep(time::Duration::from_secs(1)).await;
+    }
+
+    if !is_server_ready {
+      panic!("The web server did not become ready within the expected time.");
+    }
+
+    ChildGuard { child }
+  }
 }
 
 #[tokio::test]

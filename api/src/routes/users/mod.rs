@@ -43,7 +43,7 @@ pub(super) mod get {
       responses(
         (status = 422, description = "Invalid username"),
         (status = 404, description = "User not found"),
-        (status = 200, body = User), // todo(define reduced UserResponse body)
+        (status = 200, body = User), 
       ),
   )]
   /// Get user.

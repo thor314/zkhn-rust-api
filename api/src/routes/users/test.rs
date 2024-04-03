@@ -24,11 +24,11 @@ use tower_sessions::{Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::PostgresStore;
 use tracing::info;
 
-use crate::{error::ApiError, CredentialsPayload};
 use crate::{
-  // auth::credentials::password_creds::PasswordCreds,
+  error::ApiError,
   routes::users::{payload::UserUpdatePayload, ChangePasswordPayload, UserPayload},
   tests::common::{router_with_user_alice, setup_test_tracing, RequestBuilderExt},
+  CredentialsPayload,
 };
 
 #[sqlx::test(migrations = "../db/migrations")]
