@@ -11,7 +11,7 @@ use crate::{error::DbError, utils::now, CommentText, DbResult, Timestamp, Title,
 const MIN_POINTS: i32 = -4;
 
 /// Comments on a post
-#[derive(sqlx::FromRow, Debug, Serialize, Encode, Clone)]
+#[derive(sqlx::FromRow, Debug, Serialize, Encode, Clone, Deserialize)]
 pub struct Comment {
   /// the unique identifier given to each comment in the form of a randomly generated string
   pub id:                Uuid, // Assuming UUIDs for unique identifiers, common in SQL databases

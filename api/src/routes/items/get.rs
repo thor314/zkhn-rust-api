@@ -3,18 +3,16 @@ use super::*;
 #[utoipa::path(
   get,
   path = "/items/{id}",
-  params( ("username" = String, Path, example = "alice") ),
+  params( ("id" = String, Path, example = Uuid::new_v4) ),
   responses(
-    // todo(auth) auth error
-    // (status = 401, description = "Unauthorized"),
     (status = 422, description = "Invalid id"),
     (status = 404, description = "User not found"),
-    (status = 200, description = "Success", body = User),// todo(define reduced UserResponse body)
+    (status = 200, description = "Success", body = GetItemResponse),// todo(define reduced UserResponse body)
   ),
   )]
 /// Get item.
-///
-/// todo(auth): currently, we return the whole item. We actually want to return other stuff.
+/// 
+/// 
 ///
 /// ref get_public: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L223
 /// ref get_private: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L244

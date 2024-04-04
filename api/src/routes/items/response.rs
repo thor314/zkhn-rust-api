@@ -1,36 +1,23 @@
-use db::{models::item::Item, AuthToken, Timestamp};
+use db::{
+  models::{comment::Comment, item::Item},
+  AuthToken, Timestamp, Username,
+};
 use serde::{Deserialize, Serialize};
 use utoipa::{OpenApi, ToSchema};
 
-// // success: true,
-// // item: item,
-// // comments: comments,
-// // isMoreComments:
-// //   totalNumOfComments >
-// //   (page - 1) * config.commentsPerPage + config.commentsPerPage
-// //     ? true
-// //     : false,
-// #[derive(Debug, Serialize, Deserialize, ToSchema)]
-// #[schema(default = ItemResponse::default, example=ItemResponse::default)]
-// pub struct ItemResponse {
-//   // todo(refactor): success is redundant
-//   pub success: bool,
-//   // item:
-//   // pub username: Itemname,
-//   // pub auth_token: AuthToken,
-//   // pub auth_token_expiration_timestamp: Timestamp,
-// }
+const COMMENTS_PER_PAGE: usize = 10; // todo(config)
 
-// impl Default for ItemResponse {
-//   fn default() -> Self { Self {} }
-// }
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
+pub struct GetItemResponse {
+  pub item:             Item,
+  pub comments:         Vec<Comment>,
+  pub is_more_comments: bool,
+}
 
-// impl ItemResponse {
-//   pub(crate) fn new(user: Item, auth_token: AuthToken, auth_token_expiration: Timestamp) -> Self
-// {     Self {}
-//   }
-// }
-
-// impl From<Item> for ItemResponse {
-//   fn from(user: Item) -> Self { Self {} }
-// }
+impl GetItemResponse {
+  pub fn new(item: Item, comments: Vec<Comment>, page: usize) -> Self {
+    let is_more_comments = comments.len() > page * COMMENTS_PER_PAGE;
+    Self { item, comments, is_more_comments }
+  }
+}

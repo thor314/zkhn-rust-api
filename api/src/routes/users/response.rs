@@ -68,6 +68,7 @@ impl GetUserResponse {
     }
   }
 }
+
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = AuthenticateUserResponse::default, example=AuthenticateUserResponse::default)]
 pub struct AuthenticateUserResponse {
