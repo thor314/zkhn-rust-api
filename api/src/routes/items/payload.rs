@@ -63,8 +63,7 @@ impl ItemPayload {
     let text_or_url_content = text_or_url_content.to_string();
     let item_category = item_category.to_string();
 
-    let item_payload =
-      Self {title, item_type, is_text, text_or_url_content, item_category };
+    let item_payload = Self { title, item_type, is_text, text_or_url_content, item_category };
     item_payload.validate(&())?;
     Ok(item_payload)
   }

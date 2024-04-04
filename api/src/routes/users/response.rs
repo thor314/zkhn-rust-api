@@ -85,13 +85,13 @@ pub struct AuthenticateUserResponse {
 impl AuthenticateUserResponse {
   pub fn new(user: User) -> Self {
     Self {
-      success: true,
-      username: user.username,
-      banned: user.banned,
-      karma: user.karma,
+      success:        true,
+      username:       user.username,
+      banned:         user.banned,
+      karma:          user.karma,
       contains_email: user.email.is_some(),
-      show_dead: user.show_dead,
-      is_moderator: user.is_moderator,
+      show_dead:      user.show_dead,
+      is_moderator:   user.is_moderator,
     }
   }
 }

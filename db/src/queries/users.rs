@@ -216,7 +216,7 @@ pub async fn update_user_password(
 //   .map_err(DbError::from)
 // }
 
-// pub async fn get_user_items(pool: &DbPool, username: &Username) -> DbResult<Vec<Item>> { 
+// pub async fn get_user_items(pool: &DbPool, username: &Username) -> DbResult<Vec<Item>> {
 //   trace!("get_user_items with: {username}");
 //   sqlx::query_as!(
 //     Item,

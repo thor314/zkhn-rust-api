@@ -21,7 +21,7 @@ impl From<DateTime<Utc>> for Timestamp {
   fn from(dt: DateTime<Utc>) -> Self { Timestamp(dt) }
 }
 
-// todo(sanitize) 
+// todo(sanitize)
 /// Sanitize text:
 /// - Trim whitespace
 /// - Remove HTML tags

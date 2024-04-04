@@ -23,8 +23,7 @@ pub async fn create_item(
     auth_session.user.as_ref().map(|u| &u.0.username.0).unwrap_or(&"".into())
   );
   // todo(error handling): error passing like this should probably be a defined method for DRY
-  let user =
-    auth_session.user.ok_or(ApiError::UnauthorizedPleaseLogin)?.0.clone();
+  let user = auth_session.user.ok_or(ApiError::UnauthorizedPleaseLogin)?.0.clone();
   payload.validate(&())?;
   let item: Item = payload.into_item(user.username).await;
   db::queries::items::create_item(&state.pool, &item).await?;

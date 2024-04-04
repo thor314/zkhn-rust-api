@@ -33,7 +33,6 @@ async fn user_crud() {
   send(&c, "", "GET", "users/alice", 200, "e").await;
 }
 
-
 #[tokio::test]
 #[serial]
 async fn items_crud() {
@@ -42,5 +41,4 @@ async fn items_crud() {
   send(&c, UserPayload::default(), "POST", "users", 200, "1").await;
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "2").await;
   // send(&c, )
-
 }

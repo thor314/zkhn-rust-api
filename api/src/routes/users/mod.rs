@@ -72,7 +72,7 @@ pub(super) mod get {
       get,
       path = "/users/authenticate/{username}",
       responses(
-        (status = 401, description = "Not authenticated"),
+        (status = 401, description = "Not logged in"),
         (status = 403, description = "Forbidden"),
         (status = 403, description = "Banned"),
         (status = 422, description = "Invalid username"),
@@ -190,7 +190,7 @@ pub(super) mod put {
     Json(payload): Json<UserUpdatePayload>,
   ) -> ApiResult<StatusCode> {
     trace!("update_user_about called with payload: {payload:?}");
-    auth_session.caller_matches_payload(&payload.username)?;
+    auth_session.if_authenticated_get_user(&payload.username)?;
     payload.validate(&())?;
     if payload.about.is_none() && payload.email.is_none() {
       return Err(ApiError::BadRequest("about or email must be provided".to_string()));
@@ -222,7 +222,7 @@ pub(super) mod put {
     auth_session: AuthSession,
   ) -> ApiResult<StatusCode> {
     trace!("request-password-reset-link called with username: {:?}", username);
-    auth_session.caller_matches_payload(&username)?;
+    auth_session.if_authenticated_get_user(&username)?;
     username.validate(&())?;
     let user = users::get_user(&state.pool, &username).await?;
     let email = user.email.ok_or(ApiError::BadRequest("email missing".to_string()))?;
@@ -269,7 +269,7 @@ pub(super) mod put {
   ) -> ApiResult<StatusCode> {
     trace!("change_password called with payload: {payload:?}");
     payload.validate(&())?;
-    auth_session.caller_matches_payload(&payload.username)?;
+    auth_session.if_authenticated_get_user(&payload.username)?;
     let user = users::get_user(&state.pool, &payload.username).await?;
     payload.current_password.hash_and_verify(&user.password_hash).await?;
     users::update_user_password(&state.pool, &payload.username, &user.password_hash).await?;
@@ -302,7 +302,7 @@ pub(super) mod put {
 //     auth_session: AuthSession,
 //   ) -> ApiResult<StatusCode> {
 //     trace!("delete_user called with username: {username}");
-//     auth_session.caller_matches_payload(&username)?;
+//     auth_session.if_authenticated_get_user(&username)?;
 //     username.validate(&())?;
 //     users::delete_user(&state.pool, &username).await?;
 
