@@ -49,7 +49,7 @@ pub struct GetUserResponse {
   pub email:             Option<Email>,
   /// private - authenticated access only, otherwise None
   pub show_dead:         Option<bool>,
-  pub _is_authenticated: bool,
+  pub show_private_user_data: bool,
 }
 
 impl GetUserResponse {
@@ -64,7 +64,7 @@ impl GetUserResponse {
       banned: user.banned,
       email,
       show_dead,
-      _is_authenticated: is_authenticated,
+      show_private_user_data: is_authenticated,
     }
   }
 }
