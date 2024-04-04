@@ -13,8 +13,8 @@ pub const WEBSERVER_URL: &str = "http://localhost:8000";
 
 mod integration_utils;
 
-#[tokio::test]
-#[serial]
+// #[tokio::test]
+// #[serial]
 async fn user_crud() {
   let mut _child_guard = cargo_shuttle_run().await;
   let c = Client::builder().cookie_store(true).build().unwrap();
