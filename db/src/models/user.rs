@@ -102,9 +102,9 @@ impl User {
   // }
 
   /// Create a mock User
-  /// 
+  ///
   /// Use in cases where we want the default user metadata, but don't have a authenticated user
-  /// 
+  ///
   /// backlog: kindof a dumb footgun
   pub fn new_logged_out() -> Self { Self { username: "".into(), ..Default::default() } }
 }

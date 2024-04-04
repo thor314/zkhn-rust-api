@@ -30,7 +30,6 @@ pub async fn create_item(
   Ok(Json(item.id))
 }
 
-
 #[utoipa::path(
   post,
   path = "/items/vote",
@@ -44,7 +43,7 @@ pub async fn create_item(
   ),
   )]
 /// Submit an {up,down,un}vote on an item.
-/// 
+///
 /// Return Conflict if the user has already voted identically on the item.
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L259
