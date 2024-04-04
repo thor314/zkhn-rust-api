@@ -6,6 +6,7 @@ pub const WEBSERVER_URL: &str = "http://localhost:8000";
 
 /// Run the shuttle server
 pub async fn cargo_shuttle_run() -> ChildGuard {
+  tracing_subscriber_setup();
   db_setup();
   server_cleanup();
   rm_docker_claude();
@@ -42,7 +43,7 @@ pub async fn send(
   path: &str,
   status: u16,
   tag: &str,
-) {
+) -> Response {
   let res = match method {
     "POST" => client.post(format!("{}/{}", WEBSERVER_URL, path)).send_json(payload).await,
     "PUT" => client.put(format!("{}/{}", WEBSERVER_URL, path)).send_json(payload).await,
@@ -52,6 +53,7 @@ pub async fn send(
     _ => panic!("Invalid method"),
   };
   assert_eq!(res.status(), status, "Test {} failed", tag);
+  res
 }
 
 trait ClientExt {
@@ -126,4 +128,19 @@ fn _rm_docker_gemini() {
     let container_id = String::from_utf8(output.stdout).unwrap().trim().to_string();
     Command::new("docker").args(["rm", "-f", &container_id]).output().unwrap();
   }
+}
+
+fn tracing_subscriber_setup() {
+  let filter = tracing_subscriber::EnvFilter::from_default_env()
+    // .add_directive(LevelFilter::DEBUG.into())
+    .add_directive("sqlx=info".parse().unwrap())
+    // .add_directive("tower_http=debug".parse().unwrap())
+    // .add_directive("tower_sessions=debug".parse().unwrap())
+    // .add_directive("axum_login=debug".parse().unwrap())
+    .add_directive("axum_login=info".parse().unwrap())
+    .add_directive("h2=info".parse().unwrap())
+    .add_directive("api=info".parse().unwrap())
+    .add_directive("db=info".parse().unwrap())
+    .add_directive("server=info".parse().unwrap());
+  tracing_subscriber::fmt().with_env_filter(filter).with_test_writer().init();
 }

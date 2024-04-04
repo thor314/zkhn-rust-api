@@ -50,7 +50,7 @@ impl AuthnBackend for AuthBackend {
   }
 
   async fn get_user(&self, username: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-    let user = db::queries::users::get_user(&self.db, username).await?;
+    let user = db::queries::users::get_assert_user(&self.db, username).await?;
     Ok(Some(UserWrapper(user)))
   }
 }

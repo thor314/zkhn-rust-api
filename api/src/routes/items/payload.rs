@@ -5,13 +5,14 @@ use db::{
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use uuid::Uuid;
 
 use crate::ApiResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
-#[schema(default = ItemPayload::default, example=ItemPayload::default)]
-pub struct ItemPayload {
+#[schema(default = CreateItemPayload::default, example=CreateItemPayload::default)]
+pub struct CreateItemPayload {
   #[garde(dive)]
   pub title:           Title,
   #[garde(skip)] // todo(itemtype)
@@ -19,13 +20,13 @@ pub struct ItemPayload {
   #[garde(skip)]
   is_text:             bool,
   // todo: could turn this to an enum
-  #[garde(skip)] // todo(itemcontent)
+  #[garde(skip)] // todo(validate)
   text_or_url_content: String,
-  #[garde(skip)] // todo(item_category)
+  #[garde(skip)] // todo(validate)
   item_category: String,
 }
 
-impl Default for ItemPayload {
+impl Default for CreateItemPayload {
   fn default() -> Self {
     Self {
       title:               Title::default(),
@@ -37,7 +38,7 @@ impl Default for ItemPayload {
   }
 }
 
-impl ItemPayload {
+impl CreateItemPayload {
   pub async fn into_item(self, username: Username) -> Item {
     Item::new(
       username,
@@ -51,21 +52,42 @@ impl ItemPayload {
 
   /// convenience method for testing
   pub fn new(
-    username: &str,
     title: &str,
     item_type: &str,
     is_text: bool,
     text_or_url_content: &str,
     item_category: &str,
   ) -> ApiResult<Self> {
-    let username = Username(username.to_string());
-    let title = Title(title.to_string());
-    let item_type = item_type.to_string();
-    let text_or_url_content = text_or_url_content.to_string();
-    let item_category = item_category.to_string();
+    let title = title.into();
+    let item_type = item_type.into();
+    let text_or_url_content = text_or_url_content.into();
+    let item_category = item_category.into();
 
     let item_payload = Self { title, item_type, is_text, text_or_url_content, item_category };
     item_payload.validate(&())?;
     Ok(item_payload)
   }
+}
+
+/// A payload for voting on an item or comment
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[schema(default = VotePayload::default, example=VotePayload::default)]
+#[serde(rename_all = "camelCase")]
+pub struct VotePayload {
+  pub id:   Uuid,
+  pub vote: VotePayloadEnum,
+}
+impl VotePayload {
+  pub fn new(id: Uuid, vote: VotePayloadEnum) -> Self { Self { id, vote } }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum VotePayloadEnum {
+  Upvote,
+  Downvote,
+  Unvote,
+}
+impl Default for VotePayloadEnum {
+  fn default() -> Self { Self::Unvote }
 }

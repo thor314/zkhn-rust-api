@@ -13,6 +13,6 @@ CREATE TABLE items (
     comment_count INT DEFAULT 0 NOT NULL, 
     -- todo(sql-enums)
     item_category TEXT NOT NULL DEFAULT 'other',
-    created TIMESTAMP WITH TIME ZONE NOT NULL,
+    created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dead BOOLEAN DEFAULT false NOT NULL
 );

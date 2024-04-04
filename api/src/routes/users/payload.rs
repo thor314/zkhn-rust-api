@@ -8,8 +8,8 @@ use crate::{auth::PasswordExt, error::ApiError, ApiResult};
 /// Username, password, and optionally email, and about.
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
-#[schema(default = UserPayload::default, example=UserPayload::default)]
-pub struct UserPayload {
+#[schema(default = CreateUserPayload::default, example=CreateUserPayload::default)]
+pub struct CreateUserPayload {
   #[garde(dive)]
   pub username: Username,
   #[garde(dive)]
@@ -20,7 +20,7 @@ pub struct UserPayload {
   pub about:    Option<About>,
 }
 
-impl UserPayload {
+impl CreateUserPayload {
   pub async fn into_user(self) -> User {
     let password_hash = self.password.hash().await;
     User::new(self.username, password_hash, self.email, self.about)
@@ -49,33 +49,26 @@ impl UserPayload {
 #[schema(default = UserUpdatePayload::default, example=UserUpdatePayload::default)]
 pub struct UserUpdatePayload {
   #[garde(dive)]
-  pub username: Username,
+  pub email: Option<Email>,
   #[garde(dive)]
-  pub email:    Option<Email>,
-  #[garde(dive)]
-  pub about:    Option<About>,
+  pub about: Option<About>,
 }
 
 impl Default for UserUpdatePayload {
   fn default() -> Self {
-    Self {
-      username: Username::default(),
-      email:    Some("email@email.com".into()),
-      about:    Some("about".into()),
-    }
+    Self { email: Some("email@email.com".into()), about: Some("about".into()) }
   }
 }
 
 impl UserUpdatePayload {
   /// convenience method for testing
-  pub fn new(username: &str, email: Option<&str>, about: Option<&str>) -> ApiResult<Self> {
-    let username = username.into();
+  pub fn new(email: Option<&str>, about: Option<&str>) -> ApiResult<Self> {
     if email.is_none() && about.is_none() {
       return Err(ApiError::BadRequest("email or about must be provided".to_string()));
     }
     let email = email.map(|s| s.into());
     let about = about.map(|s| s.into());
-    let payload = Self { username, email, about };
+    let payload = Self { email, about };
     payload.validate(&())?;
 
     Ok(payload)

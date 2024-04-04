@@ -6,8 +6,6 @@ use utoipa::ToSchema;
 #[serde(rename_all = "camelCase")]
 #[schema(default = CreateUserResponse::default, example=CreateUserResponse::default)]
 pub struct CreateUserResponse {
-  // hack(refactor): success is redundant
-  pub success: bool,
   pub username: Username,
   pub auth_token: AuthToken,
   pub auth_token_expiration_timestamp: Timestamp,
@@ -16,7 +14,6 @@ pub struct CreateUserResponse {
 impl CreateUserResponse {
   pub(crate) fn new(user: User, auth_token: AuthToken, auth_token_expiration: Timestamp) -> Self {
     Self {
-      success: true,
       username: user.username,
       auth_token,
       auth_token_expiration_timestamp: auth_token_expiration,
@@ -27,7 +24,6 @@ impl CreateUserResponse {
 impl From<User> for CreateUserResponse {
   fn from(user: User) -> Self {
     Self {
-      success: true,
       username: user.username,
       auth_token: user.auth_token.unwrap_or_default(),
       auth_token_expiration_timestamp: user
@@ -70,12 +66,11 @@ impl GetUserResponse {
     }
   }
 }
+
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[serde(rename_all = "camelCase")]
 #[schema(default = AuthenticateUserResponse::default, example=AuthenticateUserResponse::default)]
 pub struct AuthenticateUserResponse {
-  // hack(redundant)
-  pub success:        bool,
   pub username:       Username,
   pub banned:         bool,
   pub karma:          i32,
@@ -88,7 +83,6 @@ pub struct AuthenticateUserResponse {
 impl AuthenticateUserResponse {
   pub fn new(user: User) -> Self {
     Self {
-      success:        true,
       username:       user.username,
       banned:         user.banned,
       karma:          user.karma,

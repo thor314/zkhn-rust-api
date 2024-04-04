@@ -43,30 +43,34 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   Ok(())
 }
 
-// pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
-//   sqlx::query_as!(
-//     Item,
-//     "SELECT
-//       id,
-//       username as \"username: Username\",
-//       title as \"title: Title\",
-//       item_type,
-//       url,
-//       domain,
-//       text,
-//       points,
-//       score,
-//       comment_count,
-//       item_category,
-//       created,
-//       dead
-//     FROM items WHERE id = $1",
-//     item_id
-//   )
-//   .fetch_optional(pool)
-//   .await
-//   .map_err(DbError::from)
-// }
+pub async fn get_assert_item(pool: &DbPool, item_id: Uuid) -> DbResult<Item> {
+  get_item(pool, item_id).await?.ok_or(DbError::NotFound("item".into()))
+}
+
+pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
+  sqlx::query_as!(
+    Item,
+    "SELECT
+      id,
+      username as \"username: Username\",
+      title as \"title: Title\",
+      item_type,
+      url,
+      domain,
+      text,
+      points,
+      score,
+      comment_count,
+      item_category,
+      created,
+      dead
+    FROM items WHERE id = $1",
+    item_id
+  )
+  .fetch_optional(pool)
+  .await
+  .map_err(DbError::from)
+}
 
 // pub async fn delete_item(pool: &DbPool, item_id: Uuid) -> DbResult<()> {
 //   sqlx::query!("DELETE FROM items WHERE id = $1", item_id)

@@ -26,6 +26,8 @@ use utoipa::OpenApi;
 use utoipa_rapidoc::RapiDoc;
 use utoipauto::utoipauto;
 
+// use super::items::{get::*, post::*, put::*, *};
+use super::items::*;
 use super::users::{get::*, post::*, put::*, *};
 
 /// router fragment supplying OpenAPI documentation and ui routes
@@ -42,8 +44,12 @@ pub(super) fn docs_router() -> Router {
 #[openapi(
   info(description = "API documentation for ZKHN"),
   // Schemas that may be returned in the body by the api.
-  components(schemas(User, UserUpdatePayload, ChangePasswordPayload, UserPayload,
-    CredentialsPayload, GetUserResponse, CreateUserResponse, AuthenticateUserResponse))
+  components(schemas(
+    User, UserUpdatePayload, ChangePasswordPayload, CreateUserPayload,
+    CredentialsPayload, GetUserResponse, CreateUserResponse, AuthenticateUserResponse,
+    CreateItemPayload,
+    GetItemResponse,
+    VotePayload, ))
   // runtime modification, e.g. for jwt: https://docs.rs/utoipa/latest/utoipa/trait.Modify.html
   // low-priority, but could gate moderator methods with an auth token.
   // modifiers(..) 

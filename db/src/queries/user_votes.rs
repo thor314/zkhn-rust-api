@@ -7,6 +7,15 @@ use crate::{
   DbPool, DbResult, Username,
 };
 
+pub async fn get_assert_vote(pool: &DbPool, username: &Username, id: Uuid) -> DbResult<()> {
+  get_vote(pool, username, id).await?.ok_or(DbError::NotFound("vote".into()))
+}
+
+// todo(vote) + get_assert_vote
+pub async fn get_vote(pool: &DbPool, username: &Username, id: Uuid) -> DbResult<Option<()>> {
+  todo!()
+}
+
 // pub async fn get_user_vote_by_content_id(
 //   pool: &DbPool,
 //   username: &str,

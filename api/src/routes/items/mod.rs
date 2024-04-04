@@ -18,13 +18,12 @@ use db::{
 use garde::Validate;
 pub use payload::*;
 pub use response::*;
-use tracing::{debug, info, warn};
+use tracing::{debug, info, trace, warn};
 use uuid::Uuid;
 
 use super::SharedState;
-use crate::auth::AuthSession;
 use crate::{
-  // auth::{self, assert_authenticated},
+  auth::{AuthSession, AuthenticationExt},
   error::ApiError,
   ApiResult,
 };
@@ -32,7 +31,8 @@ use crate::{
 /// Router to be mounted at "/items"
 pub fn items_router(state: SharedState) -> Router {
   Router::new()
-    .route("/:id", routing::get(get::get_item_simple))
+    .route("/:id", routing::get(get::get_item))
     .route("/", routing::post(post::create_item))
+    .route("/vote", routing::post(post::vote_item))
     .with_state(state)
 }

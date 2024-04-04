@@ -105,7 +105,7 @@ impl Default for ResetPasswordToken {
 #[repr(transparent)]
 pub struct Title(#[garde(ascii, length(min = 8, max = 100))] pub String);
 impl Default for Title {
-  fn default() -> Self { "title".into() }
+  fn default() -> Self { "item title".into() }
 }
 impl From<&str> for Title {
   fn from(s: &str) -> Self { Title(s.to_string()) }
@@ -120,4 +120,17 @@ impl Default for CommentText {
 }
 impl From<&str> for CommentText {
   fn from(s: &str) -> Self { CommentText(s.to_string()) }
+}
+
+// hack: does this need to be `Type`
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Validate)]
+#[garde(transparent)]
+#[repr(transparent)]
+/// A page of comments or items
+pub struct Page(#[garde(range(min = 1, max = 1000))] pub i32);
+impl Default for Page {
+  fn default() -> Self { Self(1) }
+}
+impl From<i32> for Page {
+  fn from(n: i32) -> Self { Self(n) }
 }

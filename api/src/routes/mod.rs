@@ -5,7 +5,7 @@ use tower_sessions_sqlx_store::PostgresStore;
 use tracing::debug;
 
 use self::{openapi::docs_router, users::users_router};
-use crate::auth::MyAuthLayer;
+use crate::{auth::MyAuthLayer, items_router};
 
 // pub mod so that payloads and responses can be accessed by integration tests
 pub mod comments;
@@ -28,6 +28,7 @@ pub(crate) fn routes(pool: DbPool) -> Router {
     .route("/health", routing::get(health))
     .nest("/docs", docs_router())
     .nest("/users", users_router(state.clone()))
+    .nest("/items", items_router(state.clone()))
 }
 
 /// shared state for handlers to access via the State Extractor

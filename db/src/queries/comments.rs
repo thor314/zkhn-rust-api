@@ -1,20 +1,61 @@
-// use std::collections::HashSet;
+use std::collections::HashSet;
 
-// use futures::future::join_all;
-// use rayon::prelude::*;
-// use sqlx::{Pool, Postgres, QueryBuilder, Transaction};
-// use uuid::Uuid;
+use futures::future::join_all;
+use rayon::prelude::*;
+use sqlx::{Pool, Postgres, QueryBuilder, Transaction};
+use uuid::Uuid;
 
-// use crate::{
-//   error::DbError,
-//   models::{
-//     comment::{self, Comment},
-//     item::Item,
-//     user_vote::{UserVote, VoteState},
-//   },
-//   utils::now,
-//   CommentText, DbPool, DbResult, Title, Username,
-// };
+use crate::{
+  error::DbError,
+  models::{
+    comment::{self, Comment},
+    item::Item,
+    user_vote::{UserVote, VoteState},
+  },
+  utils::now,
+  CommentText, DbPool, DbResult, Page, Title, Username,
+};
+
+pub async fn get_comments_page(
+  pool: &DbPool,
+  item_id: Uuid,
+  page: Page,
+  show_dead_comments: bool, // backlog
+) -> DbResult<(Vec<Comment>, usize)> {
+  // todo(comments)
+  //
+  // mirror in query:
+  // .sort({ points: -1, created: -1 })
+  // .skip((page - 1) * config.commentsPerPage)
+  // .limit(config.commentsPerPage)
+  //
+
+  // let comments: Vec<Comment> = sqlx::query_as!(
+  //   Comment,
+  //   "SELECT
+  //     id,
+  //     username as \"username: Username\",
+  //     parent_item_id,
+  //     parent_item_title as \"parent_item_title: Title\",
+  //     comment_text as \"comment_text: CommentText\",
+  //     is_parent,
+  //     root_comment_id,
+  //     parent_comment_id,
+  //     children_count,
+  //     points,
+  //     created,
+  //     dead
+  //   FROM comments WHERE parent_item_id = $1 AND dead = $2",
+  //   item_id,
+  //   show_dead_comments
+  // )
+  // .fetch_all(pool)
+  // .await?;
+  let comments = vec![];
+  let total_comments = 0;
+
+  Ok((comments, total_comments))
+}
 
 // pub async fn get_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
 //   sqlx::query_as!(

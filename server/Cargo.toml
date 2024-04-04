@@ -33,3 +33,4 @@ quickcheck       ="1.0"                                  # lowkey proptest suite
 quickcheck_macros="1"                                    # derive 
 reqwest = "0.12.2"
 serial_test = "3.0.0"
+uuid = { version = "1.8.0", features = ["v4"] }
