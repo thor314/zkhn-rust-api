@@ -11,8 +11,8 @@ use super::*;
   ),
   )]
 /// Get item.
-/// 
-/// 
+///
+///
 ///
 /// ref get_public: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L223
 /// ref get_private: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L244
