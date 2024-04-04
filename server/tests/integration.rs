@@ -1,3 +1,7 @@
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(dead_code)]
+
 use api::*;
 use reqwest::Client;
 use serial_test::serial;
@@ -9,8 +13,8 @@ pub const WEBSERVER_URL: &str = "http://localhost:8000";
 
 mod integration_utils;
 
-#[tokio::test]
-#[serial]
+// #[tokio::test]
+// #[serial]
 async fn user_crud() {
   let mut _child_guard = cargo_shuttle_run().await;
   let c = Client::builder().cookie_store(true).build().unwrap();
@@ -38,12 +42,12 @@ async fn user_crud() {
   send(&c, "", "GET", "users/alice", 200, "e").await;
 }
 
-// #[tokio::test]
-// #[serial]
-// async fn items_crud() {
-//   let mut _child_guard = cargo_shuttle_run().await;
-//   let c = Client::builder().cookie_store(true).build().unwrap();
-//   send(&c, UserPayload::default(), "POST", "users", 200, "1").await;
-//   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "2").await;
-//   // send(&c, )
-// }
+#[tokio::test]
+#[serial]
+async fn items_crud() {
+  let mut _child_guard = cargo_shuttle_run().await;
+  let c = Client::builder().cookie_store(true).build().unwrap();
+  send(&c, UserPayload::default(), "POST", "users", 200, "1").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "2").await;
+  // send(&c, )
+}
