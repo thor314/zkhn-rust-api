@@ -6,20 +6,30 @@ use sqlx::{Pool, Postgres, QueryBuilder, Transaction};
 use uuid::Uuid;
 
 use crate::{
-  error::DbError, models::{
+  error::DbError,
+  models::{
     comment::{self, Comment},
     item::Item,
     user_vote::{UserVote, VoteState},
-  }, utils::now, CommentText, DbPool, DbResult, Page, Title, Username
+  },
+  utils::now,
+  CommentText, DbPool, DbResult, Page, Title, Username,
 };
 
-pub async fn get_comments_page_for_item_id(
+pub async fn get_comments_page(
   pool: &DbPool,
   item_id: Uuid,
-  show_dead_comments: bool,
   page: Page,
-) -> DbResult<Vec<Comment>> {
+  show_dead_comments: bool, // backlog
+) -> DbResult<(Vec<Comment>, usize)> {
   // todo(comments)
+  //
+  // mirror in query:
+  // .sort({ points: -1, created: -1 })
+  // .skip((page - 1) * config.commentsPerPage)
+  // .limit(config.commentsPerPage)
+  //
+
   // let comments: Vec<Comment> = sqlx::query_as!(
   //   Comment,
   //   "SELECT
@@ -41,9 +51,10 @@ pub async fn get_comments_page_for_item_id(
   // )
   // .fetch_all(pool)
   // .await?;
-  let comments = vec![]; 
+  let comments = vec![];
+  let total_comments = 0;
 
-  Ok(comments)
+  Ok((comments, total_comments))
 }
 
 // pub async fn get_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {

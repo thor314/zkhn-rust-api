@@ -25,6 +25,7 @@ pub use self::error::ApiError;
 pub use self::routes::users::*;
 
 pub const MINIMUM_KARMA_TO_DOWNVOTE: i32 = 10; // todo(config)
+pub const COMMENTS_PER_PAGE: usize = 10; // todo(config)
 
 pub async fn app(pool: DbPool, session_key: Key) -> ApiResult<Router> {
   let session_layer = create_migrate_session_layer(pool.clone(), session_key).await;

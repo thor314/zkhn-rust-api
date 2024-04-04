@@ -26,7 +26,7 @@ pub fn get_auth_layer(pool: DbPool, session_layer: MySessionManagerLayer) -> MyA
 }
 
 pub(crate) trait AuthenticationExt {
-  /// Get the user from the session store, if one exists
+  /// Get the user from the session store, or else return an Error
   ///
   /// Return Ok(user) if the caller is authenticated as the given user.
   /// Return Err(ApiError::Forbidden) if caller is not authenticated.

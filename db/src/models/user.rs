@@ -46,7 +46,7 @@ pub struct User {
 impl Default for User {
   fn default() -> Self {
     User {
-      username: Username("alice".to_string()),
+      username: "alice".into(),
       password_hash: PasswordHash("password".to_string()),
       auth_token: None,
       auth_token_expiration: None,
@@ -100,6 +100,13 @@ impl User {
   //     created: now(),
   //   }
   // }
+
+  /// Create a mock User
+  /// 
+  /// Use in cases where we want the default user metadata, but don't have a authenticated user
+  /// 
+  /// backlog: kindof a dumb footgun
+  pub fn new_logged_out() -> Self { Self { username: "".into(), ..Default::default() } }
 }
 
 // explicitly redact sensitive info

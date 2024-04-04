@@ -5,8 +5,7 @@ use db::{
 use serde::{Deserialize, Serialize};
 use utoipa::{OpenApi, ToSchema};
 
-const COMMENTS_PER_PAGE: usize = 10; // todo(config)
-
+use crate::COMMENTS_PER_PAGE;
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
 pub struct GetItemResponse {
