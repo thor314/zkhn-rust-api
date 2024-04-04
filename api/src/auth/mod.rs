@@ -16,10 +16,9 @@ pub use self::{
   users::{AuthBackend, AuthSession},
   web::{login_post_internal, logout_post_internal},
 };
-use crate::{sessions::MySessionManagerLayer, ApiError, ApiResult};
+use crate::{sessions::MySessionManagerLayer, ApiError, ApiResult, MINIMUM_KARMA_TO_DOWNVOTE};
 
 pub type MyAuthLayer = AuthManagerLayer<AuthBackend, PostgresStore, SignedCookie>;
-pub const MINIMUM_KARMA_TO_DOWNVOTE: i32 = 10; // todo(config)
 
 pub fn get_auth_layer(pool: DbPool, session_layer: MySessionManagerLayer) -> MyAuthLayer {
   let backend = AuthBackend::new(pool);

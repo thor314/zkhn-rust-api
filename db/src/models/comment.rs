@@ -5,10 +5,9 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Decode, Encode};
 use uuid::Uuid;
 
-use crate::{error::DbError, utils::now, CommentText, DbResult, Timestamp, Title, Username};
-
-/// the minimum points a comment can have
-const MIN_POINTS: i32 = -4;
+use crate::{
+  error::DbError, utils::now, CommentText, DbResult, Timestamp, Title, Username, MIN_COMMENT_POINTS,
+};
 
 /// Comments on a post
 #[derive(sqlx::FromRow, Debug, Serialize, Encode, Clone)]
@@ -74,7 +73,9 @@ impl Comment {
 
   pub fn increment_point(&mut self) { self.points += 1; }
 
-  pub fn decrement_point(&mut self) { self.points = std::cmp::max(MIN_POINTS, self.points - 1); }
+  pub fn decrement_point(&mut self) {
+    self.points = std::cmp::max(MIN_COMMENT_POINTS, self.points - 1);
+  }
 
   pub fn create_child_comment(&mut self, by: Username, text: CommentText, dead: bool) -> Comment {
     let comment = Comment::new(

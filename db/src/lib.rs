@@ -16,4 +16,7 @@ pub use crate::{error::*, types::*};
 pub type DbPool = sqlx::postgres::PgPool;
 pub type DbResult<T> = Result<T, DbError>;
 
+/// the minimum points a comment can have
+pub const MIN_COMMENT_POINTS: i32 = -4;
+
 pub async fn migrate(pool: &DbPool) { sqlx::migrate!("../db/migrations").run(pool).await.unwrap(); }
