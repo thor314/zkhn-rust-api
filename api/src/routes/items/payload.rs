@@ -9,6 +9,7 @@ use utoipa::ToSchema;
 use crate::ApiResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 #[schema(default = ItemPayload::default, example=ItemPayload::default)]
 pub struct ItemPayload {
   #[garde(dive)]
