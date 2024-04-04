@@ -33,7 +33,7 @@ pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<User> {
   )
   .fetch_optional(pool)
   .await
-  .map(|r| r.ok_or(DbError::NotFound))?
+  .map(|r| r.ok_or(DbError::NotFound("user".into())))?
   .map_err(DbError::from)
 }
 
@@ -182,15 +182,6 @@ pub async fn update_user_password(
 //   Ok(())
 // }
 
-// pub async fn delete_user(pool: &DbPool, username: &Username) -> DbResult<()> {
-//   trace!("delete_user with: {username}");
-//   let result = sqlx::query!("DELETE FROM users WHERE username = $1", username.0)
-//     .execute(pool)
-//     .await
-//     .map(|r| if r.rows_affected() == 0 { Err(DbError::NotFound) } else { Ok(()) })?;
-//   Ok(())
-// }
-
 // pub async fn get_user_comments(pool: &DbPool, username: &Username) -> DbResult<Vec<Comment>> {
 // trace!("get_user_comments with: {username}");
 //   sqlx::query_as!(
@@ -216,7 +207,7 @@ pub async fn update_user_password(
 //   .map_err(DbError::from)
 // }
 
-// pub async fn get_user_items(pool: &DbPool, username: &Username) -> DbResult<Vec<Item>> { 
+// pub async fn get_user_items(pool: &DbPool, username: &Username) -> DbResult<Vec<Item>> {
 //   trace!("get_user_items with: {username}");
 //   sqlx::query_as!(
 //     Item,

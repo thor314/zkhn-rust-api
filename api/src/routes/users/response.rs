@@ -37,7 +37,7 @@ impl From<User> for CreateUserResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
-#[schema(default = CreateUserResponse::default, example=CreateUserResponse::default)]
+#[schema(default = GetUserResponse::default, example=GetUserResponse::default)]
 pub struct GetUserResponse {
   pub username:          Username,
   pub created:           Timestamp,
@@ -65,6 +65,33 @@ impl GetUserResponse {
       email,
       show_dead,
       _is_authenticated: is_authenticated,
+    }
+  }
+}
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[schema(default = AuthenticateUserResponse::default, example=AuthenticateUserResponse::default)]
+pub struct AuthenticateUserResponse {
+  // hack(redundant)
+  pub success:        bool,
+  pub username:       Username,
+  pub banned:         bool,
+  pub karma:          i32,
+  pub contains_email: bool,
+  pub show_dead:      bool,
+  pub is_moderator:   bool,
+  // shadow banned removed
+}
+
+impl AuthenticateUserResponse {
+  pub fn new(user: User) -> Self {
+    Self {
+      success:        true,
+      username:       user.username,
+      banned:         user.banned,
+      karma:          user.karma,
+      contains_email: user.email.is_some(),
+      show_dead:      user.show_dead,
+      is_moderator:   user.is_moderator,
     }
   }
 }

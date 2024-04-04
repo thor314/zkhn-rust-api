@@ -28,10 +28,13 @@ pub(super) fn users_router(state: SharedState) -> Router {
     .route("/change-password", routing::put(put::change_password))
     .route("/login", routing::post(post::login))
     .route("/logout", routing::post(post::logout))
+    .route("/authenticate/:username", routing::get(get::authenticate))
     .with_state(state)
 }
 
 pub(super) mod get {
+  use serde_json::json;
+
   use super::*;
 
   #[utoipa::path(
@@ -56,13 +59,40 @@ pub(super) mod get {
     auth_session: AuthSession,
   ) -> ApiResult<Json<GetUserResponse>> {
     trace!("get_user called with username: {username}");
-    let is_authenticated = auth_session.is_authenticated_as(&username);
     username.validate(&())?;
     let user = users::get_user(&state.pool, &username).await?;
+    let is_authenticated = auth_session.is_authenticated_and_not_banned(&username);
     let user_response = GetUserResponse::new(user, is_authenticated);
 
     debug!("user response: {user_response:?}");
     Ok(Json(user_response))
+  }
+
+  #[utoipa::path(
+      get,
+      path = "/users/authenticate/{username}",
+      responses(
+        (status = 401, description = "Not logged in"),
+        (status = 403, description = "Forbidden"),
+        (status = 403, description = "Banned"),
+        (status = 422, description = "Invalid username"),
+        (status = 200, body = AuthenticateUserResponse),
+      ),
+  )]
+  /// If the user is logged in as `username` and not banned, return information about the user.
+  /// If the user is banned, or does not match username, return a 403.
+  /// If the user is not logged in, return a 401.
+  ///
+  /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L97
+  pub async fn authenticate(
+    auth_session: AuthSession,
+    Path(username): Path<Username>,
+  ) -> ApiResult<Json<AuthenticateUserResponse>> {
+    let user = auth_session.if_authenticated_get_user(&username)?;
+    username.validate(&())?;
+    let authenticate_user_response = AuthenticateUserResponse::new(user);
+    debug!("authenticate_user_response: {authenticate_user_response:?}");
+    Ok(Json(authenticate_user_response))
   }
 }
 
@@ -129,8 +159,6 @@ pub(super) mod post {
     logout_post_internal(auth_session).await
   }
 
-  // maybe: authenticate user:
-  // ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L97
   // hack(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L71
   // hack(cookie): https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L124
 }
@@ -162,7 +190,7 @@ pub(super) mod put {
     Json(payload): Json<UserUpdatePayload>,
   ) -> ApiResult<StatusCode> {
     trace!("update_user_about called with payload: {payload:?}");
-    auth_session.caller_matches_payload(&payload.username)?;
+    auth_session.if_authenticated_get_user(&payload.username)?;
     payload.validate(&())?;
     if payload.about.is_none() && payload.email.is_none() {
       return Err(ApiError::BadRequest("about or email must be provided".to_string()));
@@ -194,7 +222,7 @@ pub(super) mod put {
     auth_session: AuthSession,
   ) -> ApiResult<StatusCode> {
     trace!("request-password-reset-link called with username: {:?}", username);
-    auth_session.caller_matches_payload(&username)?;
+    auth_session.if_authenticated_get_user(&username)?;
     username.validate(&())?;
     let user = users::get_user(&state.pool, &username).await?;
     let email = user.email.ok_or(ApiError::BadRequest("email missing".to_string()))?;
@@ -241,7 +269,7 @@ pub(super) mod put {
   ) -> ApiResult<StatusCode> {
     trace!("change_password called with payload: {payload:?}");
     payload.validate(&())?;
-    auth_session.caller_matches_payload(&payload.username)?;
+    auth_session.if_authenticated_get_user(&payload.username)?;
     let user = users::get_user(&state.pool, &payload.username).await?;
     payload.current_password.hash_and_verify(&user.password_hash).await?;
     users::update_user_password(&state.pool, &payload.username, &user.password_hash).await?;
@@ -274,7 +302,7 @@ pub(super) mod put {
 //     auth_session: AuthSession,
 //   ) -> ApiResult<StatusCode> {
 //     trace!("delete_user called with username: {username}");
-//     auth_session.caller_matches_payload(&username)?;
+//     auth_session.if_authenticated_get_user(&username)?;
 //     username.validate(&())?;
 //     users::delete_user(&state.pool, &username).await?;
 

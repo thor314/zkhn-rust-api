@@ -34,7 +34,7 @@ pub enum DbError {
   Other(String),
 
   #[error("Entry not found in db")]
-  NotFound,
+  NotFound(String),
 }
 
 impl From<sqlx::Error> for DbError {

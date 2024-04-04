@@ -23,7 +23,7 @@ impl PasswordExt for Password {
     let parsed_hash = argon2::password_hash::PasswordHash::new(&other_hash.0).unwrap();
     Argon2::default()
       .verify_password(password_bytes, &parsed_hash)
-      .map_err(|e| ApiError::Unauthorized(format!("password mismatch: {e}")))?;
+      .map_err(|e| ApiError::UnauthorizedIncorrectPassword)?;
     Ok(())
   }
 

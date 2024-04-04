@@ -43,7 +43,7 @@ pub(super) fn docs_router() -> Router {
   info(description = "API documentation for ZKHN"),
   // Schemas that may be returned in the body by the api.
   components(schemas(User, UserUpdatePayload, ChangePasswordPayload, UserPayload,
-    CredentialsPayload, GetUserResponse, CreateUserResponse))
+    CredentialsPayload, GetUserResponse, CreateUserResponse, AuthenticateUserResponse))
   // runtime modification, e.g. for jwt: https://docs.rs/utoipa/latest/utoipa/trait.Modify.html
   // low-priority, but could gate moderator methods with an auth token.
   // modifiers(..) 

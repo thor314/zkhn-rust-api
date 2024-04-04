@@ -12,8 +12,6 @@ use crate::ApiResult;
 #[schema(default = ItemPayload::default, example=ItemPayload::default)]
 pub struct ItemPayload {
   #[garde(dive)]
-  pub username:        Username,
-  #[garde(dive)]
   pub title:           Title,
   #[garde(skip)] // todo(itemtype)
   item_type: String,
@@ -29,7 +27,6 @@ pub struct ItemPayload {
 impl Default for ItemPayload {
   fn default() -> Self {
     Self {
-      username:            Username::default(),
       title:               Title::default(),
       item_type:           "news".into(),
       is_text:             true,
@@ -40,9 +37,9 @@ impl Default for ItemPayload {
 }
 
 impl ItemPayload {
-  pub async fn into_item(self) -> Item {
+  pub async fn into_item(self, username: Username) -> Item {
     Item::new(
-      self.username,
+      username,
       self.title,
       self.item_type,
       self.is_text,
@@ -66,8 +63,7 @@ impl ItemPayload {
     let text_or_url_content = text_or_url_content.to_string();
     let item_category = item_category.to_string();
 
-    let item_payload =
-      Self { username, title, item_type, is_text, text_or_url_content, item_category };
+    let item_payload = Self { title, item_type, is_text, text_or_url_content, item_category };
     item_payload.validate(&())?;
     Ok(item_payload)
   }
