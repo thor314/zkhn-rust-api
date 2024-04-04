@@ -24,6 +24,8 @@ pub use self::error::ApiError;
 // export payloads and responses
 pub use self::routes::users::*;
 
+pub const MINIMUM_KARMA_TO_DOWNVOTE: i32 = 10; // todo(config)
+
 pub async fn app(pool: DbPool, session_key: Key) -> ApiResult<Router> {
   let session_layer = create_migrate_session_layer(pool.clone(), session_key).await;
   let auth_layer = get_auth_layer(pool.clone(), session_layer);

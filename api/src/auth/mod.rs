@@ -6,15 +6,17 @@ mod web;
 
 use axum_login::{AuthManagerLayer, AuthManagerLayerBuilder};
 use db::{models::user::User, DbPool, Username};
+use serde::{Deserialize, Serialize};
 use tower_sessions::service::SignedCookie;
 use tower_sessions_sqlx_store::PostgresStore;
+use utoipa::ToSchema;
 
 pub use self::{
   password::PasswordExt,
   users::{AuthBackend, AuthSession},
   web::{login_post_internal, logout_post_internal},
 };
-use crate::{sessions::MySessionManagerLayer, ApiError, ApiResult};
+use crate::{sessions::MySessionManagerLayer, ApiError, ApiResult, MINIMUM_KARMA_TO_DOWNVOTE};
 
 pub type MyAuthLayer = AuthManagerLayer<AuthBackend, PostgresStore, SignedCookie>;
 
@@ -53,4 +55,43 @@ impl AuthenticationExt for AuthSession {
     self.user.as_ref().map(|user| user.0.username == *username).unwrap_or(false)
       && !self.user.as_ref().unwrap().0.banned
   }
+}
+
+/// Local authentication state, mirroring middleware on reference implementation
+///
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/middlewares/index.js#L36
+#[derive(Debug, Clone, Default, Serialize, Deserialize, ToSchema)]
+#[schema(default = AuthLocal::default, example=AuthLocal::default)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthLocal {
+  pub user_signed_in:   bool,
+  pub username:         Option<Username>,
+  pub karma:            Option<i32>,
+  pub contains_email:   Option<bool>,
+  pub show_dead:        bool,
+  pub show_downvote:    bool,
+  pub is_moderator:     Option<bool>,
+  // shadow_banned: removed
+  pub banned:           bool,
+  pub cookies_included: bool,
+}
+
+impl AuthLocal {
+  /// Create a new AuthLocal from a User
+  pub fn new(user: User) -> Self {
+    Self {
+      user_signed_in:   true,
+      username:         Some(user.username.clone()),
+      karma:            Some(user.karma),
+      contains_email:   Some(user.email.is_some()),
+      show_dead:        user.show_dead,
+      show_downvote:    user.karma >= MINIMUM_KARMA_TO_DOWNVOTE,
+      is_moderator:     Some(user.is_moderator),
+      banned:           user.banned,
+      cookies_included: true,
+    }
+  }
+
+  /// Create a new AuthLocal without authentication
+  pub fn new_unauthenticated(banned: bool) -> Self { Self { banned, ..Default::default() } }
 }
