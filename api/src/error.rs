@@ -68,17 +68,17 @@ pub enum ApiError {
 impl std::fmt::Display for ApiError {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
-      ApiError::OtherISE(e) => write!(f, "Thor did a bad thing, ISE: {0}", e),
-      ApiError::TaskJoin(e) => write!(f, "Concurrency Error: {0}", e),
+      ApiError::OtherISE(e) => write!(f, "Thor did a bad thing, ISE: {e}"),
+      ApiError::TaskJoin(e) => write!(f, "Concurrency Error: {e}"),
       // db errors
-      ApiError::UniqueViolation(e) => write!(f, "DbEntryAlreadyExists: {0}", e),
-      ApiError::ForeignKeyViolation(e) => write!(f, "DbForeignKeyViolation: {0}", e),
-      ApiError::NotNullViolation(e) => write!(f, "DbNotNullViolation: {0}", e),
-      ApiError::CheckViolation(e) => write!(f, "DbCheckViolation: {0}", e),
-      ApiError::DbEntryNotFound(e) => write!(f, "NotFound: {0}", e),
-      ApiError::OtherDbError(e) => write!(f, "DbError: {0}", e),
+      ApiError::UniqueViolation(e) => write!(f, "DbEntryAlreadyExists: {e}"),
+      ApiError::ForeignKeyViolation(e) => write!(f, "DbForeignKeyViolation: {e}"),
+      ApiError::NotNullViolation(e) => write!(f, "DbNotNullViolation: {e}"),
+      ApiError::CheckViolation(e) => write!(f, "DbCheckViolation: {e}"),
+      ApiError::DbEntryNotFound(e) => write!(f, "Not Found: {e}"),
+      ApiError::OtherDbError(e) => write!(f, "DbError: {e}"),
       // other client errors
-      ApiError::BadRequest(e) => write!(f, "Invalid request submitted: {0}", e),
+      ApiError::BadRequest(e) => write!(f, "Invalid request submitted: {e}"),
       ApiError::UnauthorizedPleaseLogin => write!(f, "Unauthorized: please log in",),
       ApiError::UnauthorizedIncorrectPassword => write!(f, "Unauthorized: Incorrect password"),
       ApiError::ForbiddenBanned => write!(f, "Unauthorized: User is banned"),
@@ -97,7 +97,7 @@ impl From<DbError> for ApiError {
       DbError::ForeignKeyViolation(e) => ApiError::ForeignKeyViolation(e),
       DbError::NotNullViolation(e) => ApiError::NotNullViolation(e),
       DbError::CheckViolation(e) => ApiError::CheckViolation(e),
-      DbError::NotFound => ApiError::DbEntryNotFound("Entry not found".to_string()),
+      DbError::NotFound(e) => ApiError::DbEntryNotFound(e),
       DbError::Other(e) => ApiError::OtherDbError(e),
       _ => ApiError::OtherDbError(e.to_string()),
     }
