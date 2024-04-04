@@ -24,11 +24,12 @@ pub(super) fn users_router(state: SharedState) -> Router {
     // note - called `/users/get-user-data` in reference
     .route("/:username", routing::get(get::get_user))
     .route("/", routing::put(put::update_user).post(post::create_user))
+    // todo(email) - create reset-password with reset password token
     .route("/reset-password-link/:username", routing::put(put::request_password_reset_link))
     .route("/change-password", routing::put(put::change_password))
     .route("/login", routing::post(post::login))
     .route("/logout", routing::post(post::logout))
-    .route("/authenticate/:username", routing::get(get::authenticate))
+    .route("/authenticate", routing::get(get::authenticate))
     .with_state(state)
 }
 
@@ -58,8 +59,9 @@ pub(super) mod get {
   ) -> ApiResult<Json<GetUserResponse>> {
     trace!("get_user called with username: {username}");
     username.validate(&())?;
-    let user = users::get_user(&state.pool, &username).await?;
-    let is_authenticated = auth_session.is_username_authenticated_and_not_banned(&username);
+    let user = users::get_assert_user(&state.pool, &username).await?;
+    let is_authenticated =
+      auth_session.get_user_from_session().map(|u| u.username == username).unwrap_or(false);
     let user_response = GetUserResponse::new(user, is_authenticated);
 
     debug!("user response: {user_response:?}");
@@ -84,11 +86,9 @@ pub(super) mod get {
   /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L97
   pub async fn authenticate(
     auth_session: AuthSession,
-    Path(username): Path<Username>,
   ) -> ApiResult<Json<AuthenticateUserResponse>> {
-    let user = auth_session.if_authenticated_get_user(&username)?;
-    username.validate(&())?;
-    let authenticate_user_response = AuthenticateUserResponse::new(user);
+    let session_user = auth_session.get_assert_user_from_session()?;
+    let authenticate_user_response = AuthenticateUserResponse::new(session_user);
     debug!("authenticate_user_response: {authenticate_user_response:?}");
     Ok(Json(authenticate_user_response))
   }
@@ -101,7 +101,7 @@ pub(super) mod post {
   #[utoipa::path(
       post,
       path = "/users",
-      request_body = UserPayload,
+      request_body = CreateUserPayload,
       responses(
         (status = 422, description = "Invalid Payload"),
         (status = 409, description = "Duplication Conflict"),
@@ -114,7 +114,7 @@ pub(super) mod post {
   /// hack(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
   pub async fn create_user(
     State(state): State<SharedState>,
-    Json(payload): Json<UserPayload>,
+    Json(payload): Json<CreateUserPayload>,
   ) -> ApiResult<Json<CreateUserResponse>> {
     trace!("create_user called with payload: {payload:?}");
     payload.validate(&())?;
@@ -188,15 +188,15 @@ pub(super) mod put {
     Json(payload): Json<UserUpdatePayload>,
   ) -> ApiResult<StatusCode> {
     trace!("update_user_about called with payload: {payload:?}");
-    auth_session.if_authenticated_get_user(&payload.username)?;
+    let session_user = auth_session.get_assert_user_from_session()?;
     payload.validate(&())?;
     if payload.about.is_none() && payload.email.is_none() {
       return Err(ApiError::BadRequest("about or email must be provided".to_string()));
     }
 
-    users::update_user(&state.pool, &payload.username, &payload.about, &payload.email).await?;
+    users::update_user(&state.pool, &session_user.username, &payload.about, &payload.email).await?;
 
-    debug!("updated user about for: {}", payload.username);
+    debug!("updated user about for: {}", session_user.username);
     Ok(StatusCode::OK)
   }
 
@@ -214,15 +214,16 @@ pub(super) mod put {
       ),
   )]
   /// Request a password reset link.
+  ///
+  /// don't authorize for this route, user may have forgotten their password
   pub async fn request_password_reset_link(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
-    auth_session: AuthSession,
+    // auth_session: AuthSession,
   ) -> ApiResult<StatusCode> {
     trace!("request-password-reset-link called with username: {:?}", username);
-    auth_session.if_authenticated_get_user(&username)?;
     username.validate(&())?;
-    let user = users::get_user(&state.pool, &username).await?;
+    let user = users::get_assert_user(&state.pool, &username).await?;
     let email = user.email.ok_or(ApiError::BadRequest("email missing".to_string()))?;
 
     // Generate a reset password token and expiration date for the user. Update the db.
@@ -257,18 +258,17 @@ pub(super) mod put {
         (status = 200),
       ),
   )]
-  /// Change user password.
+  /// Change user password. Do not require the user to be logged in.
   ///
   /// hack(cookie) ref - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L267
   pub async fn change_password(
     State(state): State<SharedState>,
-    auth_session: AuthSession,
+    // auth_session: AuthSession,
     Json(payload): Json<ChangePasswordPayload>,
   ) -> ApiResult<StatusCode> {
     trace!("change_password called with payload: {payload:?}");
     payload.validate(&())?;
-    auth_session.if_authenticated_get_user(&payload.username)?;
-    let user = users::get_user(&state.pool, &payload.username).await?;
+    let user = users::get_assert_user(&state.pool, &payload.username).await?;
     payload.current_password.hash_and_verify(&user.password_hash).await?;
     users::update_user_password(&state.pool, &payload.username, &user.password_hash).await?;
     // prod(email) - send an email to the user that their password has changed

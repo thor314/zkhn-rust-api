@@ -13,23 +13,22 @@ pub const WEBSERVER_URL: &str = "http://localhost:8000";
 
 mod integration_utils;
 
-// #[tokio::test]
-// #[serial]
+#[tokio::test]
+#[serial]
 async fn user_crud() {
   let mut _child_guard = cargo_shuttle_run().await;
   let c = Client::builder().cookie_store(true).build().unwrap();
 
   send(&c, "", "GET", "users/alice", 404, "00").await;
-  send(&c, "", "GET", "users/authenticate/alice", 401, "11").await;
-  send(&c, UserPayload::default(), "POST", "users", 200, "1").await;
-  send(&c, "", "GET", "users/authenticate/alice", 401, "44").await;
-  send(&c, UserPayload::default(), "POST", "users", 409, "2").await;
+  send(&c, "", "GET", "users/authenticate", 401, "11").await;
+  send(&c, CreateUserPayload::default(), "POST", "users", 200, "1").await;
+  send(&c, "", "GET", "users/authenticate", 401, "44").await;
+  send(&c, CreateUserPayload::default(), "POST", "users", 409, "2").await;
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "3").await;
-  send(&c, "", "GET", "users/authenticate/alice", 200, "22").await;
-  send(&c, "", "GET", "users/authenticate/bob", 403, "33").await;
+  send(&c, "", "GET", "users/authenticate", 200, "22").await;
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "4").await;
   send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "5").await;
-  send(&c, "", "GET", "users/authenticate/alice", 401, "44").await;
+  send(&c, "", "GET", "users/authenticate", 401, "44").await;
   send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "6").await;
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "7").await;
   send(&c, UserUpdatePayload::default(), "PUT", "users", 200, "8").await;
@@ -47,14 +46,14 @@ async fn user_crud() {
 async fn items_crud() {
   let mut _child_guard = cargo_shuttle_run().await;
   let c = Client::builder().cookie_store(true).build().unwrap();
-  send(&c, UserPayload::default(), "POST", "users", 200, "1").await;
+  send(&c, CreateUserPayload::default(), "POST", "users", 200, "1").await;
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "2").await;
   let id: uuid::Uuid =
     send(&c, CreateItemPayload::default(), "POST", "items", 200, "3").await.json().await.unwrap();
   send(&c, "", "GET", &format!("items/{id}?1"), 200, "4").await;
   send(&c, "", "GET", &format!("items/{id}?2"), 200, "5").await;
-  send(&c, "", "GET", &format!("items/{id}?2"), 200, "6").await;
-  send(&c, "", "GET", &format!("items/{id}?2"), 200, "7").await;
+  // send(&c, "", "GET", &format!("items/{id}?2"), 200, "6").await;
+  // send(&c, "", "GET", &format!("items/{id}?2"), 200, "7").await;
   let upvote = VotePayload::new(id, VotePayloadEnum::Upvote);
   // let downvote = VotePayload::new(id, VotePayloadEnum::Downvote);
   send(&c, upvote, "POST", "items/vote", 200, "8").await;

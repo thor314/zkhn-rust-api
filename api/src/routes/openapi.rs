@@ -45,7 +45,7 @@ pub(super) fn docs_router() -> Router {
   info(description = "API documentation for ZKHN"),
   // Schemas that may be returned in the body by the api.
   components(schemas(
-    User, UserUpdatePayload, ChangePasswordPayload, UserPayload,
+    User, UserUpdatePayload, ChangePasswordPayload, CreateUserPayload,
     CredentialsPayload, GetUserResponse, CreateUserResponse, AuthenticateUserResponse,
     CreateItemPayload,
     GetItemResponse,

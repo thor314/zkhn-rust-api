@@ -10,12 +10,9 @@ use crate::{
   ResetPasswordToken, Timestamp, Title, Username,
 };
 
-/// Get a user from the database by their username.
-///
-/// Break from convention: if the user is not found, return a `DbError::NotFound` error instead of
-/// None.
-pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<User> {
-  trace!("get_user function called w username: {username}");
+/// Geta user from the db.
+pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<User>> {
+  trace!("get_user called w username: {username}");
   sqlx::query_as!(
     User,
     "SELECT username as \"username: Username\", 
@@ -36,8 +33,14 @@ pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<User> {
     username.0
   )
   .fetch_optional(pool)
-  .await?
-  .ok_or(DbError::NotFound("user".into()))
+  .await
+  .map_err(DbError::from)
+}
+
+/// Get a user from the database by their username. Return an error on not found.
+pub async fn get_assert_user(pool: &DbPool, username: &Username) -> DbResult<User> {
+  trace!("get_assert_user called w username: {username}");
+  get_user(pool, username).await?.ok_or(DbError::NotFound("user".into()))
 }
 
 /// Create a new user in the database.

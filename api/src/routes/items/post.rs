@@ -22,7 +22,7 @@ pub async fn create_item(
 ) -> ApiResult<Json<Uuid>> {
   trace!("create_item called with payload: {payload:?}");
   payload.validate(&())?;
-  let user = auth_session.get_user_from_session()?;
+  let user = auth_session.get_assert_user_from_session()?;
   let item = payload.into_item(user.username).await;
   db::queries::items::create_item(&state.pool, &item).await?;
 
@@ -54,7 +54,7 @@ pub async fn vote_item(
   Json(payload): Json<VotePayload>,
 ) -> ApiResult<Json<Uuid>> {
   trace!("vote_item called with payload: {payload:?}");
-  let user = auth_session.get_user_from_session()?;
+  let user = auth_session.get_assert_user_from_session()?;
   let (item, vote) = tokio::try_join!(
     db::queries::items::get_assert_item(&state.pool, payload.id),
     db::queries::user_votes::get_vote(&state.pool, &user.username, payload.id),
