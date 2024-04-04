@@ -6,8 +6,10 @@ mod web;
 
 use axum_login::{AuthManagerLayer, AuthManagerLayerBuilder};
 use db::{models::user::User, DbPool, Username};
+use serde::{Deserialize, Serialize};
 use tower_sessions::service::SignedCookie;
 use tower_sessions_sqlx_store::PostgresStore;
+use utoipa::ToSchema;
 
 pub use self::{
   password::PasswordExt,
@@ -59,22 +61,25 @@ impl AuthenticationExt for AuthSession {
 /// Local authentication state, mirroring middleware on reference implementation
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/middlewares/index.js#L36
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, ToSchema)]
+#[schema(default = AuthLocal::default, example=AuthLocal::default)]
+#[serde(rename_all = "camelCase")]
 pub struct AuthLocal {
-  user_signed_in:   bool,
-  username:         Option<Username>,
-  karma:            Option<i32>,
-  contains_email:   Option<bool>,
-  show_dead:        bool,
-  show_downvote:    bool,
-  is_moderator:     Option<bool>,
+  pub user_signed_in:   bool,
+  pub username:         Option<Username>,
+  pub karma:            Option<i32>,
+  pub contains_email:   Option<bool>,
+  pub show_dead:        bool,
+  pub show_downvote:    bool,
+  pub is_moderator:     Option<bool>,
   // shadow_banned: removed
-  banned:           bool,
-  cookies_included: bool,
+  pub banned:           bool,
+  pub cookies_included: bool,
 }
 
 impl AuthLocal {
-  pub fn from_authenticated_user(user: &User) -> Self {
+  /// Create a new AuthLocal from a User
+  pub fn new(user: User) -> Self {
     Self {
       user_signed_in:   true,
       username:         Some(user.username.clone()),
@@ -88,5 +93,6 @@ impl AuthLocal {
     }
   }
 
+  /// Create a new AuthLocal without authentication
   pub fn new_unauthenticated(banned: bool) -> Self { Self { banned, ..Default::default() } }
 }
