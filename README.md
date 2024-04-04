@@ -58,11 +58,11 @@ Common steps for both platforms:
 4. Create a new PostgreSQL user (optional)
    `createuser --interactive --pwprompt`
 5. Create a new database
-   `createdb tk-shuttle-zkhn-rust-api2`
+   `createdb tk-shuttle-zkhn-rust-api3`
 6. Grant privileges to your user, replacing `$YOUR_USER`
    ```
-   psql tk-shuttle-zkhn-rust-api2
-   GRANT ALL PRIVILEGES ON DATABASE tk-shuttle-zkhn-rust-api2 TO $YOUR_USER;
+   psql tk-shuttle-zkhn-rust-api3
+   GRANT ALL PRIVILEGES ON DATABASE tk-shuttle-zkhn-rust-api3 TO $YOUR_USER;
    ```
 7. Exit the PostgreSQL prompt `quit` or `ctrl/cmd-d`
 
@@ -71,7 +71,7 @@ Common steps for both platforms:
 We should now be able to run the server (yay!)
 
 ```sh
-cargo shuttle run
+./run.sh
 
 # in another terminal:
 curl 127.0.0.1:8000/health
@@ -101,8 +101,6 @@ If `cargo shuttle run` gives an error about docker on MacOS, run `brew install -
 run `cargo shuttle run` and visit `localhost:8000/docs/rapidoc` for route documentation. 
 
 🏗️ API is currently under construction: not all routes may function as expected! 🏗️
-
-See `api/tests` for usage.
 
 ## Deploy to Shuttle
 ```sh
