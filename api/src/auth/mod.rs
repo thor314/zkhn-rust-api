@@ -17,6 +17,7 @@ pub use self::{
 use crate::{sessions::MySessionManagerLayer, ApiError, ApiResult};
 
 pub type MyAuthLayer = AuthManagerLayer<AuthBackend, PostgresStore, SignedCookie>;
+pub const MINIMUM_KARMA_TO_DOWNVOTE: i32 = 10; // todo(config)
 
 pub fn get_auth_layer(pool: DbPool, session_layer: MySessionManagerLayer) -> MyAuthLayer {
   let backend = AuthBackend::new(pool);
@@ -53,4 +54,39 @@ impl AuthenticationExt for AuthSession {
     self.user.as_ref().map(|user| user.0.username == *username).unwrap_or(false)
       && !self.user.as_ref().unwrap().0.banned
   }
+}
+
+/// Local authentication state, mirroring middleware on reference implementation
+///
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/middlewares/index.js#L36
+#[derive(Debug, Clone, Default)]
+pub struct AuthLocal {
+  user_signed_in:   bool,
+  username:         Option<Username>,
+  karma:            Option<i32>,
+  contains_email:   Option<bool>,
+  show_dead:        bool,
+  show_downvote:    bool,
+  is_moderator:     Option<bool>,
+  // shadow_banned: removed
+  banned:           bool,
+  cookies_included: bool,
+}
+
+impl AuthLocal {
+  pub fn from_authenticated_user(user: &User) -> Self {
+    Self {
+      user_signed_in:   true,
+      username:         Some(user.username.clone()),
+      karma:            Some(user.karma),
+      contains_email:   Some(user.email.is_some()),
+      show_dead:        user.show_dead,
+      show_downvote:    user.karma >= MINIMUM_KARMA_TO_DOWNVOTE,
+      is_moderator:     Some(user.is_moderator),
+      banned:           user.banned,
+      cookies_included: true,
+    }
+  }
+
+  pub fn new_unauthenticated(banned: bool) -> Self { Self { banned, ..Default::default() } }
 }
