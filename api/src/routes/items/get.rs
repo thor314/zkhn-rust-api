@@ -27,7 +27,9 @@ pub async fn get_item(
   Query(page): Query<Page>,
   auth_session: AuthSession,
 ) -> ApiResult<Json<GetItemResponse>> {
-  trace!("get_item called with id: {id} and page: {page:?}");
+  // 400
+  println!("get_item called with id: {id} and page: {page:?}");
+  debug!("get_item called with id: {id} and page: {page:?}");
   page.validate(&())?;
 
   let user = auth_session.get_assert_user_from_session().unwrap_or_else(|_| User::new_logged_out());

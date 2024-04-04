@@ -20,13 +20,12 @@ pub async fn create_item(
   auth_session: AuthSession,
   Json(payload): Json<CreateItemPayload>,
 ) -> ApiResult<Json<Uuid>> {
-  trace!("create_item called with payload: {payload:?}");
+  debug!("create_item called with payload: {payload:?}");
   payload.validate(&())?;
   let user = auth_session.get_assert_user_from_session()?;
   let item = payload.into_item(user.username).await;
   db::queries::items::create_item(&state.pool, &item).await?;
 
-  debug!("created item: {item:?}");
   Ok(Json(item.id))
 }
 
