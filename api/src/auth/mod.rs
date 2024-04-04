@@ -35,8 +35,10 @@ pub(crate) trait AuthenticationExt {
   /// Return Err(ApiError::Forbidden) if caller is not authenticated.
   /// Return Err(ApiError::Unauthorized) if caller is authenticated but with non-matching username.
   fn if_authenticated_get_user(&self, username: &Username) -> ApiResult<User>;
+  /// Return whether the caller is logged in
+  fn is_authenticated_and_not_banned(&self) -> bool;
   /// Return whether the caller is logged in as username
-  fn is_authenticated_and_not_banned(&self, username: &Username) -> bool;
+  fn is_username_authenticated_and_not_banned(&self, username: &Username) -> bool;
 }
 
 impl AuthenticationExt for AuthSession {
@@ -57,8 +59,11 @@ impl AuthenticationExt for AuthSession {
     }
   }
 
-  fn is_authenticated_and_not_banned(&self, username: &Username) -> bool {
-    self.user.as_ref().map(|user| user.0.username == *username).unwrap_or(false)
-      && !self.user.as_ref().unwrap().0.banned
+  fn is_authenticated_and_not_banned(&self) -> bool {
+    self.user.as_ref().map(|user| !user.0.banned).unwrap_or(false)
+  }
+
+  fn is_username_authenticated_and_not_banned(&self, username: &Username) -> bool {
+    self.is_authenticated_and_not_banned() && self.user.as_ref().unwrap().0.username == *username
   }
 }

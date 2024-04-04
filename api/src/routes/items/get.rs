@@ -12,18 +12,20 @@ use super::*;
   )]
 /// Get item.
 ///
+/// If user is authenticated, ...todo
 ///
-///
-/// ref get_public: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L223
-/// ref get_private: https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/api.js#L244
-pub async fn get_item_simple(
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L92
+pub async fn get_item(
   State(state): State<SharedState>,
   Path(id): Path<Uuid>,
-  auth_session: AuthSession, // todo(auth)
+  auth_session: AuthSession,
 ) -> ApiResult<Json<Item>> {
-  debug!("get_item called with id: {id}");
-  let pool = &state.pool;
-  // username.validate(&())?;
+  trace!("get_item called with id: {id}");
+  let is_authenticated = auth_session.is_authenticated_and_not_banned();
+  // mark show_dead_comments
+  // create comments query
+  // get item, comments, total comments number
+  //
   // let user = db::queries::users::get_item(pool, &)
   //   .await?
   //   .ok_or(ApiError::DbEntryNotFound("that user does not exist".to_string()))?;

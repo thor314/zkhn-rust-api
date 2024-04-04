@@ -59,7 +59,7 @@ pub(super) mod get {
     trace!("get_user called with username: {username}");
     username.validate(&())?;
     let user = users::get_user(&state.pool, &username).await?;
-    let is_authenticated = auth_session.is_authenticated_and_not_banned(&username);
+    let is_authenticated = auth_session.is_username_authenticated_and_not_banned(&username);
     let user_response = GetUserResponse::new(user, is_authenticated);
 
     debug!("user response: {user_response:?}");

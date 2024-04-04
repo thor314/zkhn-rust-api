@@ -16,6 +16,8 @@ use crate::auth::AuthenticationExt;
   ),
   )]
 /// Create a new item
+///
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L39
 pub async fn create_item(
   State(state): State<SharedState>,
   auth_session: AuthSession,
