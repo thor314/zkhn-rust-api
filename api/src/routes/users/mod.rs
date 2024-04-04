@@ -33,8 +33,6 @@ pub(super) fn users_router(state: SharedState) -> Router {
 }
 
 pub(super) mod get {
-  use serde_json::json;
-
   use super::*;
 
   #[utoipa::path(

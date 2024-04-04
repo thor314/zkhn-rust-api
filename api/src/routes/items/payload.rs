@@ -18,9 +18,9 @@ pub struct ItemPayload {
   #[garde(skip)]
   is_text:             bool,
   // todo: could turn this to an enum
-  #[garde(skip)] // todo(itemcontent)
+  #[garde(skip)] // todo(validate)
   text_or_url_content: String,
-  #[garde(skip)] // todo(item_category)
+  #[garde(skip)] // todo(validate)
   item_category: String,
 }
 
@@ -50,18 +50,16 @@ impl ItemPayload {
 
   /// convenience method for testing
   pub fn new(
-    username: &str,
     title: &str,
     item_type: &str,
     is_text: bool,
     text_or_url_content: &str,
     item_category: &str,
   ) -> ApiResult<Self> {
-    let username = Username(username.to_string());
-    let title = Title(title.to_string());
-    let item_type = item_type.to_string();
-    let text_or_url_content = text_or_url_content.to_string();
-    let item_category = item_category.to_string();
+    let title = title.into();
+    let item_type = item_type.into();
+    let text_or_url_content = text_or_url_content.into();
+    let item_category = item_category.into();
 
     let item_payload = Self { title, item_type, is_text, text_or_url_content, item_category };
     item_payload.validate(&())?;

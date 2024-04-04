@@ -24,9 +24,14 @@ pub fn get_auth_layer(pool: DbPool, session_layer: MySessionManagerLayer) -> MyA
 }
 
 pub(crate) trait AuthenticationExt {
+  /// Get the user from the session store, if one exists
+  ///
+  /// Return Ok(user) if the caller is authenticated as the given user.
+  /// Return Err(ApiError::Forbidden) if caller is not authenticated.
+  fn get_user_from_session(&self) -> ApiResult<User>;
   /// Assert that the caller is logged in and not banned
   ///
-  /// Return Ok(()) if the caller is authenticated as the given user.
+  /// Return Ok(user) if the caller is authenticated as the given user.
   /// Return Err(ApiError::Forbidden) if caller is not authenticated.
   /// Return Err(ApiError::Unauthorized) if caller is authenticated but with non-matching username.
   fn if_authenticated_get_user(&self, username: &Username) -> ApiResult<User>;
@@ -35,13 +40,16 @@ pub(crate) trait AuthenticationExt {
 }
 
 impl AuthenticationExt for AuthSession {
-  fn if_authenticated_get_user(&self, username: &Username) -> ApiResult<User> {
+  fn get_user_from_session(&self) -> ApiResult<User> {
     let user = self.user.as_ref().ok_or(ApiError::UnauthorizedPleaseLogin)?.clone().0;
-
     if user.banned {
       return Err(ApiError::ForbiddenBanned);
     }
+    Ok(user)
+  }
 
+  fn if_authenticated_get_user(&self, username: &Username) -> ApiResult<User> {
+    let user = self.get_user_from_session()?;
     if user.username == *username {
       Ok(user)
     } else {
