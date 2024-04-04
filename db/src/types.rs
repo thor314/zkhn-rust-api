@@ -121,3 +121,16 @@ impl Default for CommentText {
 impl From<&str> for CommentText {
   fn from(s: &str) -> Self { CommentText(s.to_string()) }
 }
+
+// hack: does this need to be `Type`
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Validate)]
+#[garde(transparent)]
+#[repr(transparent)]
+/// A page of comments or items
+pub struct Page(#[garde(range(min = 1, max = 1000))] pub i32);
+impl Default for Page {
+  fn default() -> Self { Self(1) }
+}
+impl From<i32> for Page {
+  fn from(n: i32) -> Self { Self(n) }
+}

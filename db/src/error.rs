@@ -16,11 +16,6 @@ pub enum DbError {
   #[error("Sqlx error: {0}")]
   Sqlx(String),
 
-  // user error
-  /// Library error, i.e. Hashing failed (hope to catch in password validation stage)
-  #[error("Password error: {0}")]
-  PwError(String),
-
   // database errors
   #[error("Entry already exists in db: {0}")]
   UniqueViolation(String),
@@ -33,7 +28,7 @@ pub enum DbError {
   #[error("Other db error: {0}")]
   Other(String),
 
-  #[error("Entry not found in db")]
+  #[error("Entry not found in db: {0}")]
   NotFound(String),
 }
 
@@ -51,12 +46,4 @@ impl From<sqlx::Error> for DbError {
       _ => DbError::Sqlx(err.to_string()),
     }
   }
-}
-
-impl From<argon2::password_hash::Error> for DbError {
-  fn from(err: argon2::password_hash::Error) -> Self { DbError::PwError(err.to_string()) }
-}
-
-impl From<argon2::Error> for DbError {
-  fn from(err: argon2::Error) -> Self { DbError::PwError(err.to_string()) }
 }
