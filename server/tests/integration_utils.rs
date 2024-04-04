@@ -149,6 +149,6 @@ fn tracing_subscriber_setup() {
     )
     .with_test_writer()
     .finish();
-    // .init();
+  // .init();
   tracing::subscriber::set_global_default(sub).unwrap();
 }
