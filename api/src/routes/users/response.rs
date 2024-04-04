@@ -2,6 +2,8 @@ use db::{models::user::User, About, AuthToken, Email, PasswordHash, Timestamp, U
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+use crate::MINIMUM_KARMA_TO_DOWNVOTE;
+
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[serde(rename_all = "camelCase")]
 #[schema(default = CreateUserResponse::default, example=CreateUserResponse::default)]
@@ -48,10 +50,12 @@ pub struct GetUserResponse {
   /// private - authenticated access only, otherwise None
   pub show_dead:              Option<bool>,
   pub show_private_user_data: bool,
+  pub auth_user:              AuthUserResponseInternal,
 }
 
 impl GetUserResponse {
   pub fn new(user: User, is_authenticated: bool) -> Self {
+    let auth_user = AuthUserResponseInternal::new(user.clone());
     let email = user.email.filter(|_| is_authenticated);
     let show_dead = Some(user.show_dead).filter(|_| is_authenticated);
     Self {
@@ -63,6 +67,7 @@ impl GetUserResponse {
       email,
       show_dead,
       show_private_user_data: is_authenticated,
+      auth_user,
     }
   }
 }
@@ -78,17 +83,59 @@ pub struct AuthenticateUserResponse {
   pub show_dead:      bool,
   pub is_moderator:   bool,
   // shadow banned removed
+  auth_user:          AuthUserResponseInternal,
 }
 
 impl AuthenticateUserResponse {
   pub fn new(user: User) -> Self {
+    let auth_user = AuthUserResponseInternal::new(user.clone());
     Self {
-      username:       user.username,
-      banned:         user.banned,
-      karma:          user.karma,
+      username: user.username,
+      banned: user.banned,
+      karma: user.karma,
       contains_email: user.email.is_some(),
-      show_dead:      user.show_dead,
-      is_moderator:   user.is_moderator,
+      show_dead: user.show_dead,
+      is_moderator: user.is_moderator,
+      auth_user,
     }
   }
+}
+
+/// Local authentication state, mirroring middleware on reference implementation
+///
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/middlewares/index.js#L36
+#[derive(Debug, Clone, Default, Serialize, Deserialize, ToSchema)]
+#[schema(default = AuthUserResponseInternal::default, example=AuthUserResponseInternal::default)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthUserResponseInternal {
+  pub user_signed_in:   bool,
+  pub username:         Option<Username>,
+  pub karma:            Option<i32>,
+  pub contains_email:   Option<bool>,
+  pub show_dead:        bool,
+  pub show_downvote:    bool,
+  pub is_moderator:     Option<bool>,
+  // shadow_banned: removed
+  pub banned:           bool,
+  pub cookies_included: bool,
+}
+
+impl AuthUserResponseInternal {
+  /// Create a new AuthLocal from a User
+  pub fn new(user: User) -> Self {
+    Self {
+      user_signed_in:   true,
+      username:         Some(user.username.clone()),
+      karma:            Some(user.karma),
+      contains_email:   Some(user.email.is_some()),
+      show_dead:        user.show_dead,
+      show_downvote:    user.karma >= MINIMUM_KARMA_TO_DOWNVOTE,
+      is_moderator:     Some(user.is_moderator),
+      banned:           user.banned,
+      cookies_included: true,
+    }
+  }
+
+  /// Create a new AuthLocal without authentication
+  pub fn new_unauthenticated(banned: bool) -> Self { Self { banned, ..Default::default() } }
 }

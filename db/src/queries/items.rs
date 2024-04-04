@@ -44,10 +44,12 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
 }
 
 pub async fn get_assert_item(pool: &DbPool, item_id: Uuid) -> DbResult<Item> {
+  debug!("get_assert_item with: {item_id:?}");
   get_item(pool, item_id).await?.ok_or(DbError::NotFound("item".into()))
 }
 
 pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
+  debug!("get_item with: {item_id:?}");
   sqlx::query_as!(
     Item,
     "SELECT
