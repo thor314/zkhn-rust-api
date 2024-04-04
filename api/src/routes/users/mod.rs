@@ -70,7 +70,7 @@ pub(super) mod get {
 
   #[utoipa::path(
       get,
-      path = "/users/authenticate/{username}",
+      path = "/users/authenticate",
       responses(
         (status = 401, description = "Not logged in"),
         (status = 403, description = "Forbidden"),
