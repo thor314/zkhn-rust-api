@@ -7,6 +7,7 @@ use crate::{auth::PasswordExt, error::ApiError, ApiResult};
 
 /// Username, password, and optionally email, and about.
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 #[schema(default = UserPayload::default, example=UserPayload::default)]
 pub struct UserPayload {
   #[garde(dive)]
@@ -44,6 +45,7 @@ impl UserPayload {
 
 /// Update user details.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 #[schema(default = UserUpdatePayload::default, example=UserUpdatePayload::default)]
 pub struct UserUpdatePayload {
   #[garde(dive)]
@@ -82,6 +84,7 @@ impl UserUpdatePayload {
 
 /// Payload for `change_password`
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 #[schema(default = ChangePasswordPayload::default, example=ChangePasswordPayload::default)]
 pub struct ChangePasswordPayload {
   #[garde(dive)]
@@ -106,6 +109,7 @@ impl ChangePasswordPayload {
 }
 
 #[derive(Debug, Default, Clone, Deserialize, Serialize, ToSchema, Validate)]
+#[serde(rename_all = "camelCase")]
 #[schema(example = CredentialsPayload::default, default = CredentialsPayload::default)]
 pub struct CredentialsPayload {
   #[garde(dive)]

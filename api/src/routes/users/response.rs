@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[serde(rename_all = "camelCase")]
 #[schema(default = CreateUserResponse::default, example=CreateUserResponse::default)]
 pub struct CreateUserResponse {
   // hack(refactor): success is redundant
@@ -37,18 +38,19 @@ impl From<User> for CreateUserResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[serde(rename_all = "camelCase")]
 #[schema(default = GetUserResponse::default, example=GetUserResponse::default)]
 pub struct GetUserResponse {
-  pub username:          Username,
-  pub created:           Timestamp,
-  pub karma:             i32,
-  pub about:             Option<About>,
-  pub banned:            bool,
+  pub username:               Username,
+  pub created:                Timestamp,
+  pub karma:                  i32,
+  pub about:                  Option<About>,
+  pub banned:                 bool,
   // shadow_banned: removed
   /// private - authenticated access only, otherwise None
-  pub email:             Option<Email>,
+  pub email:                  Option<Email>,
   /// private - authenticated access only, otherwise None
-  pub show_dead:         Option<bool>,
+  pub show_dead:              Option<bool>,
   pub show_private_user_data: bool,
 }
 
@@ -69,6 +71,7 @@ impl GetUserResponse {
   }
 }
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[serde(rename_all = "camelCase")]
 #[schema(default = AuthenticateUserResponse::default, example=AuthenticateUserResponse::default)]
 pub struct AuthenticateUserResponse {
   // hack(redundant)
