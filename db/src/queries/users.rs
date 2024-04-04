@@ -10,6 +10,10 @@ use crate::{
   ResetPasswordToken, Timestamp, Title, Username,
 };
 
+/// Get a user from the database by their username.
+///
+/// Break from convention: if the user is not found, return a `DbError::NotFound` error instead of
+/// None.
 pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<User> {
   trace!("get_user function called w username: {username}");
   sqlx::query_as!(
@@ -32,9 +36,8 @@ pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<User> {
     username.0
   )
   .fetch_optional(pool)
-  .await
-  .map(|r| r.ok_or(DbError::NotFound("user".into())))?
-  .map_err(DbError::from)
+  .await?
+  .ok_or(DbError::NotFound("user".into()))
 }
 
 /// Create a new user in the database.
@@ -73,8 +76,7 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
     email.map(|s| s.0),
   )
   .execute(&mut *tx)
-  .await
-  .map_err(DbError::from)?;
+  .await?;
 
   tx.commit().await?;
   Ok(())
@@ -90,14 +92,12 @@ pub async fn update_user(
   if let Some(about) = about {
     sqlx::query!("UPDATE users SET about = $1 WHERE username = $2", about.0, username.0)
       .execute(&mut *tx)
-      .await
-      .map_err(DbError::from)?;
+      .await?;
   }
   if let Some(email) = email {
     sqlx::query!("UPDATE users SET email = $1 WHERE username = $2", email.0, username.0)
       .execute(&mut *tx)
-      .await
-      .map_err(DbError::from)?;
+      .await?;
   }
 
   trace!("update_user with: {username}");
@@ -121,8 +121,7 @@ pub async fn update_user_password_token(
     username.0
   )
   .execute(pool)
-  .await
-  .map_err(DbError::from)?;
+  .await?;
 
   Ok(())
 }
@@ -143,8 +142,7 @@ pub async fn update_user_password(
     username.0,
   )
   .execute(pool)
-  .await
-  .map_err(DbError::from)?;
+  .await?;
 
   Ok(())
 }
@@ -157,8 +155,7 @@ pub async fn update_user_password(
 //     username.0
 //   )
 //   .execute(pool)
-//   .await
-//   .map_err(DbError::from)
+//   .await?;
 // }
 
 // pub async fn update_user_auth_token(
@@ -176,8 +173,7 @@ pub async fn update_user_password(
 //     username.0
 //   )
 //   .execute(pool)
-//   .await
-//   .map_err(DbError::from)?;
+//   .await?;
 
 //   Ok(())
 // }
@@ -203,8 +199,7 @@ pub async fn update_user_password(
 //     username.0
 //   )
 //   .fetch_all(pool)
-//   .await
-//   .map_err(DbError::from)
+//   .await?
 // }
 
 // pub async fn get_user_items(pool: &DbPool, username: &Username) -> DbResult<Vec<Item>> {
@@ -229,6 +224,5 @@ pub async fn update_user_password(
 //     username.0
 //   )
 //   .fetch_all(pool)
-//   .await
-//   .map_err(DbError::from)
+//   .await?
 // }
