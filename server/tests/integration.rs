@@ -49,5 +49,13 @@ async fn items_crud() {
   let c = Client::builder().cookie_store(true).build().unwrap();
   send(&c, UserPayload::default(), "POST", "users", 200, "1").await;
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "2").await;
-  // send(&c, )
+  let id: uuid::Uuid =
+    send(&c, CreateItemPayload::default(), "POST", "items", 200, "3").await.json().await.unwrap();
+  send(&c, "", "GET", &format!("items/{id}?1"), 200, "4").await;
+  send(&c, "", "GET", &format!("items/{id}?2"), 200, "5").await;
+  send(&c, "", "GET", &format!("items/{id}?2"), 200, "6").await;
+  send(&c, "", "GET", &format!("items/{id}?2"), 200, "7").await;
+  let upvote = VotePayload::new(id, VotePayloadEnum::Upvote);
+  // let downvote = VotePayload::new(id, VotePayloadEnum::Downvote);
+  send(&c, upvote, "POST", "items/vote", 200, "8").await;
 }

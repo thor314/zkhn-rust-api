@@ -23,6 +23,7 @@ pub(crate) type ApiResult<T> = Result<T, ApiError>;
 pub use self::error::ApiError;
 // export payloads and responses
 pub use self::routes::users::*;
+pub use self::routes::items::*;
 
 pub const MINIMUM_KARMA_TO_DOWNVOTE: i32 = 10; // todo(config)
 pub const COMMENTS_PER_PAGE: usize = 10; // todo(config)

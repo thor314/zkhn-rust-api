@@ -105,7 +105,7 @@ impl Default for ResetPasswordToken {
 #[repr(transparent)]
 pub struct Title(#[garde(ascii, length(min = 8, max = 100))] pub String);
 impl Default for Title {
-  fn default() -> Self { "title".into() }
+  fn default() -> Self { "item title".into() }
 }
 impl From<&str> for Title {
   fn from(s: &str) -> Self { Title(s.to_string()) }

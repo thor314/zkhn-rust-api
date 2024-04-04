@@ -5,13 +5,14 @@ use db::{
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use uuid::Uuid;
 
 use crate::ApiResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
-#[schema(default = ItemPayload::default, example=ItemPayload::default)]
-pub struct ItemPayload {
+#[schema(default = CreateItemPayload::default, example=CreateItemPayload::default)]
+pub struct CreateItemPayload {
   #[garde(dive)]
   pub title:           Title,
   #[garde(skip)] // todo(itemtype)
@@ -25,7 +26,7 @@ pub struct ItemPayload {
   item_category: String,
 }
 
-impl Default for ItemPayload {
+impl Default for CreateItemPayload {
   fn default() -> Self {
     Self {
       title:               Title::default(),
@@ -37,7 +38,7 @@ impl Default for ItemPayload {
   }
 }
 
-impl ItemPayload {
+impl CreateItemPayload {
   pub async fn into_item(self, username: Username) -> Item {
     Item::new(
       username,
@@ -66,4 +67,27 @@ impl ItemPayload {
     item_payload.validate(&())?;
     Ok(item_payload)
   }
+}
+
+/// A payload for voting on an item or comment
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[schema(default = VotePayload::default, example=VotePayload::default)]
+#[serde(rename_all = "camelCase")]
+pub struct VotePayload {
+  pub id:   Uuid,
+  pub vote: VotePayloadEnum,
+}
+impl VotePayload {
+  pub fn new(id: Uuid, vote: VotePayloadEnum) -> Self { Self { id, vote } }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum VotePayloadEnum {
+  Upvote,
+  Downvote,
+  Unvote,
+}
+impl Default for VotePayloadEnum {
+  fn default() -> Self { Self::Unvote }
 }

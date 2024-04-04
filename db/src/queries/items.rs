@@ -43,7 +43,11 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   Ok(())
 }
 
-pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Item> {
+pub async fn get_assert_item(pool: &DbPool, item_id: Uuid) -> DbResult<Item> {
+  get_item(pool, item_id).await?.ok_or(DbError::NotFound("item".into()))
+}
+
+pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
   sqlx::query_as!(
     Item,
     "SELECT
@@ -64,8 +68,8 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Item> {
     item_id
   )
   .fetch_optional(pool)
-  .await?
-  .ok_or(DbError::NotFound("item".into()))
+  .await
+  .map_err(DbError::from)
 }
 
 // pub async fn delete_item(pool: &DbPool, item_id: Uuid) -> DbResult<()> {

@@ -51,6 +51,9 @@ pub enum ApiError {
   /// The client submitted an incorrect password
   #[status(StatusCode::UNAUTHORIZED)] // 401
   UnauthorizedIncorrectPassword,
+  /// The client submitted a change to a dead item or comment
+  #[status(StatusCode::FORBIDDEN)] // 403
+  ForbiddenDead,
   /// The client submitted an incorrect password
   #[status(StatusCode::FORBIDDEN)] // 403
   ForbiddenUsernameDoesNotMatchSession,
@@ -81,7 +84,8 @@ impl std::fmt::Display for ApiError {
       ApiError::BadRequest(e) => write!(f, "Invalid request submitted: {e}"),
       ApiError::UnauthorizedPleaseLogin => write!(f, "Unauthorized: please log in",),
       ApiError::UnauthorizedIncorrectPassword => write!(f, "Unauthorized: Incorrect password"),
-      ApiError::ForbiddenBanned => write!(f, "Unauthorized: User is banned"),
+      ApiError::ForbiddenDead => write!(f, "Forbidden: item or comment is dead"),
+      ApiError::ForbiddenBanned => write!(f, "Forbidden: User is banned"),
       ApiError::ForbiddenUsernameDoesNotMatchSession =>
         write!(f, "Forbidden: provided username does not match session"),
       ApiError::ForbiddenModeratorRequired => write!(f, "Forbidden: Moderator only"),

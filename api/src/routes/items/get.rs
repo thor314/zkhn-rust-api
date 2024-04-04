@@ -32,7 +32,7 @@ pub async fn get_item(
 
   let user = auth_session.get_user_from_session().unwrap_or_else(|_| User::new_logged_out());
   let (item, (comments, total_comments)) = tokio::try_join!(
-    db::queries::items::get_item(&state.pool, id),
+    db::queries::items::get_assert_item(&state.pool, id),
     db::queries::comments::get_comments_page(&state.pool, id, page, user.show_dead),
   )?;
 
@@ -44,7 +44,6 @@ pub async fn get_item(
   } else {
     // Authenticated user
     // get user's itemVotes, itemFavorites, itemHiddens, and commentVotes, and update item_response
-    // accordingly
     //
     // let (item_votes, item_favorites, item_hiddens, comment_votes) = tokio::try_join!(todo)
     Ok(Json(get_item_response))

@@ -42,7 +42,7 @@ pub async fn send(
   path: &str,
   status: u16,
   tag: &str,
-) {
+) -> Response {
   let res = match method {
     "POST" => client.post(format!("{}/{}", WEBSERVER_URL, path)).send_json(payload).await,
     "PUT" => client.put(format!("{}/{}", WEBSERVER_URL, path)).send_json(payload).await,
@@ -52,6 +52,7 @@ pub async fn send(
     _ => panic!("Invalid method"),
   };
   assert_eq!(res.status(), status, "Test {} failed", tag);
+  res
 }
 
 trait ClientExt {
