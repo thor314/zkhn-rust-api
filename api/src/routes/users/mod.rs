@@ -88,7 +88,7 @@ pub(super) mod get {
     auth_session: AuthSession,
   ) -> ApiResult<Json<AuthenticateUserResponse>> {
     let session_user = auth_session.get_assert_user_from_session()?;
-    let authenticate_user_response = AuthenticateUserResponse::new(session_user);
+    let authenticate_user_response = AuthenticateUserResponse::new(session_user, true);
     debug!("authenticate_user_response: {authenticate_user_response:?}");
     Ok(Json(authenticate_user_response))
   }
