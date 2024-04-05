@@ -29,15 +29,12 @@ pub async fn edit_item(
 
   // payload.title.sanitize() // backlog(sanitize)
   // backlog(sanitize) item text
-  // backlog validate url
+  // backlog validate url?
 
-  // later: figure out what this does
-  // if (ogItemTitle !== newItemTitle) {
-  //   item.type = utils.getItemType(newItemTitle, item.url, newItemText);
-  // }
+  // if title changed, we may need to change the item type; see routes/utils.js/getitemtype
 
-  // backlog(search)
   // await searchApi.editItem(itemId, newItemTitle, newItemText, newItemCategory);
+  // backlog(search)
 
   Ok(StatusCode::OK)
 }

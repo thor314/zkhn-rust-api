@@ -3,6 +3,7 @@ use super::*;
 /// Delete an item
 ///
 /// https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L559
+/// https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L262
 #[utoipa::path(
   put,
   path = "/items/delete-item",
@@ -28,13 +29,10 @@ pub async fn delete_item(
   // backlog(sanitize) item text
   // backlog validate url
 
-  // later: figure out what this does
-  // if (ogItemTitle !== newItemTitle) {
-  //   item.type = utils.getItemType(newItemTitle, item.url, newItemText);
-  // }
+  // if title changed, we may need to change the item type; see routes/utils.js/getitemtype
 
   // backlog(search)
-  // await searchApi.editItem(itemId, newItemTitle, newItemText, newItemCategory);
+  // await searchApi.deleteItem(itemId, newItemTitle, newItemText, newItemCategory);
 
   Ok(StatusCode::OK)
 }

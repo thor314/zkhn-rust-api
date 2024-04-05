@@ -41,8 +41,8 @@ async fn user_crud() {
   send(&c, "", "GET", "users/alice", 200, "e").await;
 }
 
-// #[tokio::test]
-// #[serial]
+#[tokio::test]
+#[serial]
 async fn items_crud() {
   let mut _child_guard = cargo_shuttle_run().await;
   let c = Client::builder().cookie_store(true).build().unwrap();
@@ -68,5 +68,8 @@ async fn items_crud() {
   // todo(test) favorite_item
   // todo(test) hide_item
 
+  // get edit item
   // edit item
+  // get delete item
+  // delete item
 }
