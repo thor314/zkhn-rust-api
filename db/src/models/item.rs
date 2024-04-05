@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -24,7 +26,7 @@ pub struct Item {
   /// internal algorithmic score to sort items on home page by popularity
   pub score:         i32,
   /// tweet, blog, paper, other
-  pub item_category: String, // validate
+  pub item_category: ItemCategory, // validate
   pub created:       Timestamp,
   pub dead:          bool,
 }
@@ -41,7 +43,7 @@ impl Default for Item {
       text:          Some(Text::default()),
       points:        1,
       score:         0,
-      item_category: "tweet".to_string(),
+      item_category: ItemCategory::Other,
       created:       now(),
       dead:          false,
     }
@@ -55,7 +57,7 @@ impl Item {
     item_type: String,
     is_text: bool,
     text_or_url_content: String,
-    item_category: String,
+    item_category: ItemCategory,
   ) -> Self {
     let (url, domain, text) = if is_text {
       (None, None, Some(Text(text_or_url_content)))
@@ -81,22 +83,32 @@ impl Item {
   pub fn modification_expiration(&self) -> Timestamp { self.created + chrono::Duration::hours(1) }
 }
 
-// todo: add other types rest
-#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-#[sqlx(type_name = "item_category_enum")]
-#[serde(rename_all = "camelCase")]
+#[derive(Default, Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+#[sqlx(type_name = "item_category_enum", rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
 pub enum ItemCategory {
   Tweet,
   Blog,
   Paper,
+  #[default]
   Other,
 }
-
-#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-#[sqlx(type_name = "item_type", rename_all = "lowercase")]
-#[serde(rename_all = "camelCase")]
-pub enum ItemType {
-  News,
-  Show,
-  Ask,
+impl fmt::Display for ItemCategory {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    match self {
+      ItemCategory::Tweet => write!(f, "tweet"),
+      ItemCategory::Blog => write!(f, "blog"),
+      ItemCategory::Paper => write!(f, "paper"),
+      ItemCategory::Other => write!(f, "other"),
+    }
+  }
 }
+
+// #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+// #[sqlx(type_name = "item_type", rename_all = "lowercase")]
+// #[serde(rename_all = "camelCase")]
+// pub enum ItemType {
+//   News,
+//   Show,
+//   Ask,
+// }

@@ -120,7 +120,7 @@ pub(super) mod post {
     let user: User = payload.into_user().await;
     users::create_user(&state.pool, &user).await?;
 
-    debug!("created user: {user_response:?}");
+    debug!("created user: {user:?}");
     Ok(StatusCode::OK)
   }
 

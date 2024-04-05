@@ -1,5 +1,8 @@
 use db::{
-  models::{comment::Comment, item::Item},
+  models::{
+    comment::Comment,
+    item::{Item, ItemCategory},
+  },
   AuthToken, Domain, Text, Timestamp, Title, Url, Username,
 };
 use serde::{Deserialize, Serialize};
@@ -41,7 +44,7 @@ pub struct GetEditItemResponse {
   /// internal algorithmic score to sort items on home page by popularity
   pub score:            i32,
   /// tweet, blog, paper, other
-  pub item_category:    String, // validate
+  pub item_category:    ItemCategory,
   pub created:          Timestamp,
   pub dead:             bool,
   /// unique to get-edit item page

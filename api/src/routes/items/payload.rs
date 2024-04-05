@@ -1,5 +1,6 @@
 use db::{
-  models::item::{self, Item}, Text, Title, Url, Username
+  models::item::{self, Item, ItemCategory},
+  Text, Title, Url, Username,
 };
 use garde::Validate;
 use serde::{Deserialize, Serialize};
@@ -18,11 +19,12 @@ pub struct CreateItemPayload {
   item_type: String,
   #[garde(skip)]
   is_text:             bool,
-  // todo: could turn this to an enum
-  #[garde(dive)] // todo(validate)
-  text_or_url_content: TextOrUrl,
+  // #[garde(dive)] // todo(validate)
+  //  text_or_url_content: TextOrUrl,
   #[garde(skip)] // todo(validate)
-  item_category: String,
+  text_or_url_content: String,
+  #[garde(skip)] // todo(validate)
+  item_category: ItemCategory,
 }
 
 impl Default for CreateItemPayload {
@@ -32,15 +34,17 @@ impl Default for CreateItemPayload {
       item_type:           "news".into(),
       is_text:             true,
       text_or_url_content: "text content".into(),
-      item_category:       "tweet".into(),
+      item_category:       ItemCategory::default(),
     }
   }
 }
 
-pub enum TextOrUrl{ 
-  Text(Text),
-  Url(Url),
-
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
+// #[schema(default = CreateItemPayload::default, example=CreateItemPayload::default)]
+pub enum TextOrUrl {
+  Text(#[garde(dive)] Text),
+  Url(#[garde(dive)] Url),
 }
 
 impl CreateItemPayload {
@@ -61,12 +65,11 @@ impl CreateItemPayload {
     item_type: &str,
     is_text: bool,
     text_or_url_content: &str,
-    item_category: &str,
+    item_category: ItemCategory,
   ) -> ApiResult<Self> {
     let title = title.into();
     let item_type = item_type.into();
     let text_or_url_content = text_or_url_content.into();
-    let item_category = item_category.into();
 
     let item_payload = Self { title, item_type, is_text, text_or_url_content, item_category };
     item_payload.validate(&())?;

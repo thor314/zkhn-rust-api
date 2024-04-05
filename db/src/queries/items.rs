@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::{
   error::DbError,
-  models::{comment::Comment, item::Item},
+  models::{comment::Comment, item::*},
   types::*,
   DbPool, DbResult,
 };
@@ -24,7 +24,7 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
     url,
     domain,
     text,
-    item_category
+    item_category 
   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
     id,
     username.0,
@@ -33,7 +33,7 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
     url.map(|s| s.0),
     domain.map(|s| s.0),
     text.map(|s| s.0),
-    item_category,
+    item_category.to_string(),
   )
   .execute(&mut *tx)
   .await?;
@@ -63,7 +63,7 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
       text as \"text: Text\",
       points,
       score,
-      item_category,
+      item_category as \"item_category: ItemCategory\",
       created,
       dead
     FROM items WHERE id = $1",
