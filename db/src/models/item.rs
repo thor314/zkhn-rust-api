@@ -21,8 +21,7 @@ pub struct Item {
   /// karma for the item
   pub points:        i32,
   /// internal algorithmic score to sort items on home page by popularity
-  pub score:         i32, // todo: both points and score?
-  pub comment_count: i32,
+  pub score:         i32, 
   /// tweet, blog, paper, other
   pub item_category: String, // validate
   pub created:       Timestamp,
@@ -41,7 +40,6 @@ impl Default for Item {
       text:          Some(Text::default()),
       points:        1,
       score:         0,
-      comment_count: 0,
       item_category: "tweet".to_string(),
       created:       now(),
       dead:          false,
@@ -71,7 +69,7 @@ impl Item {
 
   /// An item is editable if it was created less than 1 hour ago, and has no comments.
   pub async fn assert_editable(&self, pool: &DbPool) -> DbResult<()> {
-    if crate::queries::items::has_comments(pool, self.id).await {
+    if crate::queries::items::item_has_comments(pool, self.id).await {
       return Err(DbError::NotEditable("has comments".into()));
     } else if now() > self.modification_expiration() {
       return Err(DbError::NotEditable("expired".into()));

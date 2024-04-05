@@ -1,6 +1,5 @@
 use db::{
-  models::{comment::Comment, item::Item},
-  AuthToken, Timestamp, Title, Username,
+  models::{comment::Comment, item::Item}, AuthToken, Domain, Text, Timestamp, Title, Url, Username
 };
 use serde::{Deserialize, Serialize};
 use utoipa::{OpenApi, ToSchema};
@@ -31,20 +30,19 @@ pub struct GetEditItemResponse {
   pub title:            Title,
   /// news, show, ask
   pub item_type:        String,
-  pub url:              Option<String>, // validate
-  pub domain:           Option<String>,
-  pub text:             Option<String>, // validate
+  pub url:              Option<Url>, 
+  pub domain:           Option<Domain>,
+  pub text:             Option<Text>, 
   /// karma for the item
   pub points:           i32,
   /// internal algorithmic score to sort items on home page by popularity
-  pub score:            i32, // todo: both points and score?
-  pub comment_count:    i32,
+  pub score:            i32, 
   /// tweet, blog, paper, other
   pub item_category:    String, // validate
   pub created:          Timestamp,
   pub dead:             bool,
   /// unique to get-edit item page
-  pub text_for_editing: Option<String>, // validate
+  pub text_for_editing: Option<Text>, // validate
 }
 impl From<Item> for GetEditItemResponse {
   fn from(item: Item) -> Self {
@@ -60,7 +58,6 @@ impl From<Item> for GetEditItemResponse {
       text: item.text,
       points: item.points,
       score: item.score,
-      comment_count: item.comment_count,
       item_category: item.item_category,
       created: item.created,
       dead: item.dead,

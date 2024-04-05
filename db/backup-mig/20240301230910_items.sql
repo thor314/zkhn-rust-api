@@ -17,7 +17,7 @@ CREATE TABLE items (
     text TEXT,
     points INT DEFAULT 1 CHECK (points >= 1) NOT NULL,
     score INT DEFAULT 0 NOT NULL,
-    comment_count INT DEFAULT 0 NOT NULL, 
+    -- comment_count INT DEFAULT 0 NOT NULL, -- todo remove
     -- todo: cat
     item_category TEXT NOT NULL DEFAULT 'other',
     created TIMESTAMP WITH TIME ZONE NOT NULL,

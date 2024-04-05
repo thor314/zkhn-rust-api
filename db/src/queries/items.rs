@@ -63,7 +63,6 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
       text as \"text: Text\",
       points,
       score,
-      comment_count,
       item_category,
       created,
       dead
@@ -76,10 +75,20 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
 }
 
 /// Return whether the item has any comments.
-// backlog(refactor) - remove one: Item.comment_count or this method
-pub(crate) async fn has_comments(pool: &DbPool, id: Uuid) -> bool {
-  // todo!()
-  false
+pub(crate) async fn item_has_comments(pool: &DbPool, id: Uuid) -> bool {
+  item_comment_count(pool, id).await > 0
+}
+
+pub(crate) async fn item_comment_count(pool: &DbPool, id: Uuid) -> usize {
+  // todo
+  let mut count = 1;
+  count -= 1;
+  // let count = sqlx::query!("SELECT COUNT(*) FROM comments WHERE parent_item_id = $1", id)
+  //   .fetch_one(pool)
+  //   .await
+  //   .map(|row| row.count)
+  //   .unwrap_or_default();
+  count
 }
 
 /// Delete an item from the database.
@@ -110,22 +119,5 @@ pub async fn delete_item(pool: &DbPool, item_id: Uuid) -> DbResult<()> {
 //   .await
 //   .map_err(DbError::from)?;
 
-//   Ok(())
-// }
-
-// pub(crate) async fn decrement_item_comment_count_by(
-//   pool: &sqlx::Pool<sqlx::Postgres>,
-//   item_id: Uuid,
-//   len: i32,
-// ) -> DbResult<()> {
-//   sqlx::query!(
-//     "UPDATE items
-//     SET comment_count = comment_count - $1
-//     WHERE id = $2",
-//     len,
-//     item_id
-//   )
-//   .execute(pool)
-//   .await?;
 //   Ok(())
 // }
