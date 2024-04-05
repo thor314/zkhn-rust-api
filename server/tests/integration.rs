@@ -37,7 +37,7 @@ async fn user_crud() {
   send(&c, "", "PUT_EMPTY", "users/reset-password-link/alice", 200, "a").await;
   send(&c, "", "PUT_EMPTY", "users/reset-password-link/alice", 200, "b").await;
   send(&c, ChangePasswordPayload::default(), "PUT", "users/change-password", 200, "c").await;
-  send(&c, ChangePasswordPayload::default(), "PUT", "users/change-password", 200, "d").await;
+  send(&c, ChangePasswordPayload::default(), "PUT", "users/change-password", 401, "d").await;
   send(&c, "", "GET", "users/alice", 200, "e").await;
 }
 

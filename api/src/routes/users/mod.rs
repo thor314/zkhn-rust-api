@@ -278,15 +278,15 @@ pub(super) mod put {
     payload.validate(&())?;
     let user = users::get_assert_user(&state.pool, &payload.username).await?;
 
-    if let Some(password) = payload.current_password {
+    if let Some(ref password) = payload.current_password {
       // user has submitted their old password as verification
       password.hash_and_verify(&user.password_hash).await?;
-    } else if let Some(token) = payload.reset_password_token {
+    } else if let Some(ref token) = payload.reset_password_token {
       // user has submitted a password reset token as verification
       let user = users::get_assert_user(&state.pool, &payload.username).await?;
       if user.reset_password_token.is_none() {
         return Err(ApiError::BadRequest("no reset password token found for user".to_string()));
-      } else if user.reset_password_token.unwrap() != token {
+      } else if &user.reset_password_token.unwrap() != token {
         return Err(ApiError::UnauthorizedIncorrectToken);
       }
     } else {
@@ -295,10 +295,11 @@ pub(super) mod put {
       ));
     }
 
-    users::update_user_password(&state.pool, &payload.username, &user.password_hash).await?;
+    let new_hash = payload.new_password.hash().await;
+    users::update_user_password(&state.pool, &payload.username, &new_hash).await?;
     // prod(email) - send an email to the user that their password has changed
 
-    debug!("changed password for user: {}", payload.username);
+    debug!("changed password with payload: {payload:?}");
     Ok(StatusCode::OK)
   }
 }
