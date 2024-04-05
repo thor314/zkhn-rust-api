@@ -1,5 +1,8 @@
 use db::{
-  models::item::{self, Item, ItemCategory, ItemType},
+  models::{
+    item::{self, Item, ItemCategory, ItemType},
+    user_vote::VoteState,
+  },
   Text, TextOrUrl, Title, Url, Username,
 };
 use garde::Validate;
@@ -49,22 +52,11 @@ impl CreateItemPayload {
 #[schema(default = VotePayload::default, example=VotePayload::default)]
 #[serde(rename_all = "camelCase")]
 pub struct VotePayload {
-  pub id:   Uuid,
-  pub vote: VotePayloadEnum,
+  pub id:         Uuid,
+  pub vote_state: VoteState,
 }
 impl VotePayload {
-  pub fn new(id: Uuid, vote: VotePayloadEnum) -> Self { Self { id, vote } }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase")]
-pub enum VotePayloadEnum {
-  Upvote,
-  Downvote,
-  Unvote,
-}
-impl Default for VotePayloadEnum {
-  fn default() -> Self { Self::Upvote }
+  pub fn new(id: Uuid, vote: VoteState) -> Self { Self { id, vote_state: vote } }
 }
 
 /// A payload for favoriting on an item or comment

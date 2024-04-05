@@ -52,22 +52,21 @@ pub async fn vote_item(
   auth_session: AuthSession,
   Json(payload): Json<VotePayload>,
 ) -> ApiResult<()> {
-  trace!("vote_item called with payload: {payload:?}");
+  debug!("vote_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
   let (item, vote) = tokio::try_join!(
     db::queries::items::get_assert_item(&state.pool, payload.id),
-    db::queries::user_votes::get_vote(&state.pool, &user.username, payload.id),
+    db::queries::user_votes::get_item_vote(&state.pool, &user.username, payload.id),
   )?;
   // note - diverge from reference, allow submitting user to vote on their own item
-  // if vote.matches(&payload}) { return Err(ApiError::Conflict); }
+  if let Some(vote) = vote {
+    if vote.vote_state == payload.vote_state {
+      return Err(ApiError::UniqueViolation("user item vote duplication attempt".into()));
+    }
+  }
 
-  // todo(vote): insert the new vote
-  // let vote = db::models::user_votes::UserVote::new(&user.username, &payload);
-  // db::queries::user_votes::insert_vote(&state.pool, &vote);
-  // todo(item points)
-  // todo(karma)
-
-  debug!("vote submitted");
+  db::queries::user_votes::vote_on_item(&state.pool, item.id, &user.username, payload.vote_state)
+    .await?;
   Ok(())
 }
 
