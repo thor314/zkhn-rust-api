@@ -41,8 +41,18 @@ async fn user_crud() {
   send(&c, "", "GET", "users/alice", 200, "e").await;
 }
 
-#[tokio::test]
-#[serial]
+async fn user_bug() {
+  let mut _child_guard = cargo_shuttle_run().await;
+  let c = Client::builder().cookie_store(true).build().unwrap();
+  let bob = CreateUserPayload::new("bob", "password", None, None).unwrap();
+  send(&c, CreateUserPayload::default(), "POST", "users", 200, "1").await;
+  send(&c, bob, "POST", "users", 200, "2").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "3").await;
+}
+
+
+// #[tokio::test]
+// #[serial]
 async fn items_crud() {
   let mut _child_guard = cargo_shuttle_run().await;
   let c = Client::builder().cookie_store(true).build().unwrap();

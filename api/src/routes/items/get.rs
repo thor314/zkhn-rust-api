@@ -12,6 +12,7 @@ use super::*;
   params( ("id" = String, Path, example = Uuid::new_v4),
           ("page" = i32, Query, example = Page::default) ),
   responses( (status = 422, description = "Invalid id"),
+             (status = 422, description = "Invalid page"),
              (status = 404, description = "User not found"),
              (status = 200, description = "Success", body = GetItemResponse) ),
   )]
@@ -51,21 +52,55 @@ pub async fn get_item(
 #[utoipa::path(
   get,
   path = "/items/get-edit-item-page-data",
-  params( ("id" = String, Path, example = Uuid::new_v4),
-          ("page" = i32, Query, example = Page::default) ),
+  params( ("id" = String, Path, example = Uuid::new_v4) ),
   responses( (status = 422, description = "Invalid id"),
+             (status = 401, description = "Unauthorized"),
+             (status = 403, description = "Forbidden"),
              (status = 404, description = "User not found"),
-             (status = 200, description = "Success", body = GetItemResponse) ),
+             (status = 200, description = "Success", body = GetEditItemResponse) ),
   )]
-/// todo idk
-///
+/// Get item content for for editing.
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L462
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L191
 pub async fn get_edit_item_page_data(
   State(state): State<SharedState>,
   Path(id): Path<Uuid>,
-  Query(page): Query<Page>,
   auth_session: AuthSession,
-) -> ApiResult<Json<GetItemResponse>> {
+) -> ApiResult<Json<GetEditItemResponse>> {
+  debug!("get_delete_item called with id: {id}");
+  let user = auth_session.get_assert_user_from_session().unwrap_or_else(|_| User::new_logged_out());
+  let item = db::queries::items::get_assert_item(&state.pool, id).await?;
+  // backlog: error if past edit timeout
+  // backlog: error if item has any comments
+
+  Ok(Json(item.into()))
+}
+
+#[utoipa::path(
+  get,
+  path = "/items/get-delete-item-page-data",
+  params( ("id" = String, Path, example = Uuid::new_v4) ),
+  responses( (status = 422, description = "Invalid id"),
+             (status = 401, description = "Unauthorized"),
+             (status = 403, description = "Forbidden"),
+             (status = 404, description = "User not found"),
+             (status = 200, description = "Success", body = GetItemResponse) ),
+  )]
+/// Get item content for for deletion.
+///
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L538
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L242
+pub async fn get_delete_item_page_data(
+  State(state): State<SharedState>,
+  Path(id): Path<Uuid>,
+  auth_session: AuthSession,
+) -> ApiResult<Json<GetDeleteItemResponse>> {
+  debug!("get_delete_item called with id: {id}");
+  let user = auth_session.get_assert_user_from_session().unwrap_or_else(|_| User::new_logged_out());
+  let item = db::queries::items::get_assert_item(&state.pool, id).await?;
+  // backlog: error if past delete timeout
+  // backlog: error if item has any comments
+
+  Ok(Json(item.into()))
 }

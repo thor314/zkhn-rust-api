@@ -36,5 +36,7 @@ pub fn items_router(state: SharedState) -> Router {
     .route("/vote", routing::post(post::vote_item))
     .route("/favorite", routing::post(post::favorite_item))
     .route("/hide", routing::post(post::hide_item))
+    .route("/get-edit-item-page-data", routing::get(get::get_edit_item_page_data))
+    .route("/get-delete-item-page-data", routing::get(get::get_delete_item_page_data))
     .with_state(state)
 }
