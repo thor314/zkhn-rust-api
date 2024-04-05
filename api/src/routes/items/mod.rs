@@ -73,14 +73,14 @@ mod delete {
     debug!("delete_item called with id: {id:?}");
     let item = db::queries::items::get_assert_item(&state.pool, id).await?;
     item.assert_editable(&state.pool).await?;
-    let _user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
+    let user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
 
     // payload.title.sanitize() // backlog(sanitize)
     // backlog(sanitize) item text
     // backlog validate url
 
     // if title changed, we may need to change the item type; see routes/utils.js/getitemtype
-    db::queries::items::delete_item(&state.pool, id).await?;
+    db::queries::items::delete_item(&state.pool, id, &user.username).await?;
 
     // backlog(search)
     // await searchApi.deleteItem(itemId, newItemTitle, newItemText, newItemCategory);

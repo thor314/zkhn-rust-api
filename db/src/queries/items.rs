@@ -15,7 +15,6 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
 
   let Item { id, username, title, item_type, url, domain, text, item_category, .. } = item.clone();
 
-  // Try sqlx::query!("INSERT INTO tbl VALUES ($1)", Enm::Foo as Enm).
   sqlx::query!(
     "INSERT INTO items
     ( id,
@@ -39,10 +38,16 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   .execute(&mut *tx)
   .await?;
 
-  // todo(karma): increment
+  sqlx::query!(
+    "UPDATE users
+    SET karma = karma + 1
+    WHERE username = $1",
+    username.0
+  )
+  .execute(&mut *tx)
+  .await?;
 
-  tx.commit().await?;
-  Ok(())
+  Ok(tx.commit().await?)
 }
 
 pub async fn get_assert_item(pool: &DbPool, item_id: Uuid) -> DbResult<Item> {
@@ -91,16 +96,24 @@ pub(crate) async fn item_comment_count(pool: &DbPool, id: Uuid) -> usize {
   count
 }
 
-/// Delete an item from the database.
-pub async fn delete_item(pool: &DbPool, item_id: Uuid) -> DbResult<()> {
-  sqlx::query!("DELETE FROM items WHERE id = $1", item_id)
-    .execute(pool)
-    .await
-    .map_err(DbError::from)?;
+/// Delete an item from the database. Adjust user karma accordingly.
+pub async fn delete_item(pool: &DbPool, item_id: Uuid, username: &Username) -> DbResult<()> {
+  let points = sqlx::query!("SELECT points FROM items WHERE id = $1", item_id)
+    .fetch_one(pool)
+    .await?
+    .points
+    .max(0);
 
-  // todo - adjust karma
+  let mut tx = pool.begin().await?;
+  if points > 0 {
+    sqlx::query!("UPDATE users SET karma = karma - $1 WHERE username = $2", points, username.0)
+      .execute(&mut *tx)
+      .await?;
+  }
 
-  Ok(())
+  sqlx::query!("DELETE FROM items WHERE id = $1", item_id).execute(&mut *tx).await?;
+
+  Ok(tx.commit().await?)
 }
 
 // pub async fn update_item_category(

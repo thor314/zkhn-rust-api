@@ -17,7 +17,6 @@ pub struct Item {
   pub id:            Uuid,
   pub username:      Username,
   pub title:         Title,
-  /// news, show, ask
   pub item_type:     ItemType,
   pub url:           Option<Url>,
   pub domain:        Option<Domain>,
@@ -26,7 +25,6 @@ pub struct Item {
   pub points:        i32,
   /// internal algorithmic score to sort items on home page by popularity
   pub score:         i32,
-  /// tweet, blog, paper, other
   pub item_category: ItemCategory,
   pub created:       Timestamp,
   pub dead:          bool,
