@@ -161,7 +161,7 @@ pub(super) mod post {
 }
 
 pub(super) mod put {
-  use db::Timestamp;
+  use db::{ResetPasswordToken, Timestamp};
 
   use super::*;
 
@@ -227,7 +227,6 @@ pub(super) mod put {
   pub async fn request_password_reset_link(
     State(state): State<SharedState>,
     Path(username): Path<Username>,
-    // auth_session: AuthSession,
   ) -> ApiResult<StatusCode> {
     trace!("request-password-reset-link called with username: {:?}", username);
     username.validate(&())?;
@@ -236,7 +235,7 @@ pub(super) mod put {
 
     // Generate a reset password token and expiration date for the user. Update the db.
     // prod(email)
-    let reset_password_token = AuthToken("create reset password token".into());
+    let reset_password_token = ResetPasswordToken("create reset password token".into());
     let reset_password_token_expiration = Timestamp::default_token_expiration();
     users::update_user_password_token(
       &state.pool,
@@ -268,16 +267,34 @@ pub(super) mod put {
   )]
   /// Change user password. Do not require the user to be logged in.
   ///
+  /// The user may either submit their current password, or a PasswordResetToken to identify
+  /// themselves.
+  ///
   /// hack(cookie) ref - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L267
   pub async fn change_password(
     State(state): State<SharedState>,
-    // auth_session: AuthSession,
     Json(payload): Json<ChangePasswordPayload>,
   ) -> ApiResult<StatusCode> {
     trace!("change_password called with payload: {payload:?}");
     payload.validate(&())?;
     let user = users::get_assert_user(&state.pool, &payload.username).await?;
-    payload.current_password.hash_and_verify(&user.password_hash).await?;
+    if let Some(password) = payload.current_password {
+      // user has submitted their old password as verification
+      password.hash_and_verify(&user.password_hash).await?;
+    } else if let Some(token) = payload.reset_password_token {
+      // user has submitted a password reset token as verification
+      let user = users::get_assert_user(&state.pool, &payload.username).await?;
+      if user.reset_password_token.is_none() {
+        return Err(ApiError::BadRequest("no reset password token found for user".to_string()));
+      } else if user.reset_password_token.unwrap() != token {
+        return Err(ApiError::UnauthorizedIncorrectToken);
+      }
+    } else {
+      return Err(ApiError::BadRequest(
+        "current_password or reset_password_token must be provided".to_string(),
+      ));
+    }
+
     users::update_user_password(&state.pool, &payload.username, &user.password_hash).await?;
     // prod(email) - send an email to the user that their password has changed
 

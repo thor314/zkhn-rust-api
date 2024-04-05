@@ -116,7 +116,7 @@ pub async fn update_user(
 pub async fn update_user_password_token(
   pool: &DbPool,
   username: &Username,
-  reset_password_token: &AuthToken,
+  reset_password_token: &ResetPasswordToken,
   reset_password_token_expiration: &Timestamp,
 ) -> DbResult<()> {
   trace!("update_user_password_token with: {username}");

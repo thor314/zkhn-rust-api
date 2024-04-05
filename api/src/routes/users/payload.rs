@@ -1,4 +1,4 @@
-use db::{models::user::User, About, Email, Password, Username};
+use db::{models::user::User, About, Email, Password, ResetPasswordToken, Username};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
@@ -87,20 +87,28 @@ impl UserUpdatePayload {
 #[schema(default = ChangePasswordPayload::default, example=ChangePasswordPayload::default)]
 pub struct ChangePasswordPayload {
   #[garde(dive)]
-  pub username:         Username,
+  pub username:             Username,
   #[garde(dive)]
-  pub current_password: Password,
+  pub current_password:     Option<Password>,
   #[garde(dive)]
-  pub new_password:     Password,
+  pub reset_password_token: Option<ResetPasswordToken>,
+  #[garde(dive)]
+  pub new_password:         Password,
 }
 
 impl ChangePasswordPayload {
   /// convenience method for testing
-  pub fn new(username: &str, current_password: &str, new_password: &str) -> ApiResult<Self> {
+  pub fn new(
+    username: &str,
+    current_password: Option<&str>,
+    reset_password_token: Option<&str>,
+    new_password: &str,
+  ) -> ApiResult<Self> {
     let username = username.into();
-    let current_password = current_password.into();
+    let current_password = current_password.map(Password::from);
+    let reset_password_token = reset_password_token.map(ResetPasswordToken::from);
     let new_password = new_password.into();
-    let payload = Self { username, current_password, new_password };
+    let payload = Self { username, current_password, reset_password_token, new_password };
     payload.validate(&())?;
 
     Ok(payload)

@@ -51,6 +51,9 @@ pub enum ApiError {
   /// The client submitted an incorrect password
   #[status(StatusCode::UNAUTHORIZED)] // 401
   UnauthorizedIncorrectPassword,
+  /// The client submitted an incorrect auth token
+  #[status(StatusCode::UNAUTHORIZED)] // 401
+  UnauthorizedIncorrectToken,
   /// The client submitted a change to an item that is no longer editable (but not dead)
   #[status(StatusCode::FORBIDDEN)] // 403
   ForbiddenNotEditable(String),
@@ -87,6 +90,7 @@ impl std::fmt::Display for ApiError {
       ApiError::BadRequest(e) => write!(f, "Invalid request submitted: {e}"),
       ApiError::UnauthorizedPleaseLogin => write!(f, "Unauthorized: please log in",),
       ApiError::UnauthorizedIncorrectPassword => write!(f, "Unauthorized: Incorrect password"),
+      ApiError::UnauthorizedIncorrectToken => write!(f, "Unauthorized: Incorrect Token"),
       ApiError::ForbiddenNotEditable(e) => write!(f, "Forbidden: {e}"),
       ApiError::ForbiddenDead => write!(f, "Forbidden: item or comment is dead"),
       ApiError::ForbiddenBanned => write!(f, "Forbidden: User is banned"),

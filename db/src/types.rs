@@ -95,11 +95,14 @@ impl Default for AuthToken {
   fn default() -> Self { AuthToken("default_auth_token".into()) }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Validate, PartialEq)]
 #[repr(transparent)]
-pub struct ResetPasswordToken(pub String);
+pub struct ResetPasswordToken(#[garde(ascii, length(min = 40, max = 40))] pub String);
 impl Default for ResetPasswordToken {
-  fn default() -> Self { ResetPasswordToken("default_reset_password_token".into()) }
+  fn default() -> Self { ResetPasswordToken("1234567890123456789012345678901234567890".into()) }
+}
+impl From<&str> for ResetPasswordToken {
+  fn from(s: &str) -> Self { ResetPasswordToken(s.to_string()) }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Validate, PartialEq)]
