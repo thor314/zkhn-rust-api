@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{utils::now, DbError, DbPool, DbResult, Domain, Text, Timestamp, Title, Url, Username};
+use crate::{
+  utils::now, DbError, DbPool, DbResult, Domain, Text, TextOrUrl, Timestamp, Title, Url, Username,
+};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
@@ -117,23 +119,4 @@ impl fmt::Display for ItemType {
       ItemType::Show => write!(f, "show"),
     }
   }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
-#[serde(rename_all = "camelCase")]
-// #[schema(default = CreateItemPayload::default, example=CreateItemPayload::default)]
-pub enum TextOrUrl {
-  Text(#[garde(dive)] Text),
-  Url(#[garde(dive)] Url),
-}
-impl TextOrUrl {
-  fn url_domain_text(self) -> (Option<Url>, Option<Domain>, Option<Text>) {
-    match self {
-      TextOrUrl::Text(text) => (None, None, Some(text.clone())),
-      TextOrUrl::Url(url) => (Some(url.clone()), Some(Domain::from(url)), None),
-    }
-  }
-}
-impl Default for TextOrUrl {
-  fn default() -> Self { Self::Url(Url::default()) }
 }

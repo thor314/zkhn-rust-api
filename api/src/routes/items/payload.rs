@@ -1,6 +1,6 @@
 use db::{
-  models::item::{self, Item, ItemCategory, ItemType, TextOrUrl},
-  Text, Title, Url, Username,
+  models::item::{self, Item, ItemCategory, ItemType},
+  Text, TextOrUrl, Title, Url, Username,
 };
 use garde::Validate;
 use serde::{Deserialize, Serialize};

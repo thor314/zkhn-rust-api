@@ -172,3 +172,22 @@ impl Default for Text {
 impl From<&str> for Text {
   fn from(s: &str) -> Self { Self(s.into()) }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
+#[schema(default = TextOrUrl::default, example=TextOrUrl::default)]
+pub enum TextOrUrl {
+  Text(#[garde(dive)] Text),
+  Url(#[garde(dive)] Url),
+}
+impl TextOrUrl {
+  pub fn url_domain_text(self) -> (Option<Url>, Option<Domain>, Option<Text>) {
+    match self {
+      TextOrUrl::Text(text) => (None, None, Some(text.clone())),
+      TextOrUrl::Url(url) => (Some(url.clone()), Some(Domain::from(url)), None),
+    }
+  }
+}
+impl Default for TextOrUrl {
+  fn default() -> Self { Self::Url(Url::default()) }
+}
