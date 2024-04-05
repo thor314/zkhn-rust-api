@@ -6,21 +6,6 @@ use crate::MINIMUM_KARMA_TO_DOWNVOTE;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[serde(rename_all = "camelCase")]
-#[schema(default = CreateUserResponse::default, example=CreateUserResponse::default)]
-pub struct CreateUserResponse {
-  pub username: Username,
-}
-
-impl CreateUserResponse {
-  pub(crate) fn new(user: User) -> Self { Self { username: user.username } }
-}
-
-impl From<User> for CreateUserResponse {
-  fn from(user: User) -> Self { Self { username: user.username } }
-}
-
-#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
-#[serde(rename_all = "camelCase")]
 #[schema(default = GetUserResponse::default, example=GetUserResponse::default)]
 pub struct GetUserResponse {
   pub username:               Username,

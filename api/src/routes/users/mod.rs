@@ -104,25 +104,24 @@ pub(super) mod post {
       responses(
         (status = 422, description = "Invalid Payload"),
         (status = 409, description = "Duplication Conflict"),
-        (status = 200, body = CreateUserResponse),
+        (status = 200),
       ),
   )]
-  /// Create a new user:
+  /// Create a new user.
   ///
   /// prod(search): tell the Algolia about the new user
   /// hack(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
   pub async fn create_user(
     State(state): State<SharedState>,
     Json(payload): Json<CreateUserPayload>,
-  ) -> ApiResult<Json<CreateUserResponse>> {
+  ) -> ApiResult<StatusCode> {
     trace!("create_user called with payload: {payload:?}");
     payload.validate(&())?;
     let user: User = payload.into_user().await;
     users::create_user(&state.pool, &user).await?;
-    let user_response = CreateUserResponse::from(user);
 
     debug!("created user: {user_response:?}");
-    Ok(Json(user_response))
+    Ok(StatusCode::OK)
   }
 
   #[utoipa::path(
