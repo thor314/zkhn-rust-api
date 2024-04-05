@@ -1,5 +1,6 @@
 use std::fmt;
 
+use garde::Validate;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -26,7 +27,7 @@ pub struct Item {
   /// internal algorithmic score to sort items on home page by popularity
   pub score:         i32,
   /// tweet, blog, paper, other
-  pub item_category: ItemCategory, 
+  pub item_category: ItemCategory,
   pub created:       Timestamp,
   pub dead:          bool,
 }
@@ -38,6 +39,8 @@ impl Default for Item {
       username:      Username::default(),
       title:         Title::default(),
       item_type:     ItemType::default(),
+      // note that an item either has a url and domain, or text, but not both
+      // but it's convenient to have both for testing and documentation purposes
       url:           Some(Url::default()),
       domain:        Some(Domain::default()),
       text:          Some(Text::default()),
@@ -55,17 +58,10 @@ impl Item {
     username: Username,
     title: Title,
     item_type: ItemType,
-    is_text: bool,
-    text_or_url_content: String,
+    text_or_url_content: TextOrUrl,
     item_category: ItemCategory,
   ) -> Self {
-    let (url, domain, text) = if is_text {
-      (None, None, Some(Text(text_or_url_content)))
-    } else {
-      let url = Url(text_or_url_content.clone());
-      let domain: Domain = url.clone().into();
-      (Some(url), Some(domain), None)
-    };
+    let (url, domain, text) = text_or_url_content.url_domain_text();
 
     Item { username, title, item_type, url, domain, text, item_category, ..Default::default() }
   }
@@ -121,4 +117,23 @@ impl fmt::Display for ItemType {
       ItemType::Show => write!(f, "show"),
     }
   }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
+// #[schema(default = CreateItemPayload::default, example=CreateItemPayload::default)]
+pub enum TextOrUrl {
+  Text(#[garde(dive)] Text),
+  Url(#[garde(dive)] Url),
+}
+impl TextOrUrl {
+  fn url_domain_text(self) -> (Option<Url>, Option<Domain>, Option<Text>) {
+    match self {
+      TextOrUrl::Text(text) => (None, None, Some(text.clone())),
+      TextOrUrl::Url(url) => (Some(url.clone()), Some(Domain::from(url)), None),
+    }
+  }
+}
+impl Default for TextOrUrl {
+  fn default() -> Self { Self::Url(Url::default()) }
 }

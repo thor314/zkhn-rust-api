@@ -48,7 +48,7 @@ pub struct GetEditItemResponse {
   pub created:          Timestamp,
   pub dead:             bool,
   /// unique to get-edit item page
-  pub text_for_editing: Option<Text>, 
+  pub text_for_editing: Option<Text>,
 }
 impl From<Item> for GetEditItemResponse {
   fn from(item: Item) -> Self {

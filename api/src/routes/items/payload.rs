@@ -1,5 +1,5 @@
 use db::{
-  models::item::{self, Item, ItemCategory, ItemType},
+  models::item::{self, Item, ItemCategory, ItemType, TextOrUrl},
   Text, Title, Url, Username,
 };
 use garde::Validate;
@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use crate::ApiResult;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[schema(default = CreateItemPayload::default, example=CreateItemPayload::default)]
 pub struct CreateItemPayload {
@@ -17,46 +17,15 @@ pub struct CreateItemPayload {
   pub title:           Title,
   #[garde(skip)]
   item_type:           ItemType,
-  #[garde(skip)]
-  is_text:             bool,
-  // #[garde(dive)] // todo(validate)
-  //  text_or_url_content: TextOrUrl,
-  #[garde(skip)]
-  text_or_url_content: String,
+  #[garde(dive)]
+  text_or_url_content: TextOrUrl,
   #[garde(skip)]
   item_category:       ItemCategory,
 }
 
-impl Default for CreateItemPayload {
-  fn default() -> Self {
-    Self {
-      title:               Title::default(),
-      item_type:           ItemType::default(),
-      is_text:             true,
-      text_or_url_content: "text content".into(),
-      item_category:       ItemCategory::default(),
-    }
-  }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
-#[serde(rename_all = "camelCase")]
-// #[schema(default = CreateItemPayload::default, example=CreateItemPayload::default)]
-pub enum TextOrUrl {
-  Text(#[garde(dive)] Text),
-  Url(#[garde(dive)] Url),
-}
-
 impl CreateItemPayload {
   pub async fn into_item(self, username: Username) -> Item {
-    Item::new(
-      username,
-      self.title,
-      self.item_type,
-      self.is_text,
-      self.text_or_url_content,
-      self.item_category,
-    )
+    Item::new(username, self.title, self.item_type, self.text_or_url_content, self.item_category)
   }
 
   /// convenience method for testing
@@ -64,13 +33,12 @@ impl CreateItemPayload {
     title: &str,
     item_type: ItemType,
     is_text: bool,
-    text_or_url_content: &str,
+    text_or_url_content: TextOrUrl,
     item_category: ItemCategory,
   ) -> ApiResult<Self> {
     let title = title.into();
-    let text_or_url_content = text_or_url_content.into();
 
-    let item_payload = Self { title, item_type, is_text, text_or_url_content, item_category };
+    let item_payload = Self { title, item_type, text_or_url_content, item_category };
     item_payload.validate(&())?;
     Ok(item_payload)
   }
