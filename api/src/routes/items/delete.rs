@@ -1,29 +1,26 @@
 use super::*;
 
-/// Edit an item's title, text, or category
+/// Delete an item
 ///
-/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L492
-/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L212
+/// https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L559
 #[utoipa::path(
   put,
-  path = "/items/edit-item",
+  path = "/items/delete-item",
   request_body = ItemPayload,
   responses(
     (status = 401, description = "Unauthorized"),
     (status = 422, description = "Invalid Payload"),
-    (status = 200, description = "Title must be different"), 
     (status = 200, description = "Success"), 
   ),
   )]
-pub async fn edit_item(
+pub async fn delete_item(
   State(state): State<SharedState>,
   auth_session: AuthSession,
-  Json(payload): Json<EditItemPayload>,
+  Path(id): Path<Uuid>,
 ) -> ApiResult<StatusCode> {
-  debug!("update_item called with payload: {payload:?}");
-  payload.validate(&())?;
+  debug!("delete_item called with id: {id:?}");
   let session_user = auth_session.get_assert_user_from_session()?;
-  let item = db::queries::items::get_assert_item(&state.pool, payload.id).await?;
+  let item = db::queries::items::get_assert_item(&state.pool, id).await?;
   // backlog: assert item is editable
   // backlog: assert no comments
 

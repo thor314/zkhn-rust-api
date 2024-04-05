@@ -67,4 +67,6 @@ async fn items_crud() {
 
   // todo(test) favorite_item
   // todo(test) hide_item
+
+  // edit item
 }

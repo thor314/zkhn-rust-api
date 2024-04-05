@@ -2,6 +2,7 @@ mod get;
 mod payload;
 mod post;
 mod put;
+mod delete;
 mod response;
 
 use anyhow::anyhow;
