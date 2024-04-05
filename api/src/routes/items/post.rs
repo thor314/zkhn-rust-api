@@ -63,6 +63,7 @@ pub async fn vote_item(
     if vote.vote_state == payload.vote_state {
       return Err(ApiError::UniqueViolation("user item vote duplication attempt".into()));
     }
+    // todo - delete old vote
   }
 
   db::queries::user_votes::vote_on_item(&state.pool, item.id, &user.username, payload.vote_state)
