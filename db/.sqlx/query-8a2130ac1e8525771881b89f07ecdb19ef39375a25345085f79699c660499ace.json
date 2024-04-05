@@ -1,0 +1,111 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n      id,\n      username as \"username: Username\",\n      title as \"title: Title\",\n      item_type as \"item_type: ItemType\",\n      url as \"url: Url\",\n      domain as \"domain: Domain\",\n      text as \"text: Text\",\n      points,\n      score,\n      item_category as \"item_category: ItemCategory\",\n      created,\n      dead\n    FROM items WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "username: Username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title: Title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "item_type: ItemType",
+        "type_info": {
+          "Custom": {
+            "name": "item_type_enum",
+            "kind": {
+              "Enum": [
+                "news",
+                "show",
+                "ask"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "url: Url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "domain: Domain",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "text: Text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "points",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "item_category: ItemCategory",
+        "type_info": {
+          "Custom": {
+            "name": "item_category_enum",
+            "kind": {
+              "Enum": [
+                "tweet",
+                "blog",
+                "paper",
+                "other"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "created",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "dead",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8a2130ac1e8525771881b89f07ecdb19ef39375a25345085f79699c660499ace"
+}

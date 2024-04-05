@@ -82,7 +82,7 @@ impl UserUpdatePayload {
 }
 
 /// Payload for `change_password`
-#[derive(Debug, Default, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[schema(default = ChangePasswordPayload::default, example=ChangePasswordPayload::default)]
 pub struct ChangePasswordPayload {
@@ -94,6 +94,17 @@ pub struct ChangePasswordPayload {
   pub reset_password_token: Option<ResetPasswordToken>,
   #[garde(dive)]
   pub new_password:         Password,
+}
+
+impl Default for ChangePasswordPayload {
+  fn default() -> Self {
+    Self {
+      username:             "alice".into(),
+      current_password:     Some("password".into()),
+      reset_password_token: None,
+      new_password:         "new_password".into(),
+    }
+  }
 }
 
 impl ChangePasswordPayload {

@@ -13,8 +13,8 @@ pub(crate) fn setup(secret_store: &shuttle_runtime::SecretStore) -> Result<(), S
     // .add_directive("axum_login=debug".parse().unwrap())
     .add_directive("axum_login=info".parse().unwrap())
     .add_directive("h2=info".parse().unwrap())
-    .add_directive("api=info".parse().unwrap())
-    .add_directive("db=info".parse().unwrap())
+    .add_directive("api=debug".parse().unwrap())
+    .add_directive("db=debug".parse().unwrap())
     .add_directive("server=info".parse().unwrap());
   tracing_subscriber::fmt().with_env_filter(filter).init();
   secret_store.get("DOTENV_OK").context("failed to get secrets")?;

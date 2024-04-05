@@ -4,8 +4,6 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     username TEXT PRIMARY KEY,
     password_hash TEXT NOT NULL,
-    auth_token TEXT,
-    auth_token_expiration TIMESTAMP WITH TIME ZONE,
     reset_password_token TEXT,
     reset_password_token_expiration TIMESTAMP WITH TIME ZONE,
     email TEXT,

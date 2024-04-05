@@ -104,25 +104,24 @@ pub(super) mod post {
       responses(
         (status = 422, description = "Invalid Payload"),
         (status = 409, description = "Duplication Conflict"),
-        (status = 200, body = CreateUserResponse),
+        (status = 200),
       ),
   )]
-  /// Create a new user:
+  /// Create a new user.
   ///
   /// prod(search): tell the Algolia about the new user
   /// hack(cookie) https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L29
   pub async fn create_user(
     State(state): State<SharedState>,
     Json(payload): Json<CreateUserPayload>,
-  ) -> ApiResult<Json<CreateUserResponse>> {
+  ) -> ApiResult<StatusCode> {
     trace!("create_user called with payload: {payload:?}");
     payload.validate(&())?;
     let user: User = payload.into_user().await;
     users::create_user(&state.pool, &user).await?;
-    let user_response = CreateUserResponse::from(user);
 
-    debug!("created user: {user_response:?}");
-    Ok(Json(user_response))
+    debug!("created user: {user:?}");
+    Ok(StatusCode::OK)
   }
 
   #[utoipa::path(
@@ -278,6 +277,7 @@ pub(super) mod put {
     trace!("change_password called with payload: {payload:?}");
     payload.validate(&())?;
     let user = users::get_assert_user(&state.pool, &payload.username).await?;
+
     if let Some(password) = payload.current_password {
       // user has submitted their old password as verification
       password.hash_and_verify(&user.password_hash).await?;
@@ -302,34 +302,3 @@ pub(super) mod put {
     Ok(StatusCode::OK)
   }
 }
-
-// pub(super) mod delete {
-//   use super::*;
-
-//   #[utoipa::path(
-//       delete,
-//       path = "/users/{username}",
-//       params( ("username" = String, Path, example = "alice") ),
-//       responses(
-//         (status = 401, description = "Unauthorized"),
-//         (status = 403, description = "Forbidden"),
-//         (status = 422, description = "Invalid username"),
-//         (status = 404, description = "User not found"),
-//         (status = 200),
-//       ),
-//   )]
-//   /// Delete a user.
-//   pub async fn delete_user(
-//     State(state): State<SharedState>,
-//     Path(username): Path<Username>,
-//     auth_session: AuthSession,
-//   ) -> ApiResult<StatusCode> {
-//     trace!("delete_user called with username: {username}");
-//     auth_session.if_authenticated_get_user(&username)?;
-//     username.validate(&())?;
-//     users::delete_user(&state.pool, &username).await?;
-
-//     debug!("deleted user: {}", username);
-//     Ok(StatusCode::OK)
-//   }
-// }

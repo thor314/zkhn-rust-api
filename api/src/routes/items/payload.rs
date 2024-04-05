@@ -1,6 +1,6 @@
 use db::{
-  models::item::{self, Item},
-  Title, Username,
+  models::item::{self, Item, ItemCategory, ItemType},
+  Text, TextOrUrl, Title, Url, Username,
 };
 use garde::Validate;
 use serde::{Deserialize, Serialize};
@@ -9,61 +9,36 @@ use uuid::Uuid;
 
 use crate::ApiResult;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[schema(default = CreateItemPayload::default, example=CreateItemPayload::default)]
 pub struct CreateItemPayload {
   #[garde(dive)]
   pub title:           Title,
-  #[garde(skip)] // todo(itemtype)
-  item_type: String,
   #[garde(skip)]
-  is_text:             bool,
-  // todo: could turn this to an enum
-  #[garde(skip)] // todo(validate)
-  text_or_url_content: String,
-  #[garde(skip)] // todo(validate)
-  item_category: String,
-}
-
-impl Default for CreateItemPayload {
-  fn default() -> Self {
-    Self {
-      title:               Title::default(),
-      item_type:           "news".into(),
-      is_text:             true,
-      text_or_url_content: "text content".into(),
-      item_category:       "tweet".into(),
-    }
-  }
+  item_type:           ItemType,
+  #[garde(dive)]
+  text_or_url_content: TextOrUrl,
+  #[garde(skip)]
+  item_category:       ItemCategory,
 }
 
 impl CreateItemPayload {
   pub async fn into_item(self, username: Username) -> Item {
-    Item::new(
-      username,
-      self.title,
-      self.item_type,
-      self.is_text,
-      self.text_or_url_content,
-      self.item_category,
-    )
+    Item::new(username, self.title, self.item_type, self.text_or_url_content, self.item_category)
   }
 
   /// convenience method for testing
   pub fn new(
     title: &str,
-    item_type: &str,
+    item_type: ItemType,
     is_text: bool,
-    text_or_url_content: &str,
-    item_category: &str,
+    text_or_url_content: TextOrUrl,
+    item_category: ItemCategory,
   ) -> ApiResult<Self> {
     let title = title.into();
-    let item_type = item_type.into();
-    let text_or_url_content = text_or_url_content.into();
-    let item_category = item_category.into();
 
-    let item_payload = Self { title, item_type, is_text, text_or_url_content, item_category };
+    let item_payload = Self { title, item_type, text_or_url_content, item_category };
     item_payload.validate(&())?;
     Ok(item_payload)
   }
@@ -145,24 +120,25 @@ pub struct EditItemPayload {
   pub id:       Uuid,
   #[garde(dive)]
   pub title:    Title,
+  #[garde(dive)]
+  pub text:     Text,
   #[garde(skip)]
-  pub text:     String, // todo(validate)
-  #[garde(skip)]
-  pub category: String, // todo(validate)
+  pub category: ItemCategory,
 }
 
 impl EditItemPayload {
-  pub fn new(id: Uuid, title: &str, text: &str, category: &str) -> Self {
-    Self { id, title: title.into(), text: text.into(), category: category.into() }
+  pub fn new(id: Uuid, title: &str, text: &str, category: ItemCategory) -> Self {
+    Self { id, title: title.into(), text: text.into(), category }
   }
 }
 
 /// A payload for getting items by different sorting methods
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub enum ItemKind {
   Ranked,
   Newest,
-  RaknedShow,
+  RankedShow,
   Ask,
   BySiteDomain,
   ByUser,

@@ -140,3 +140,54 @@ impl Default for Page {
 impl From<i32> for Page {
   fn from(n: i32) -> Self { Self { page: n } }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
+#[garde(transparent)]
+pub struct Url(#[garde(url)] pub String);
+impl Default for Url {
+  fn default() -> Self { "http://example.com".into() }
+}
+impl From<&str> for Url {
+  fn from(s: &str) -> Self { Self(s.into()) }
+}
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct Domain(pub String);
+impl Default for Domain {
+  fn default() -> Self { Domain("example.com".into()) }
+}
+impl From<Url> for Domain {
+  fn from(d: Url) -> Self {
+    let url = url::Url::parse(&d.0).unwrap();
+    let domain = url.domain().unwrap().to_string();
+    Self(domain)
+  }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
+#[garde(transparent)]
+pub struct Text(#[garde(ascii, length(min = 10, max = 2000))] pub String);
+impl Default for Text {
+  fn default() -> Self { "Some text for your reading pleasure".into() }
+}
+impl From<&str> for Text {
+  fn from(s: &str) -> Self { Self(s.into()) }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
+#[schema(default = TextOrUrl::default, example=TextOrUrl::default)]
+pub enum TextOrUrl {
+  Text(#[garde(dive)] Text),
+  Url(#[garde(dive)] Url),
+}
+impl TextOrUrl {
+  pub fn url_domain_text(self) -> (Option<Url>, Option<Domain>, Option<Text>) {
+    match self {
+      TextOrUrl::Text(text) => (None, None, Some(text.clone())),
+      TextOrUrl::Url(url) => (Some(url.clone()), Some(Domain::from(url)), None),
+    }
+  }
+}
+impl Default for TextOrUrl {
+  fn default() -> Self { Self::Url(Url::default()) }
+}

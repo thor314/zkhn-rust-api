@@ -46,7 +46,7 @@ pub(super) fn docs_router() -> Router {
   // Schemas that may be returned in the body by the api.
   components(schemas(
     User, UserUpdatePayload, ChangePasswordPayload, CreateUserPayload,
-    CredentialsPayload, GetUserResponse, CreateUserResponse, AuthenticateUserResponse, AuthUserResponseInternal,
+    CredentialsPayload, GetUserResponse, AuthenticateUserResponse, AuthUserResponseInternal,
     CreateItemPayload,
     GetItemResponse, GetEditItemResponse,
     VotePayload, VotePayloadEnum, FavoritePayload, FavoritePayloadEnum, HiddenPayload, HiddenPayloadEnum))

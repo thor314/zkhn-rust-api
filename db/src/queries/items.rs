@@ -3,8 +3,9 @@ use uuid::Uuid;
 
 use crate::{
   error::DbError,
-  models::{comment::Comment, item::Item},
-  DbPool, DbResult, Title, Username,
+  models::{comment::Comment, item::*},
+  types::*,
+  DbPool, DbResult,
 };
 
 /// Create a new item in the database.
@@ -14,6 +15,7 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
 
   let Item { id, username, title, item_type, url, domain, text, item_category, .. } = item.clone();
 
+  // Try sqlx::query!("INSERT INTO tbl VALUES ($1)", Enm::Foo as Enm).
   sqlx::query!(
     "INSERT INTO items
     ( id,
@@ -23,16 +25,16 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
     url,
     domain,
     text,
-    item_category
+    item_category 
   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
     id,
     username.0,
     title.0,
-    item_type,
-    url,
-    domain,
-    text,
-    item_category,
+    item_type as ItemType,
+    url.map(|s| s.0),
+    domain.map(|s| s.0),
+    text.map(|s| s.0),
+    item_category as ItemCategory,
   )
   .execute(&mut *tx)
   .await?;
@@ -56,14 +58,13 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
       id,
       username as \"username: Username\",
       title as \"title: Title\",
-      item_type,
-      url,
-      domain,
-      text,
+      item_type as \"item_type: ItemType\",
+      url as \"url: Url\",
+      domain as \"domain: Domain\",
+      text as \"text: Text\",
       points,
       score,
-      comment_count,
-      item_category,
+      item_category as \"item_category: ItemCategory\",
       created,
       dead
     FROM items WHERE id = $1",
@@ -75,10 +76,19 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
 }
 
 /// Return whether the item has any comments.
-// backlog(refactor) - remove one: Item.comment_count or this method
-pub(crate) async fn has_comments(pool: &DbPool, id: Uuid) -> bool {
-  // todo!()
-  false
+pub(crate) async fn item_has_comments(pool: &DbPool, id: Uuid) -> bool {
+  item_comment_count(pool, id).await > 0
+}
+
+pub(crate) async fn item_comment_count(pool: &DbPool, id: Uuid) -> usize {
+  let mut count = 1;
+  count -= 1;
+  // let count = sqlx::query!("SELECT COUNT(*) FROM comments WHERE parent_item_id = $1", id)
+  //   .fetch_one(pool)
+  //   .await
+  //   .map(|row| row.count)
+  //   .unwrap_or_default();
+  count
 }
 
 /// Delete an item from the database.
@@ -109,22 +119,5 @@ pub async fn delete_item(pool: &DbPool, item_id: Uuid) -> DbResult<()> {
 //   .await
 //   .map_err(DbError::from)?;
 
-//   Ok(())
-// }
-
-// pub(crate) async fn decrement_item_comment_count_by(
-//   pool: &sqlx::Pool<sqlx::Postgres>,
-//   item_id: Uuid,
-//   len: i32,
-// ) -> DbResult<()> {
-//   sqlx::query!(
-//     "UPDATE items
-//     SET comment_count = comment_count - $1
-//     WHERE id = $2",
-//     len,
-//     item_id
-//   )
-//   .execute(pool)
-//   .await?;
 //   Ok(())
 // }

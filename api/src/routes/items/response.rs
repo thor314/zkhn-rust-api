@@ -1,6 +1,9 @@
 use db::{
-  models::{comment::Comment, item::Item},
-  AuthToken, Timestamp, Title, Username,
+  models::{
+    comment::Comment,
+    item::{Item, ItemCategory, ItemType},
+  },
+  AuthToken, Domain, Text, Timestamp, Title, Url, Username,
 };
 use serde::{Deserialize, Serialize};
 use utoipa::{OpenApi, ToSchema};
@@ -10,9 +13,10 @@ use crate::COMMENTS_PER_PAGE;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
+#[serde(rename_all = "camelCase")]
 pub struct GetItemResponse {
   pub item:             Item,
-  pub comments:         Vec<Comment>,
+  pub comments:         Vec<Comment>, // todo: transform reduce comment
   pub is_more_comments: bool,
 }
 
@@ -25,26 +29,26 @@ impl GetItemResponse {
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetEditItemResponse::default, example=GetEditItemResponse::default)]
+#[serde(rename_all = "camelCase")]
 pub struct GetEditItemResponse {
   pub id:               Uuid,
   pub username:         Username,
   pub title:            Title,
   /// news, show, ask
-  pub item_type:        String,
-  pub url:              Option<String>, // validate
-  pub domain:           Option<String>,
-  pub text:             Option<String>, // validate
-  /// karma for the item
+  pub item_type:        ItemType,
+  pub url:              Option<Url>,
+  pub domain:           Option<Domain>,
+  pub text:             Option<Text>,
+  /// how many upvotes
   pub points:           i32,
   /// internal algorithmic score to sort items on home page by popularity
-  pub score:            i32, // todo: both points and score?
-  pub comment_count:    i32,
+  pub score:            i32,
   /// tweet, blog, paper, other
-  pub item_category:    String, // validate
+  pub item_category:    ItemCategory,
   pub created:          Timestamp,
   pub dead:             bool,
   /// unique to get-edit item page
-  pub text_for_editing: Option<String>, // validate
+  pub text_for_editing: Option<Text>,
 }
 impl From<Item> for GetEditItemResponse {
   fn from(item: Item) -> Self {
@@ -60,7 +64,6 @@ impl From<Item> for GetEditItemResponse {
       text: item.text,
       points: item.points,
       score: item.score,
-      comment_count: item.comment_count,
       item_category: item.item_category,
       created: item.created,
       dead: item.dead,
