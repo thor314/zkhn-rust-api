@@ -228,7 +228,7 @@ pub(super) mod put {
     // Generate a reset password token and expiration date for the user. Update the db.
     // prod(email)
     let reset_password_token = AuthToken("create reset password token".into());
-    let reset_password_token_expiration = Timestamp::default_expiration();
+    let reset_password_token_expiration = Timestamp::default_token_expiration();
     users::update_user_password_token(
       &state.pool,
       &username,

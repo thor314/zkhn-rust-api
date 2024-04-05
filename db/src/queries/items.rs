@@ -74,6 +74,13 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
   .map_err(DbError::from)
 }
 
+/// Return whether the item has any comments. 
+// backlog(refactor) - remove one: Item.comment_count or this method
+pub(crate) fn has_comments(pool: &DbPool, id: Uuid) -> bool {
+  // todo!()
+  false
+}
+
 // pub async fn delete_item(pool: &DbPool, item_id: Uuid) -> DbResult<()> {
 //   sqlx::query!("DELETE FROM items WHERE id = $1", item_id)
 //     .execute(pool)

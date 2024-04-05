@@ -30,7 +30,7 @@ impl From<User> for CreateUserResponse {
       auth_token: user.auth_token.unwrap_or_default(),
       auth_token_expiration_timestamp: user
         .auth_token_expiration
-        .unwrap_or_else(Timestamp::default_expiration),
+        .unwrap_or_else(Timestamp::default_token_expiration),
     }
   }
 }

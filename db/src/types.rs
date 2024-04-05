@@ -9,10 +9,10 @@ use tracing::warn;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::DbResult;
+use crate::{utils::now, DbResult};
 
 /// A timestamp wrapper that we can use in our sqlx models.
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Type, PartialEq, PartialOrd)]
 #[sqlx(transparent)]
 pub struct Timestamp(pub DateTime<Utc>);
 impl Default for Timestamp {
@@ -22,10 +22,12 @@ impl Timestamp {
   pub fn now() -> Self { Timestamp(Utc::now()) }
 
   /// generate an expiration date
-  pub fn default_expiration() -> Timestamp {
-    let timestamp = Utc::now().to_utc() + TimeDelta::try_days(30).unwrap();
-    Timestamp(timestamp)
-  }
+  pub fn default_token_expiration() -> Self { now() + TimeDelta::try_days(1).unwrap() }
+}
+impl std::ops::Add<TimeDelta> for Timestamp {
+  type Output = Self;
+
+  fn add(self, other: TimeDelta) -> Self { Timestamp(self.0 + other) }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]

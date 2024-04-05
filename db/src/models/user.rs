@@ -17,8 +17,10 @@ pub struct User {
   pub username: Username,
   /// Hashed password
   pub password_hash: PasswordHash,
+  // backlog(kill)
   /// Authentication token
   pub auth_token: Option<AuthToken>,
+  // backlog(kill)
   /// Expiration of auth token
   pub auth_token_expiration: Option<Timestamp>,
   /// Reset password token
@@ -37,6 +39,7 @@ pub struct User {
   pub show_dead: bool,
   /// Is user a moderator
   pub is_moderator: bool,
+  // backlog(kill)
   /// Is user shadow banned
   pub shadow_banned: bool,
   /// Is user banned
@@ -53,6 +56,7 @@ impl Default for User {
       reset_password_token: None,
       reset_password_token_expiration: None,
       email: None,
+      // backlog(now) - these could all be done in the database
       created: now(),
       karma: 1,
       about: None,
