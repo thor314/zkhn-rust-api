@@ -278,6 +278,7 @@ pub(super) mod put {
     trace!("change_password called with payload: {payload:?}");
     payload.validate(&())?;
     let user = users::get_assert_user(&state.pool, &payload.username).await?;
+
     if let Some(password) = payload.current_password {
       // user has submitted their old password as verification
       password.hash_and_verify(&user.password_hash).await?;
