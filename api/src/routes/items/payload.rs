@@ -21,7 +21,7 @@ pub struct CreateItemPayload {
   is_text:             bool,
   // #[garde(dive)] // todo(validate)
   //  text_or_url_content: TextOrUrl,
-  #[garde(skip)] // todo(validate)
+  #[garde(skip)]
   text_or_url_content: String,
   #[garde(skip)]
   item_category:       ItemCategory,
@@ -152,15 +152,15 @@ pub struct EditItemPayload {
   pub id:       Uuid,
   #[garde(dive)]
   pub title:    Title,
+  #[garde(dive)]
+  pub text:     Text,
   #[garde(skip)]
-  pub text:     String, // todo(validate)
-  #[garde(skip)]
-  pub category: String, // todo(validate)
+  pub category: ItemCategory,
 }
 
 impl EditItemPayload {
-  pub fn new(id: Uuid, title: &str, text: &str, category: &str) -> Self {
-    Self { id, title: title.into(), text: text.into(), category: category.into() }
+  pub fn new(id: Uuid, title: &str, text: &str, category: ItemCategory) -> Self {
+    Self { id, title: title.into(), text: text.into(), category }
   }
 }
 

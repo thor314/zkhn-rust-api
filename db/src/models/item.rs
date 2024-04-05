@@ -21,12 +21,12 @@ pub struct Item {
   pub url:           Option<Url>,
   pub domain:        Option<Domain>,
   pub text:          Option<Text>,
-  /// karma for the item
+  /// upvotes for the item
   pub points:        i32,
   /// internal algorithmic score to sort items on home page by popularity
   pub score:         i32,
   /// tweet, blog, paper, other
-  pub item_category: ItemCategory, // validate
+  pub item_category: ItemCategory, 
   pub created:       Timestamp,
   pub dead:          bool,
 }
