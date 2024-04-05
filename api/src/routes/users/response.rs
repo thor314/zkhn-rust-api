@@ -55,7 +55,7 @@ pub struct GetUserResponse {
 
 impl GetUserResponse {
   pub fn new(user: User, is_authenticated: bool) -> Self {
-    let auth_user = AuthUserResponseInternal::new(user.clone());
+    let auth_user = AuthUserResponseInternal::new(user.clone(), is_authenticated);
     let email = user.email.filter(|_| is_authenticated);
     let show_dead = Some(user.show_dead).filter(|_| is_authenticated);
     Self {
@@ -87,8 +87,8 @@ pub struct AuthenticateUserResponse {
 }
 
 impl AuthenticateUserResponse {
-  pub fn new(user: User) -> Self {
-    let auth_user = AuthUserResponseInternal::new(user.clone());
+  pub fn new(user: User, is_authenticated: bool) -> Self {
+    let auth_user = AuthUserResponseInternal::new(user.clone(), is_authenticated);
     Self {
       username: user.username,
       banned: user.banned,
@@ -122,17 +122,21 @@ pub struct AuthUserResponseInternal {
 
 impl AuthUserResponseInternal {
   /// Create a new AuthLocal from a User
-  pub fn new(user: User) -> Self {
-    Self {
-      user_signed_in:   true,
-      username:         Some(user.username.clone()),
-      karma:            Some(user.karma),
-      contains_email:   Some(user.email.is_some()),
-      show_dead:        user.show_dead,
-      show_downvote:    user.karma >= MINIMUM_KARMA_TO_DOWNVOTE,
-      is_moderator:     Some(user.is_moderator),
-      banned:           user.banned,
-      cookies_included: true,
+  pub fn new(user: User, is_authenticated: bool) -> Self {
+    if is_authenticated {
+      Self {
+        user_signed_in:   true,
+        username:         Some(user.username.clone()),
+        karma:            Some(user.karma),
+        contains_email:   Some(user.email.is_some()),
+        show_dead:        user.show_dead,
+        show_downvote:    user.karma >= MINIMUM_KARMA_TO_DOWNVOTE,
+        is_moderator:     Some(user.is_moderator),
+        banned:           user.banned,
+        cookies_included: true,
+      }
+    } else {
+      Self::default()
     }
   }
 
