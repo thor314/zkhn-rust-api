@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO items\n    ( id,\n    username,\n    title,\n    item_type,\n    url,\n    domain,\n    text,\n    item_category \n  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "item_type_enum",
+            "kind": {
+              "Enum": [
+                "news",
+                "show",
+                "ask"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "item_category_enum",
+            "kind": {
+              "Enum": [
+                "tweet",
+                "blog",
+                "paper",
+                "other"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f4d8b2f53453c687b7cccd21616b59ecd9f5ac479cb4495e9c543db4896d634f"
+}

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n      id,\n      username as \"username: Username\",\n      title as \"title: Title\",\n      item_type,\n      url as \"url: Url\",\n      domain as \"domain: Domain\",\n      text as \"text: Text\",\n      points,\n      score,\n      item_category,\n      created,\n      dead\n    FROM items WHERE id = $1",
+  "query": "SELECT\n      id,\n      username as \"username: Username\",\n      title as \"title: Title\",\n      item_type as \"item_type: ItemType\",\n      url as \"url: Url\",\n      domain as \"domain: Domain\",\n      text as \"text: Text\",\n      points,\n      score,\n      item_category as \"item_category: ItemCategory\",\n      created,\n      dead\n    FROM items WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -20,8 +20,19 @@
       },
       {
         "ordinal": 3,
-        "name": "item_type",
-        "type_info": "Text"
+        "name": "item_type: ItemType",
+        "type_info": {
+          "Custom": {
+            "name": "item_type_enum",
+            "kind": {
+              "Enum": [
+                "news",
+                "show",
+                "ask"
+              ]
+            }
+          }
+        }
       },
       {
         "ordinal": 4,
@@ -50,8 +61,20 @@
       },
       {
         "ordinal": 9,
-        "name": "item_category",
-        "type_info": "Text"
+        "name": "item_category: ItemCategory",
+        "type_info": {
+          "Custom": {
+            "name": "item_category_enum",
+            "kind": {
+              "Enum": [
+                "tweet",
+                "blog",
+                "paper",
+                "other"
+              ]
+            }
+          }
+        }
       },
       {
         "ordinal": 10,
@@ -84,5 +107,5 @@
       false
     ]
   },
-  "hash": "4efcba3e1ed2be154e00f4f58be32069e1acb776c7b3008dc64bc3cc452b6d08"
+  "hash": "8a2130ac1e8525771881b89f07ecdb19ef39375a25345085f79699c660499ace"
 }

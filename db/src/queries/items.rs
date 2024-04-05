@@ -15,6 +15,7 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
 
   let Item { id, username, title, item_type, url, domain, text, item_category, .. } = item.clone();
 
+  // Try sqlx::query!("INSERT INTO tbl VALUES ($1)", Enm::Foo as Enm).
   sqlx::query!(
     "INSERT INTO items
     ( id,
@@ -29,11 +30,11 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
     id,
     username.0,
     title.0,
-    item_type,
+    item_type as ItemType,
     url.map(|s| s.0),
     domain.map(|s| s.0),
     text.map(|s| s.0),
-    item_category.to_string(),
+    item_category as ItemCategory,
   )
   .execute(&mut *tx)
   .await?;
@@ -57,7 +58,7 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
       id,
       username as \"username: Username\",
       title as \"title: Title\",
-      item_type,
+      item_type as \"item_type: ItemType\",
       url as \"url: Url\",
       domain as \"domain: Domain\",
       text as \"text: Text\",

@@ -1,7 +1,7 @@
 use db::{
   models::{
     comment::Comment,
-    item::{Item, ItemCategory},
+    item::{Item, ItemCategory, ItemType},
   },
   AuthToken, Domain, Text, Timestamp, Title, Url, Username,
 };
@@ -16,7 +16,7 @@ use crate::COMMENTS_PER_PAGE;
 #[serde(rename_all = "camelCase")]
 pub struct GetItemResponse {
   pub item:             Item,
-  pub comments:         Vec<Comment>,
+  pub comments:         Vec<Comment>, // todo: transform reduce comment
   pub is_more_comments: bool,
 }
 
@@ -35,7 +35,7 @@ pub struct GetEditItemResponse {
   pub username:         Username,
   pub title:            Title,
   /// news, show, ask
-  pub item_type:        String,
+  pub item_type:        ItemType,
   pub url:              Option<Url>,
   pub domain:           Option<Domain>,
   pub text:             Option<Text>,

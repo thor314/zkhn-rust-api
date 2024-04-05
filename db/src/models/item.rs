@@ -17,7 +17,7 @@ pub struct Item {
   pub username:      Username,
   pub title:         Title,
   /// news, show, ask
-  pub item_type:     String,
+  pub item_type:     ItemType,
   pub url:           Option<Url>,
   pub domain:        Option<Domain>,
   pub text:          Option<Text>,
@@ -37,13 +37,13 @@ impl Default for Item {
       id:            Uuid::new_v4(),
       username:      Username::default(),
       title:         Title::default(),
-      item_type:     "news".to_string(),
+      item_type:     ItemType::default(),
       url:           Some(Url::default()),
       domain:        Some(Domain::default()),
       text:          Some(Text::default()),
       points:        1,
       score:         0,
-      item_category: ItemCategory::Other,
+      item_category: ItemCategory::default(),
       created:       now(),
       dead:          false,
     }
@@ -54,7 +54,7 @@ impl Item {
   pub fn new(
     username: Username,
     title: Title,
-    item_type: String,
+    item_type: ItemType,
     is_text: bool,
     text_or_url_content: String,
     item_category: ItemCategory,
@@ -104,11 +104,21 @@ impl fmt::Display for ItemCategory {
   }
 }
 
-// #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-// #[sqlx(type_name = "item_type", rename_all = "lowercase")]
-// #[serde(rename_all = "camelCase")]
-// pub enum ItemType {
-//   News,
-//   Show,
-//   Ask,
-// }
+#[derive(Default, Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+#[sqlx(type_name = "item_type_enum", rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
+pub enum ItemType {
+  #[default]
+  News,
+  Show,
+  Ask,
+}
+impl fmt::Display for ItemType {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    match self {
+      ItemType::Ask => write!(f, "ask"),
+      ItemType::News => write!(f, "news"),
+      ItemType::Show => write!(f, "show"),
+    }
+  }
+}

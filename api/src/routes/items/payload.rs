@@ -1,5 +1,5 @@
 use db::{
-  models::item::{self, Item, ItemCategory},
+  models::item::{self, Item, ItemCategory, ItemType},
   Text, Title, Url, Username,
 };
 use garde::Validate;
@@ -15,23 +15,23 @@ use crate::ApiResult;
 pub struct CreateItemPayload {
   #[garde(dive)]
   pub title:           Title,
-  #[garde(skip)] // todo(itemtype)
-  item_type: String,
+  #[garde(skip)]
+  item_type:           ItemType,
   #[garde(skip)]
   is_text:             bool,
   // #[garde(dive)] // todo(validate)
   //  text_or_url_content: TextOrUrl,
   #[garde(skip)] // todo(validate)
   text_or_url_content: String,
-  #[garde(skip)] // todo(validate)
-  item_category: ItemCategory,
+  #[garde(skip)]
+  item_category:       ItemCategory,
 }
 
 impl Default for CreateItemPayload {
   fn default() -> Self {
     Self {
       title:               Title::default(),
-      item_type:           "news".into(),
+      item_type:           ItemType::default(),
       is_text:             true,
       text_or_url_content: "text content".into(),
       item_category:       ItemCategory::default(),
@@ -62,13 +62,12 @@ impl CreateItemPayload {
   /// convenience method for testing
   pub fn new(
     title: &str,
-    item_type: &str,
+    item_type: ItemType,
     is_text: bool,
     text_or_url_content: &str,
     item_category: ItemCategory,
   ) -> ApiResult<Self> {
     let title = title.into();
-    let item_type = item_type.into();
     let text_or_url_content = text_or_url_content.into();
 
     let item_payload = Self { title, item_type, is_text, text_or_url_content, item_category };
