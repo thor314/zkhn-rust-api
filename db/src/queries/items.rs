@@ -4,7 +4,8 @@ use uuid::Uuid;
 use crate::{
   error::DbError,
   models::{comment::Comment, item::Item},
-  DbPool, DbResult, Title, Username,
+  types::*,
+  DbPool, DbResult,
 };
 
 /// Create a new item in the database.
@@ -29,9 +30,9 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
     username.0,
     title.0,
     item_type,
-    url,
-    domain,
-    text,
+    url.map(|s| s.0),
+    domain.map(|s| s.0),
+    text.map(|s| s.0),
     item_category,
   )
   .execute(&mut *tx)
@@ -57,9 +58,9 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
       username as \"username: Username\",
       title as \"title: Title\",
       item_type,
-      url,
-      domain,
-      text,
+      url as \"url: Url\",
+      domain as \"domain: Domain\",
+      text as \"text: Text\",
       points,
       score,
       comment_count,

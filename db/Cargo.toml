@@ -25,7 +25,7 @@ url="2.5.0"
 uuid = { version = "1.7.0", features = ["serde", "v4"] }
 rayon = "1.9.0"
 futures = "0.3.30"
-garde = { version = "0.18.0", features = ["email", "derive", "serde"] }
+garde = { version = "0.18.0", features = ["email", "derive", "serde", "url"] }
 utoipa = "4.2.0"
 argon2 = "0.5.3"
 

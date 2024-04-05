@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{utils::now, DbError, DbPool, DbResult, Timestamp, Title, Username};
+use crate::{utils::now, DbError, DbPool, DbResult, Domain, Text, Timestamp, Title, Url, Username};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
@@ -15,9 +15,9 @@ pub struct Item {
   pub title:         Title,
   /// news, show, ask
   pub item_type:     String,
-  pub url:           Option<String>, // validate
-  pub domain:        Option<String>,
-  pub text:          Option<String>, // validate
+  pub url:           Option<Url>,
+  pub domain:        Option<Domain>,
+  pub text:          Option<Text>,
   /// karma for the item
   pub points:        i32,
   /// internal algorithmic score to sort items on home page by popularity
@@ -36,9 +36,9 @@ impl Default for Item {
       username:      Username::default(),
       title:         Title::default(),
       item_type:     "news".to_string(),
-      url:           Some("https://example.com".to_string()),
-      domain:        Some("example.com".to_string()),
-      text:          None,
+      url:           Some(Url::default()),
+      domain:        Some(Domain::default()),
+      text:          Some(Text::default()),
       points:        1,
       score:         0,
       comment_count: 0,
@@ -59,10 +59,10 @@ impl Item {
     item_category: String,
   ) -> Self {
     let (url, domain, text) = if is_text {
-      (None, None, Some(text_or_url_content.clone()))
+      (None, None, Some(Text(text_or_url_content)))
     } else {
-      let url = text_or_url_content.clone();
-      let domain = url::Url::parse(&url).unwrap().domain().unwrap().to_string();
+      let url = Url(text_or_url_content.clone());
+      let domain: Domain = url.clone().into();
       (Some(url), Some(domain), None)
     };
 
