@@ -1,14 +1,13 @@
 use std::{process, process::Command, time};
 
 use reqwest::{Client, RequestBuilder, Response};
-use tracing_subscriber::util::SubscriberInitExt;
 
 pub const WEBSERVER_URL: &str = "http://localhost:8000";
 
 /// Run the shuttle server
 pub async fn cargo_shuttle_run() -> ChildGuard {
-  tracing_subscriber_setup();
-  db_setup();
+  // tracing_subscriber_setup();
+  // db_setup();
   server_cleanup();
   rm_docker_claude();
   let child = process::Command::new("cargo")
@@ -131,24 +130,24 @@ fn _rm_docker_gemini() {
   }
 }
 
-fn tracing_subscriber_setup() {
-  // let filter = tracing_subscriber::EnvFilter::from_default_env()
-  // tracing_subscriber::fmt().with_env_filter(filter).with_test_writer().init();
-  let sub = tracing_subscriber::fmt()
-    .with_env_filter(
-      tracing_subscriber::EnvFilter::from_default_env()
-    .add_directive("sqlx=warn".parse().unwrap())
-    // .add_directive("tower_http=debug".parse().unwrap())
-    // .add_directive("tower_sessions=debug".parse().unwrap())
-    // .add_directive("axum_login=debug".parse().unwrap())
-    .add_directive("axum_login=info".parse().unwrap())
-    .add_directive("h2=info".parse().unwrap())
-    .add_directive("api=debug".parse().unwrap())
-    .add_directive("db=debug".parse().unwrap())
-    .add_directive("server=debug".parse().unwrap()),
-    )
-    .with_test_writer()
-    .finish();
-  // .init();
-  tracing::subscriber::set_global_default(sub).unwrap();
-}
+// fn tracing_subscriber_setup() {
+//   // let filter = tracing_subscriber::EnvFilter::from_default_env()
+//   // tracing_subscriber::fmt().with_env_filter(filter).with_test_writer().init();
+//   let sub = tracing_subscriber::fmt()
+//     .with_env_filter(
+//       tracing_subscriber::EnvFilter::from_default_env()
+//     .add_directive("sqlx=warn".parse().unwrap())
+//     // .add_directive("tower_http=debug".parse().unwrap())
+//     // .add_directive("tower_sessions=debug".parse().unwrap())
+//     // .add_directive("axum_login=debug".parse().unwrap())
+//     .add_directive("axum_login=info".parse().unwrap())
+//     .add_directive("h2=info".parse().unwrap())
+//     .add_directive("api=debug".parse().unwrap())
+//     .add_directive("db=debug".parse().unwrap())
+//     .add_directive("server=debug".parse().unwrap()),
+//     )
+//     .with_test_writer()
+//     .finish();
+//   // .init();
+//   tracing::subscriber::set_global_default(sub).unwrap();
+// }

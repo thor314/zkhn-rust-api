@@ -8,7 +8,7 @@ use super::*;
 
 #[utoipa::path(
   get,
-  path = "/items/{id}",
+  path = "/items/{id}?page={page}",
   params( ("id" = String, Path, example = Uuid::new_v4),
           ("page" = i32, Query, example = Page::default) ),
   responses( (status = 422, description = "Invalid id"),
@@ -16,8 +16,6 @@ use super::*;
              (status = 200, description = "Success", body = GetItemResponse) ),
   )]
 /// Get item.
-///
-/// If user is authenticated, ...todo
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L92
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L52
@@ -27,8 +25,6 @@ pub async fn get_item(
   Query(page): Query<Page>,
   auth_session: AuthSession,
 ) -> ApiResult<Json<GetItemResponse>> {
-  // 400
-  println!("get_item called with id: {id} and page: {page:?}");
   debug!("get_item called with id: {id} and page: {page:?}");
   page.validate(&())?;
 
@@ -51,15 +47,3 @@ pub async fn get_item(
     Ok(Json(get_item_response))
   }
 }
-
-// mark show_dead_comments
-// create comments query
-// get item, comments, total comments number
-//
-// let user = db::queries::users::get_item(pool, &)
-//   .await?
-//   .ok_or(ApiError::DbEntryNotFound("that user does not exist".to_string()))?;
-// // todo(auth): currently, we return the whole user.
-// // When auth is implemented, we will want to return different user data, per the caller's
-// auth. info!("found user: {user:?}");
-// Ok(Json(user))

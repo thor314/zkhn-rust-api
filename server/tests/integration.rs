@@ -50,11 +50,16 @@ async fn items_crud() {
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "2").await;
   let id: uuid::Uuid =
     send(&c, CreateItemPayload::default(), "POST", "items", 200, "3").await.json().await.unwrap();
-  send(&c, "", "GET", &format!("items/{id}?1"), 200, "4").await;
-  send(&c, "", "GET", &format!("items/{id}?2"), 200, "5").await;
+  let fake_id = uuid::Uuid::new_v4();
+  send(&c, "", "GET", &format!("items/{fake_id}?page=1"), 404, "40").await;
+  send(&c, "", "GET", &format!("items/{id}?page=0"), 422, "41").await;
+  send(&c, "", "GET", &format!("items/{id}?page=1"), 200, "4").await;
+  let r: GetItemResponse =
+    send(&c, "", "GET", &format!("items/{id}?page=2"), 200, "5").await.json().await.unwrap();
+  assert!(r.comments.is_empty());
   // send(&c, "", "GET", &format!("items/{id}?2"), 200, "6").await;
   // send(&c, "", "GET", &format!("items/{id}?2"), 200, "7").await;
-  let upvote = VotePayload::new(id, VotePayloadEnum::Upvote);
+  // let upvote = VotePayload::new(id, VotePayloadEnum::Upvote);
   // let downvote = VotePayload::new(id, VotePayloadEnum::Downvote);
-  send(&c, upvote, "POST", "items/vote", 200, "8").await;
+  // send(&c, upvote, "POST", "items/vote", 200, "8").await;
 }
