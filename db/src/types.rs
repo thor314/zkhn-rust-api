@@ -100,7 +100,7 @@ impl Default for ResetPasswordToken {
   fn default() -> Self { ResetPasswordToken("default_reset_password_token".into()) }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Validate, PartialEq)]
 #[garde(transparent)]
 #[repr(transparent)]
 pub struct Title(#[garde(ascii, length(min = 8, max = 100))] pub String);

@@ -135,3 +135,24 @@ pub enum HiddenPayloadEnum {
 impl Default for HiddenPayloadEnum {
   fn default() -> Self { Self::Hidden }
 }
+
+/// A payload for editing an item
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema, Validate)]
+#[schema(default = EditItemPayload::default, example=EditItemPayload::default)]
+#[serde(rename_all = "camelCase")]
+pub struct EditItemPayload {
+  #[garde(skip)]
+  pub id:       Uuid,
+  #[garde(dive)]
+  pub title:    Title,
+  #[garde(skip)]
+  pub text:     String, // todo(validate)
+  #[garde(skip)]
+  pub category: String, // todo(validate)
+}
+
+impl EditItemPayload {
+  pub fn new(id: Uuid, title: &str, text: &str, category: &str) -> Self {
+    Self { id, title: title.into(), text: text.into(), category: category.into() }
+  }
+}

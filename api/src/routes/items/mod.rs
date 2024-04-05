@@ -32,6 +32,7 @@ use crate::{
 pub fn items_router(state: SharedState) -> Router {
   Router::new()
     .route("/:id", routing::get(get::get_item))
+    .route("/edit-item", routing::put(put::edit_item))
     .route("/", routing::post(post::create_item))
     .route("/vote", routing::post(post::vote_item))
     .route("/favorite", routing::post(post::favorite_item))
