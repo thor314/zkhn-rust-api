@@ -37,8 +37,8 @@ impl UserVote {
   }
 }
 
-#[derive(sqlx::Type, Default, PartialEq, Serialize, Deserialize, Debug, Clone)]
-#[sqlx(type_name = "vote_state_enum")] 
+#[derive(sqlx::Type, Default, PartialEq, Serialize, Deserialize, Debug, Clone, ToSchema)]
+#[sqlx(type_name = "vote_state_enum")]
 #[sqlx(rename_all = "lowercase")]
 pub enum VoteState {
   #[default]
@@ -57,10 +57,10 @@ impl From<i8> for VoteState {
   }
 }
 
-#[derive(sqlx::Type, PartialEq, Serialize, Deserialize, Debug, Clone)]
-#[sqlx(type_name = "item_or_comment_enum")] 
+#[derive(sqlx::Type, PartialEq, Serialize, Deserialize, Debug, Clone, ToSchema)]
+#[sqlx(type_name = "item_or_comment_enum")]
 #[sqlx(rename_all = "lowercase")]
-pub enum ItemOrComment{
+pub enum ItemOrComment {
   Item,
   Comment,
 }
