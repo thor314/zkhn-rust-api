@@ -302,34 +302,3 @@ pub(super) mod put {
     Ok(StatusCode::OK)
   }
 }
-
-// pub(super) mod delete {
-//   use super::*;
-
-//   #[utoipa::path(
-//       delete,
-//       path = "/users/{username}",
-//       params( ("username" = String, Path, example = "alice") ),
-//       responses(
-//         (status = 401, description = "Unauthorized"),
-//         (status = 403, description = "Forbidden"),
-//         (status = 422, description = "Invalid username"),
-//         (status = 404, description = "User not found"),
-//         (status = 200),
-//       ),
-//   )]
-//   /// Delete a user.
-//   pub async fn delete_user(
-//     State(state): State<SharedState>,
-//     Path(username): Path<Username>,
-//     auth_session: AuthSession,
-//   ) -> ApiResult<StatusCode> {
-//     trace!("delete_user called with username: {username}");
-//     auth_session.if_authenticated_get_user(&username)?;
-//     username.validate(&())?;
-//     users::delete_user(&state.pool, &username).await?;
-
-//     debug!("deleted user: {}", username);
-//     Ok(StatusCode::OK)
-//   }
-// }
