@@ -220,8 +220,6 @@ pub(super) mod put {
   )]
   /// Request a password reset link.
   ///
-  /// todo(password reset) - need to write a change password endpoint allowing user to use the token
-  ///
   /// don't authorize for this route, user may have forgotten their password
   pub async fn request_password_reset_link(
     State(state): State<SharedState>,

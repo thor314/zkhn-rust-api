@@ -77,7 +77,6 @@ mod delete {
 
     // payload.title.sanitize() // backlog(sanitize)
     // backlog(sanitize) item text
-    // backlog validate url
 
     // if title changed, we may need to change the item type; see routes/utils.js/getitemtype
     db::queries::items::delete_item(&state.pool, id, &user.username).await?;
