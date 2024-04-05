@@ -17,12 +17,6 @@ pub struct User {
   pub username: Username,
   /// Hashed password
   pub password_hash: PasswordHash,
-  // backlog(kill)
-  /// Authentication token
-  pub auth_token: Option<AuthToken>,
-  // backlog(kill)
-  /// Expiration of auth token
-  pub auth_token_expiration: Option<Timestamp>,
   /// Reset password token
   pub reset_password_token: Option<ResetPasswordToken>,
   /// Expiration of reset password token
@@ -39,9 +33,8 @@ pub struct User {
   pub show_dead: bool,
   /// Is user a moderator
   pub is_moderator: bool,
-  // backlog(kill)
-  /// Is user shadow banned
-  pub shadow_banned: bool,
+  /// Is user shadow banned - killed feature
+  // pub shadow_banned: bool,
   /// Is user banned
   pub banned: bool,
 }
@@ -51,8 +44,6 @@ impl Default for User {
     User {
       username: "alice".into(),
       password_hash: PasswordHash("password".to_string()),
-      auth_token: None,
-      auth_token_expiration: None,
       reset_password_token: None,
       reset_password_token_expiration: None,
       email: None,
@@ -62,7 +53,6 @@ impl Default for User {
       about: None,
       show_dead: false,
       is_moderator: false,
-      shadow_banned: false,
       banned: false,
     }
   }
@@ -119,8 +109,6 @@ impl std::fmt::Debug for User {
     f.debug_struct("User")
       .field("username", &self.username)
       .field("password_hash", &self.password_hash)
-      .field("auth_token", &"redacted")
-      .field("auth_token_expiration", &self.auth_token_expiration)
       .field("reset_password_token", &"redacted")
       .field("reset_password_token_expiration", &self.reset_password_token_expiration)
       .field("email", &self.email)
@@ -129,7 +117,6 @@ impl std::fmt::Debug for User {
       .field("about", &self.about)
       .field("show_dead", &self.show_dead)
       .field("is_moderator", &self.is_moderator)
-      .field("shadow_banned", &self.shadow_banned)
       .field("banned", &self.banned)
       .finish()
   }

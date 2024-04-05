@@ -21,7 +21,7 @@ pub struct Item {
   /// karma for the item
   pub points:        i32,
   /// internal algorithmic score to sort items on home page by popularity
-  pub score:         i32, 
+  pub score:         i32,
   /// tweet, blog, paper, other
   pub item_category: String, // validate
   pub created:       Timestamp,

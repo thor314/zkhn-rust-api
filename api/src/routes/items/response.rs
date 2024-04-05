@@ -1,5 +1,6 @@
 use db::{
-  models::{comment::Comment, item::Item}, AuthToken, Domain, Text, Timestamp, Title, Url, Username
+  models::{comment::Comment, item::Item},
+  AuthToken, Domain, Text, Timestamp, Title, Url, Username,
 };
 use serde::{Deserialize, Serialize};
 use utoipa::{OpenApi, ToSchema};
@@ -30,13 +31,13 @@ pub struct GetEditItemResponse {
   pub title:            Title,
   /// news, show, ask
   pub item_type:        String,
-  pub url:              Option<Url>, 
+  pub url:              Option<Url>,
   pub domain:           Option<Domain>,
-  pub text:             Option<Text>, 
-  /// karma for the item
+  pub text:             Option<Text>,
+  /// how many upvotes
   pub points:           i32,
   /// internal algorithmic score to sort items on home page by popularity
-  pub score:            i32, 
+  pub score:            i32,
   /// tweet, blog, paper, other
   pub item_category:    String, // validate
   pub created:          Timestamp,

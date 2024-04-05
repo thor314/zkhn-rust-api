@@ -9,16 +9,12 @@ use crate::MINIMUM_KARMA_TO_DOWNVOTE;
 #[schema(default = CreateUserResponse::default, example=CreateUserResponse::default)]
 pub struct CreateUserResponse {
   pub username: Username,
-  pub auth_token: AuthToken,
-  pub auth_token_expiration_timestamp: Timestamp,
 }
 
 impl CreateUserResponse {
-  pub(crate) fn new(user: User, auth_token: AuthToken, auth_token_expiration: Timestamp) -> Self {
+  pub(crate) fn new(user: User) -> Self {
     Self {
       username: user.username,
-      auth_token,
-      auth_token_expiration_timestamp: auth_token_expiration,
     }
   }
 }
@@ -27,10 +23,6 @@ impl From<User> for CreateUserResponse {
   fn from(user: User) -> Self {
     Self {
       username: user.username,
-      auth_token: user.auth_token.unwrap_or_default(),
-      auth_token_expiration_timestamp: user
-        .auth_token_expiration
-        .unwrap_or_else(Timestamp::default_token_expiration),
     }
   }
 }
