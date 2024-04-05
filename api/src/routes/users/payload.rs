@@ -49,26 +49,32 @@ impl CreateUserPayload {
 #[schema(default = UserUpdatePayload::default, example=UserUpdatePayload::default)]
 pub struct UserUpdatePayload {
   #[garde(dive)]
-  pub email: Option<Email>,
+  pub email:     Option<Email>,
   #[garde(dive)]
-  pub about: Option<About>,
+  pub about:     Option<About>,
+  #[garde(skip)]
+  pub show_dead: Option<bool>,
 }
 
 impl Default for UserUpdatePayload {
   fn default() -> Self {
-    Self { email: Some("email@email.com".into()), about: Some("about".into()) }
+    Self {
+      email:     Some("email@email.com".into()),
+      about:     Some("about".into()),
+      show_dead: Some(false),
+    }
   }
 }
 
 impl UserUpdatePayload {
   /// convenience method for testing
-  pub fn new(email: Option<&str>, about: Option<&str>) -> ApiResult<Self> {
+  pub fn new(email: Option<&str>, about: Option<&str>, show_dead: Option<bool>) -> ApiResult<Self> {
     if email.is_none() && about.is_none() {
       return Err(ApiError::BadRequest("email or about must be provided".to_string()));
     }
     let email = email.map(|s| s.into());
     let about = about.map(|s| s.into());
-    let payload = Self { email, about };
+    let payload = Self { email, about, show_dead };
     payload.validate(&())?;
 
     Ok(payload)

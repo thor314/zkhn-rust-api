@@ -193,7 +193,14 @@ pub(super) mod put {
       return Err(ApiError::BadRequest("about or email must be provided".to_string()));
     }
 
-    users::update_user(&state.pool, &session_user.username, &payload.about, &payload.email).await?;
+    users::update_user(
+      &state.pool,
+      &session_user.username,
+      &payload.about,
+      &payload.email,
+      &payload.show_dead,
+    )
+    .await?;
 
     debug!("updated user about for: {}", session_user.username);
     Ok(StatusCode::OK)

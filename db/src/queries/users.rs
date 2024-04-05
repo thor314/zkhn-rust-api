@@ -90,6 +90,7 @@ pub async fn update_user(
   username: &Username,
   about: &Option<About>,
   email: &Option<Email>,
+  show_dead: &Option<bool>,
 ) -> DbResult<()> {
   let mut tx = pool.begin().await?;
   if let Some(about) = about {
@@ -99,6 +100,11 @@ pub async fn update_user(
   }
   if let Some(email) = email {
     sqlx::query!("UPDATE users SET email = $1 WHERE username = $2", email.0, username.0)
+      .execute(&mut *tx)
+      .await?;
+  }
+  if let Some(show_dead) = show_dead {
+    sqlx::query!("UPDATE users SET show_dead = $1 WHERE username = $2", show_dead, username.0)
       .execute(&mut *tx)
       .await?;
   }
