@@ -99,7 +99,7 @@ pub async fn get_items_by_page(
   Query(page): Query<Page>,
   auth_session: AuthSession,
 ) -> ApiResult<Json<()>> {
-  debug!("get_ranked_items_by_page with page: {page:?}");
+  debug!("get_items_by_page with page: {page:?} and kind: {item_kind:?}");
   // let user = auth_session.get_assert_user_from_session().unwrap_or_else(|_|
   // User::new_logged_out());
 

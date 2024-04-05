@@ -44,3 +44,6 @@ pub fn items_router(state: SharedState) -> Router {
     .route("/get-items-by-page", routing::get(get::get_items_by_page))
     .with_state(state)
 }
+
+// todo(score): update scores every 10m
+// todo(search): tell algolia things

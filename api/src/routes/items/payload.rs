@@ -162,6 +162,7 @@ impl EditItemPayload {
 pub enum ItemKind {
   Ranked,
   Newest,
+  RaknedShow,
   Ask,
   BySiteDomain,
   ByUser,
@@ -169,4 +170,6 @@ pub enum ItemKind {
 }
 impl Default for ItemKind {
   fn default() -> Self { Self::Ranked }
-}
+} 
+
+// ranked, newest, rankedshow, newestshow, rankedask, sitedomain, submittedbyuser, rankedbyday, farovitedbypage, hiddenbypage, upvotedbypage, 
