@@ -71,8 +71,7 @@ pub async fn get_edit_item_page_data(
   debug!("get_delete_item called with id: {id}");
   let user = auth_session.get_assert_user_from_session().unwrap_or_else(|_| User::new_logged_out());
   let item = db::queries::items::get_assert_item(&state.pool, id).await?;
-  // backlog: error if past edit timeout
-  // backlog: error if item has any comments
+  item.assert_editable(&state.pool).await?;
 
   Ok(Json(item.into()))
 }
@@ -99,8 +98,7 @@ pub async fn get_delete_item_page_data(
   debug!("get_delete_item called with id: {id}");
   let user = auth_session.get_assert_user_from_session().unwrap_or_else(|_| User::new_logged_out());
   let item = db::queries::items::get_assert_item(&state.pool, id).await?;
-  // backlog: error if past delete timeout
-  // backlog: error if item has any comments
+  item.assert_editable(&state.pool).await?;
 
   Ok(Json(item.into()))
 }

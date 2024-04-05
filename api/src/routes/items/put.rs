@@ -10,8 +10,9 @@ use super::*;
   request_body = ItemPayload,
   responses(
     (status = 401, description = "Unauthorized"),
+    (status = 403, description = "Forbidden"),
+    (status = 403, description = "Forbidden not editable"),
     (status = 422, description = "Invalid Payload"),
-    (status = 200, description = "Title must be different"), 
     (status = 200, description = "Success"), 
   ),
   )]
@@ -24,14 +25,15 @@ pub async fn edit_item(
   payload.validate(&())?;
   let session_user = auth_session.get_assert_user_from_session()?;
   let item = db::queries::items::get_assert_item(&state.pool, payload.id).await?;
-  // backlog: assert item is editable
-  // backlog: assert no comments
+  item.assert_editable(&state.pool).await?;
 
   // payload.title.sanitize() // backlog(sanitize)
   // backlog(sanitize) item text
   // backlog validate url?
 
   // if title changed, we may need to change the item type; see routes/utils.js/getitemtype
+  // todo: list the fields that can change
+  // todo - update db
 
   // await searchApi.editItem(itemId, newItemTitle, newItemText, newItemCategory);
   // backlog(search)

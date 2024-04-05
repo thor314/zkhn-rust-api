@@ -90,7 +90,7 @@ fn server_cleanup() {
 }
 
 /// migrate the db to the newest schema
-fn db_setup() {
+fn _db_setup() {
   Command::new("sqlx")
     .arg("db")
     .arg("reset")
