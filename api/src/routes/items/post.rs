@@ -51,7 +51,7 @@ pub async fn vote_item(
   State(state): State<SharedState>,
   auth_session: AuthSession,
   Json(payload): Json<VotePayload>,
-) -> ApiResult<Json<Uuid>> {
+) -> ApiResult<()> {
   trace!("vote_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
   let (item, vote) = tokio::try_join!(
@@ -68,5 +68,38 @@ pub async fn vote_item(
   // todo(karma)
 
   debug!("vote submitted");
-  Ok(Json(item.id))
+  Ok(())
+}
+
+#[utoipa::path(
+  post,
+  path = "/items/favorite",
+  request_body = FavoritePayload,
+  responses(
+    (status = 401, description = "Unauthorized"),
+    (status = 403, description = "Forbidden"),
+    (status = 422, description = "Invalid Payload"),
+    (status = 409, description = "Duplication Conflict"),
+    (status = 200),
+  ),
+  )]
+/// Submit an [un]favorite on an item.
+///
+/// Return conflict if user has already [un]favorited the item.
+///
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L363
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L115
+pub async fn favorite_item(
+  State(state): State<SharedState>,
+  auth_session: AuthSession,
+  Json(payload): Json<FavoritePayload>,
+) -> ApiResult<()> {
+  trace!("favorite_item called with payload: {payload:?}");
+  let user = auth_session.get_assert_user_from_session()?;
+  let (item, favorite) = tokio::try_join!(
+    db::queries::items::get_assert_item(&state.pool, payload.id),
+    db::queries::user_favorites::get_favorite(&state.pool, &user.username, payload.id),
+  )?;
+
+  Ok(())
 }

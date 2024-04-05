@@ -57,9 +57,13 @@ async fn items_crud() {
   let r: GetItemResponse =
     send(&c, "", "GET", &format!("items/{id}?page=2"), 200, "5").await.json().await.unwrap();
   assert!(r.comments.is_empty());
+
+  // todo(test) vote_item
   // send(&c, "", "GET", &format!("items/{id}?2"), 200, "6").await;
   // send(&c, "", "GET", &format!("items/{id}?2"), 200, "7").await;
   // let upvote = VotePayload::new(id, VotePayloadEnum::Upvote);
   // let downvote = VotePayload::new(id, VotePayloadEnum::Downvote);
   // send(&c, upvote, "POST", "items/vote", 200, "8").await;
+
+  // todo(test) vote_favorite
 }

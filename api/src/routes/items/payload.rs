@@ -89,5 +89,27 @@ pub enum VotePayloadEnum {
   Unvote,
 }
 impl Default for VotePayloadEnum {
-  fn default() -> Self { Self::Unvote }
+  fn default() -> Self { Self::Upvote }
+}
+
+/// A payload for favoriting on an item or comment
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[schema(default = FavoritePayload::default, example=FavoritePayload::default)]
+#[serde(rename_all = "camelCase")]
+pub struct FavoritePayload {
+  pub id:       Uuid,
+  pub favorite: FavoritePayloadEnum,
+}
+impl FavoritePayload {
+  pub fn new(id: Uuid, favorite: FavoritePayloadEnum) -> Self { Self { id, favorite } }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum FavoritePayloadEnum {
+  Favorite,
+  Unfavorite,
+}
+impl Default for FavoritePayloadEnum {
+  fn default() -> Self { Self::Favorite }
 }
