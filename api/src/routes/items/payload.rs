@@ -123,7 +123,7 @@ pub struct HiddenPayload {
   pub hidden: HiddenPayloadEnum,
 }
 impl HiddenPayload {
-  pub fn new(id: Uuid, hidden: HiddenPayloadEnum) -> Self { Self { id, hidden} }
+  pub fn new(id: Uuid, hidden: HiddenPayloadEnum) -> Self { Self { id, hidden } }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
@@ -135,3 +135,42 @@ pub enum HiddenPayloadEnum {
 impl Default for HiddenPayloadEnum {
   fn default() -> Self { Self::Hidden }
 }
+
+/// A payload for editing an item
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema, Validate)]
+#[schema(default = EditItemPayload::default, example=EditItemPayload::default)]
+#[serde(rename_all = "camelCase")]
+pub struct EditItemPayload {
+  #[garde(skip)]
+  pub id:       Uuid,
+  #[garde(dive)]
+  pub title:    Title,
+  #[garde(skip)]
+  pub text:     String, // todo(validate)
+  #[garde(skip)]
+  pub category: String, // todo(validate)
+}
+
+impl EditItemPayload {
+  pub fn new(id: Uuid, title: &str, text: &str, category: &str) -> Self {
+    Self { id, title: title.into(), text: text.into(), category: category.into() }
+  }
+}
+
+/// A payload for getting items by different sorting methods
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, ToSchema)]
+pub enum ItemKind {
+  Ranked,
+  Newest,
+  RaknedShow,
+  Ask,
+  BySiteDomain,
+  ByUser,
+  ByDay,
+}
+impl Default for ItemKind {
+  fn default() -> Self { Self::Ranked }
+}
+
+// ranked, newest, rankedshow, newestshow, rankedask, sitedomain, submittedbyuser, rankedbyday,
+// farovitedbypage, hiddenbypage, upvotedbypage,

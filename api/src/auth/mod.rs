@@ -34,6 +34,12 @@ pub(crate) trait AuthenticationExt {
   /// Return Err(ApiError::Unauthorized) if caller is not logged in.
   /// Return Err(ApiError::Forbidden) if caller is banned.
   fn get_assert_user_from_session(&self) -> ApiResult<User>;
+  /// Get the user from the session store, or else return an Error
+  ///
+  /// Return Ok(user) if the caller is authenticated as the given user.
+  /// Return Err(ApiError::Unauthorized) if caller is not logged in.
+  /// Return Err(ApiError::Forbidden) if caller is banned.
+  fn get_assert_user_from_session_assert_match(&self, username: &Username) -> ApiResult<User>;
   /// Return whether the caller is logged in and not banned
   fn am_authenticated_and_not_banned(&self) -> bool;
 }
@@ -45,6 +51,14 @@ impl AuthenticationExt for AuthSession {
     let user = self.get_user_from_session().ok_or(ApiError::UnauthorizedPleaseLogin)?.clone();
     if user.banned {
       return Err(ApiError::ForbiddenBanned);
+    }
+    Ok(user)
+  }
+
+  fn get_assert_user_from_session_assert_match(&self, username: &Username) -> ApiResult<User> {
+    let user = self.get_assert_user_from_session()?;
+    if user.username != *username {
+      return Err(ApiError::ForbiddenUsernameDoesNotMatchSession);
     }
     Ok(user)
   }

@@ -51,6 +51,9 @@ pub enum ApiError {
   /// The client submitted an incorrect password
   #[status(StatusCode::UNAUTHORIZED)] // 401
   UnauthorizedIncorrectPassword,
+  /// The client submitted a change to an item that is no longer editable (but not dead)
+  #[status(StatusCode::FORBIDDEN)] // 403
+  ForbiddenNotEditable(String),
   /// The client submitted a change to a dead item or comment
   #[status(StatusCode::FORBIDDEN)] // 403
   ForbiddenDead,
@@ -84,6 +87,7 @@ impl std::fmt::Display for ApiError {
       ApiError::BadRequest(e) => write!(f, "Invalid request submitted: {e}"),
       ApiError::UnauthorizedPleaseLogin => write!(f, "Unauthorized: please log in",),
       ApiError::UnauthorizedIncorrectPassword => write!(f, "Unauthorized: Incorrect password"),
+      ApiError::ForbiddenNotEditable(e) => write!(f, "Forbidden: {e}"),
       ApiError::ForbiddenDead => write!(f, "Forbidden: item or comment is dead"),
       ApiError::ForbiddenBanned => write!(f, "Forbidden: User is banned"),
       ApiError::ForbiddenUsernameDoesNotMatchSession =>
@@ -97,6 +101,7 @@ impl std::fmt::Display for ApiError {
 impl From<DbError> for ApiError {
   fn from(e: DbError) -> Self {
     match e {
+      DbError::NotEditable(e) => ApiError::ForbiddenNotEditable(e),
       DbError::UniqueViolation(e) => ApiError::UniqueViolation(e),
       DbError::ForeignKeyViolation(e) => ApiError::ForeignKeyViolation(e),
       DbError::NotNullViolation(e) => ApiError::NotNullViolation(e),

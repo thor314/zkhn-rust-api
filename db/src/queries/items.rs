@@ -74,15 +74,24 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
   .map_err(DbError::from)
 }
 
-// pub async fn delete_item(pool: &DbPool, item_id: Uuid) -> DbResult<()> {
-//   sqlx::query!("DELETE FROM items WHERE id = $1", item_id)
-//     .execute(pool)
-//     .await
-//     .map_err(DbError::from)?;
-//   // todo delete comments, adjust karma
+/// Return whether the item has any comments.
+// backlog(refactor) - remove one: Item.comment_count or this method
+pub(crate) async fn has_comments(pool: &DbPool, id: Uuid) -> bool {
+  // todo!()
+  false
+}
 
-//   Ok(())
-// }
+/// Delete an item from the database.
+pub async fn delete_item(pool: &DbPool, item_id: Uuid) -> DbResult<()> {
+  sqlx::query!("DELETE FROM items WHERE id = $1", item_id)
+    .execute(pool)
+    .await
+    .map_err(DbError::from)?;
+
+  // todo - adjust karma
+
+  Ok(())
+}
 
 // pub async fn update_item_category(
 //   pool: &DbPool,

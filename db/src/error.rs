@@ -30,6 +30,9 @@ pub enum DbError {
 
   #[error("Entry not found in db: {0}")]
   NotFound(String),
+
+  #[error("Entry not editable: {0}")]
+  NotEditable(String),
 }
 
 impl From<sqlx::Error> for DbError {

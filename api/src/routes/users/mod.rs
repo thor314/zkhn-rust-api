@@ -214,6 +214,8 @@ pub(super) mod put {
   )]
   /// Request a password reset link.
   ///
+  /// todo(password reset) - need to write a change password endpoint allowing user to use the token
+  ///
   /// don't authorize for this route, user may have forgotten their password
   pub async fn request_password_reset_link(
     State(state): State<SharedState>,
@@ -228,7 +230,7 @@ pub(super) mod put {
     // Generate a reset password token and expiration date for the user. Update the db.
     // prod(email)
     let reset_password_token = AuthToken("create reset password token".into());
-    let reset_password_token_expiration = Timestamp::default_expiration();
+    let reset_password_token_expiration = Timestamp::default_token_expiration();
     users::update_user_password_token(
       &state.pool,
       &username,

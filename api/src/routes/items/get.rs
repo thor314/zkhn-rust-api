@@ -2,6 +2,7 @@ use std::f32::consts::E;
 
 use axum::extract::Query;
 use db::{Page, PasswordHash};
+use serde::{Deserialize, Serialize};
 use serde_json::Number;
 
 use super::*;
@@ -12,6 +13,7 @@ use super::*;
   params( ("id" = String, Path, example = Uuid::new_v4),
           ("page" = i32, Query, example = Page::default) ),
   responses( (status = 422, description = "Invalid id"),
+             (status = 422, description = "Invalid page"),
              (status = 404, description = "User not found"),
              (status = 200, description = "Success", body = GetItemResponse) ),
   )]
@@ -46,4 +48,61 @@ pub async fn get_item(
     // let (item_votes, item_favorites, item_hiddens, comment_votes) = tokio::try_join!(todo)
     Ok(Json(get_item_response))
   }
+}
+
+#[utoipa::path(
+  get,
+  path = "/items/get-edit-item-page-data",
+  params( ("id" = String, Path, example = Uuid::new_v4) ),
+  responses( (status = 422, description = "Invalid id"),
+             (status = 401, description = "Unauthorized"),
+             (status = 403, description = "Forbidden"),
+             (status = 404, description = "User not found"),
+             (status = 200, description = "Success", body = GetEditItemResponse) ),
+  )]
+/// Get item content for for editing. User must be authenticated.
+///
+/// Note that get-delete-item-page-data also maps to this route.
+///
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L462
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L191
+pub async fn get_edit_item_page_data(
+  State(state): State<SharedState>,
+  Path(id): Path<Uuid>,
+  auth_session: AuthSession,
+) -> ApiResult<Json<GetEditItemResponse>> {
+  debug!("get_edit_item called with id: {id}");
+  let item = db::queries::items::get_assert_item(&state.pool, id).await?;
+  item.assert_editable(&state.pool).await?;
+  let _user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
+
+  Ok(Json(item.into()))
+}
+
+#[utoipa::path(
+  get,
+  path = "/items/get-items-by-page/{item_kind}?page={page}",
+  params( ("item_kind" = ItemKind, Query, example = ItemKind::default), 
+          ("page" = i32, Query, example = Page::default) ),
+  responses( (status = 401, description = "Unauthorized"),
+             (status = 403, description = "Forbidden"),
+             (status = 404, description = "User not found"),
+             (status = 200, description = "Success") ), // response body todo
+  )]
+/// Get items by page, sorted by SortKind
+///
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L611
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L282
+pub async fn get_items_by_page(
+  State(state): State<SharedState>,
+  Path(item_kind): Path<ItemKind>,
+  Query(page): Query<Page>,
+  auth_session: AuthSession,
+) -> ApiResult<Json<()>> {
+  debug!("get_items_by_page with page: {page:?} and kind: {item_kind:?}");
+  // let user = auth_session.get_assert_user_from_session().unwrap_or_else(|_|
+  // User::new_logged_out());
+
+  // Ok(Json(item.into()))
+  todo!();
 }

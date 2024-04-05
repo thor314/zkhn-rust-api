@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{utils::now, Timestamp, Title, Username};
+use crate::{utils::now, DbError, DbPool, DbResult, Timestamp, Title, Username};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.
@@ -68,6 +68,18 @@ impl Item {
 
     Item { username, title, item_type, url, domain, text, item_category, ..Default::default() }
   }
+
+  /// An item is editable if it was created less than 1 hour ago, and has no comments.
+  pub async fn assert_editable(&self, pool: &DbPool) -> DbResult<()> {
+    if crate::queries::items::has_comments(pool, self.id).await {
+      return Err(DbError::NotEditable("has comments".into()));
+    } else if now() > self.modification_expiration() {
+      return Err(DbError::NotEditable("expired".into()));
+    }
+    Ok(())
+  }
+
+  pub fn modification_expiration(&self) -> Timestamp { self.created + chrono::Duration::hours(1) }
 }
 
 // // todo: add other types rest
