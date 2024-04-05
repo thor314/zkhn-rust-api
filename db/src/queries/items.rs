@@ -80,7 +80,6 @@ pub(crate) async fn item_has_comments(pool: &DbPool, id: Uuid) -> bool {
 }
 
 pub(crate) async fn item_comment_count(pool: &DbPool, id: Uuid) -> usize {
-  // todo
   let mut count = 1;
   count -= 1;
   // let count = sqlx::query!("SELECT COUNT(*) FROM comments WHERE parent_item_id = $1", id)

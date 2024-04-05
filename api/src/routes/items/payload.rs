@@ -1,6 +1,5 @@
 use db::{
-  models::item::{self, Item},
-  Title, Username,
+  models::item::{self, Item}, Text, Title, Url, Username
 };
 use garde::Validate;
 use serde::{Deserialize, Serialize};
@@ -20,8 +19,8 @@ pub struct CreateItemPayload {
   #[garde(skip)]
   is_text:             bool,
   // todo: could turn this to an enum
-  #[garde(skip)] // todo(validate)
-  text_or_url_content: String,
+  #[garde(dive)] // todo(validate)
+  text_or_url_content: TextOrUrl,
   #[garde(skip)] // todo(validate)
   item_category: String,
 }
@@ -36,6 +35,12 @@ impl Default for CreateItemPayload {
       item_category:       "tweet".into(),
     }
   }
+}
+
+pub enum TextOrUrl{ 
+  Text(Text),
+  Url(Url),
+
 }
 
 impl CreateItemPayload {
@@ -159,10 +164,11 @@ impl EditItemPayload {
 
 /// A payload for getting items by different sorting methods
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub enum ItemKind {
   Ranked,
   Newest,
-  RaknedShow,
+  RankedShow,
   Ask,
   BySiteDomain,
   ByUser,

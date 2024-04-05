@@ -10,6 +10,7 @@ use crate::COMMENTS_PER_PAGE;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
+#[serde(rename_all = "camelCase")]
 pub struct GetItemResponse {
   pub item:             Item,
   pub comments:         Vec<Comment>,
@@ -25,6 +26,7 @@ impl GetItemResponse {
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetEditItemResponse::default, example=GetEditItemResponse::default)]
+#[serde(rename_all = "camelCase")]
 pub struct GetEditItemResponse {
   pub id:               Uuid,
   pub username:         Username,

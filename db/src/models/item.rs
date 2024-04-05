@@ -9,6 +9,7 @@ use crate::{utils::now, DbError, DbPool, DbResult, Domain, Text, Timestamp, Titl
 /// Comments on a post
 #[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[schema(example = Item::default, default = Item::default)]
+#[serde(rename_all = "camelCase")]
 pub struct Item {
   pub id:            Uuid,
   pub username:      Username,
@@ -80,21 +81,22 @@ impl Item {
   pub fn modification_expiration(&self) -> Timestamp { self.created + chrono::Duration::hours(1) }
 }
 
-// // todo: add other types rest
-// #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-// #[sqlx(type_name = "item_category_enum")]
-// pub enum ItemCategory {
-//   Tweet,
-//   Blog,
-//   Paper,
-//   Other,
-// }
+// todo: add other types rest
+#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+#[sqlx(type_name = "item_category_enum")]
+#[serde(rename_all = "camelCase")]
+pub enum ItemCategory {
+  Tweet,
+  Blog,
+  Paper,
+  Other,
+}
 
-// #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
-// #[sqlx(type_name = "item_type", rename_all = "lowercase")]
-// // #[serde(rename_all = "lowercase")]
-// pub enum ItemType {
-//   News,
-//   Show,
-//   Ask,
-// }
+#[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
+#[sqlx(type_name = "item_type", rename_all = "lowercase")]
+#[serde(rename_all = "camelCase")]
+pub enum ItemType {
+  News,
+  Show,
+  Ask,
+}

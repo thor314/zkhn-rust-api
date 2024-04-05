@@ -12,19 +12,11 @@ pub struct CreateUserResponse {
 }
 
 impl CreateUserResponse {
-  pub(crate) fn new(user: User) -> Self {
-    Self {
-      username: user.username,
-    }
-  }
+  pub(crate) fn new(user: User) -> Self { Self { username: user.username } }
 }
 
 impl From<User> for CreateUserResponse {
-  fn from(user: User) -> Self {
-    Self {
-      username: user.username,
-    }
-  }
+  fn from(user: User) -> Self { Self { username: user.username } }
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
