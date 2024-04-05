@@ -49,7 +49,7 @@ pub(super) fn docs_router() -> Router {
     CredentialsPayload, GetUserResponse, CreateUserResponse, AuthenticateUserResponse, AuthUserResponseInternal,
     CreateItemPayload,
     GetItemResponse,
-    VotePayload, VotePayloadEnum, FavoritePayload, FavoritePayloadEnum,))
+    VotePayload, VotePayloadEnum, FavoritePayload, FavoritePayloadEnum, HiddenPayload, HiddenPayloadEnum))
   // runtime modification, e.g. for jwt: https://docs.rs/utoipa/latest/utoipa/trait.Modify.html
   // low-priority, but could gate moderator methods with an auth token.
   // modifiers(..) 

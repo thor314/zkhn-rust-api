@@ -113,3 +113,25 @@ pub enum FavoritePayloadEnum {
 impl Default for FavoritePayloadEnum {
   fn default() -> Self { Self::Favorite }
 }
+
+/// A payload for hiding an item or comment
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[schema(default = HiddenPayload::default, example=HiddenPayload::default)]
+#[serde(rename_all = "camelCase")]
+pub struct HiddenPayload {
+  pub id:     Uuid,
+  pub hidden: HiddenPayloadEnum,
+}
+impl HiddenPayload {
+  pub fn new(id: Uuid, hidden: HiddenPayloadEnum) -> Self { Self { id, hidden} }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum HiddenPayloadEnum {
+  Hidden,
+  UnHidden,
+}
+impl Default for HiddenPayloadEnum {
+  fn default() -> Self { Self::Hidden }
+}

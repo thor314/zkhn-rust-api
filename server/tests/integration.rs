@@ -65,5 +65,6 @@ async fn items_crud() {
   // let downvote = VotePayload::new(id, VotePayloadEnum::Downvote);
   // send(&c, upvote, "POST", "items/vote", 200, "8").await;
 
-  // todo(test) vote_favorite
+  // todo(test) favorite_item
+  // todo(test) hide_item
 }
