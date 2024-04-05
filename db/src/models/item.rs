@@ -5,9 +5,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{
-  utils::now, DbError, DbPool, DbResult, Domain, Text, TextOrUrl, Timestamp, Title, Url, Username,
-};
+use crate::{types::*, utils::now, DbError, DbPool, DbResult};
 
 /// A single post on the site.
 /// Note that an item either has a url and domain, or text, but not both.

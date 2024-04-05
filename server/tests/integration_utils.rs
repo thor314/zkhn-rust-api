@@ -4,6 +4,27 @@ use reqwest::{Client, RequestBuilder, Response};
 
 pub const WEBSERVER_URL: &str = "http://localhost:8000";
 
+/// convenience function to send a request and check the response status
+pub async fn send(
+  client: &Client,
+  payload: impl serde::Serialize,
+  method: &str,
+  path: &str,
+  status: u16,
+  tag: &str,
+) -> Response {
+  let res = match method {
+    "POST" => client.post(format!("{}/{}", WEBSERVER_URL, path)).send_json(payload).await,
+    "PUT" => client.put(format!("{}/{}", WEBSERVER_URL, path)).send_json(payload).await,
+    "PUT_EMPTY" => client.put(format!("{}/{}", WEBSERVER_URL, path)).send_empty().await,
+    "GET" => client.get(format!("{}/{}", WEBSERVER_URL, path)).send_empty().await,
+    "DELETE" => client.delete(format!("{}/{}", WEBSERVER_URL, path)).send_empty().await,
+    _ => panic!("Invalid method"),
+  };
+  assert_eq!(res.status(), status, "Test {} failed", tag);
+  res
+}
+
 /// Run the shuttle server
 pub async fn cargo_shuttle_run() -> ChildGuard {
   // tracing_subscriber_setup();
@@ -33,27 +54,6 @@ pub async fn cargo_shuttle_run() -> ChildGuard {
   }
 
   ChildGuard { child }
-}
-
-/// convenience function to send a request and check the response status
-pub async fn send(
-  client: &Client,
-  payload: impl serde::Serialize,
-  method: &str,
-  path: &str,
-  status: u16,
-  tag: &str,
-) -> Response {
-  let res = match method {
-    "POST" => client.post(format!("{}/{}", WEBSERVER_URL, path)).send_json(payload).await,
-    "PUT" => client.put(format!("{}/{}", WEBSERVER_URL, path)).send_json(payload).await,
-    "PUT_EMPTY" => client.put(format!("{}/{}", WEBSERVER_URL, path)).send_empty().await,
-    "GET" => client.get(format!("{}/{}", WEBSERVER_URL, path)).send_empty().await,
-    "DELETE" => client.delete(format!("{}/{}", WEBSERVER_URL, path)).send_empty().await,
-    _ => panic!("Invalid method"),
-  };
-  assert_eq!(res.status(), status, "Test {} failed", tag);
-  res
 }
 
 trait ClientExt {
