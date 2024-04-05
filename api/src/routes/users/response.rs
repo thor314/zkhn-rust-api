@@ -54,10 +54,11 @@ pub struct GetUserResponse {
 }
 
 impl GetUserResponse {
-  pub fn new(user: User, is_authenticated: bool) -> Self {
-    let auth_user = AuthUserResponseInternal::new(user.clone());
-    let email = user.email.filter(|_| is_authenticated);
-    let show_dead = Some(user.show_dead).filter(|_| is_authenticated);
+  pub fn new(user: User, session_user: Option<User>) -> Self {
+    let auth_user = AuthUserResponseInternal::new(session_user.clone());
+    let authentication_match = session_user.as_ref().map_or(false, |u| u.username == user.username);
+    let email = user.email.filter(|_| authentication_match);
+    let show_dead = Some(user.show_dead).filter(|_| authentication_match);
     Self {
       username: user.username,
       created: user.created,
@@ -66,7 +67,7 @@ impl GetUserResponse {
       banned: user.banned,
       email,
       show_dead,
-      show_private_user_data: is_authenticated,
+      show_private_user_data: authentication_match,
       auth_user,
     }
   }
@@ -87,15 +88,15 @@ pub struct AuthenticateUserResponse {
 }
 
 impl AuthenticateUserResponse {
-  pub fn new(user: User) -> Self {
-    let auth_user = AuthUserResponseInternal::new(user.clone());
+  pub fn new(session_user: User) -> Self {
+    let auth_user = AuthUserResponseInternal::new(Some(session_user.clone()));
     Self {
-      username: user.username,
-      banned: user.banned,
-      karma: user.karma,
-      contains_email: user.email.is_some(),
-      show_dead: user.show_dead,
-      is_moderator: user.is_moderator,
+      username: session_user.username,
+      banned: session_user.banned,
+      karma: session_user.karma,
+      contains_email: session_user.email.is_some(),
+      show_dead: session_user.show_dead,
+      is_moderator: session_user.is_moderator,
       auth_user,
     }
   }
@@ -122,17 +123,21 @@ pub struct AuthUserResponseInternal {
 
 impl AuthUserResponseInternal {
   /// Create a new AuthLocal from a User
-  pub fn new(user: User) -> Self {
-    Self {
-      user_signed_in:   true,
-      username:         Some(user.username.clone()),
-      karma:            Some(user.karma),
-      contains_email:   Some(user.email.is_some()),
-      show_dead:        user.show_dead,
-      show_downvote:    user.karma >= MINIMUM_KARMA_TO_DOWNVOTE,
-      is_moderator:     Some(user.is_moderator),
-      banned:           user.banned,
-      cookies_included: true,
+  pub fn new(session_user: Option<User>) -> Self {
+    if let Some(user) = session_user {
+      Self {
+        user_signed_in:   true,
+        username:         Some(user.username.clone()),
+        karma:            Some(user.karma),
+        contains_email:   Some(user.email.is_some()),
+        show_dead:        user.show_dead,
+        show_downvote:    user.karma >= MINIMUM_KARMA_TO_DOWNVOTE,
+        is_moderator:     Some(user.is_moderator),
+        banned:           user.banned,
+        cookies_included: true,
+      }
+    } else {
+      Self::default()
     }
   }
 

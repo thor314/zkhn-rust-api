@@ -60,9 +60,8 @@ pub(super) mod get {
     trace!("get_user called with username: {username}");
     username.validate(&())?;
     let user = users::get_assert_user(&state.pool, &username).await?;
-    let is_authenticated =
-      auth_session.get_user_from_session().map(|u| u.username == username).unwrap_or(false);
-    let user_response = GetUserResponse::new(user, is_authenticated);
+    let session_user = auth_session.get_user_from_session();
+    let user_response = GetUserResponse::new(user, session_user);
 
     debug!("user response: {user_response:?}");
     Ok(Json(user_response))
