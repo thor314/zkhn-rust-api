@@ -39,6 +39,8 @@ pub fn items_router(state: SharedState) -> Router {
     .route("/favorite", routing::post(post::favorite_item))
     .route("/hide", routing::post(post::hide_item))
     .route("/get-edit-item-page-data", routing::get(get::get_edit_item_page_data))
-    .route("/get-delete-item-page-data", routing::get(get::get_delete_item_page_data))
+    .route("/edit-item", routing::put(put::edit_item))
+    .route("/delete-item", routing::delete(delete::delete_item))
+    .route("/get-items-by-page", routing::get(get::get_items_by_page))
     .with_state(state)
 }

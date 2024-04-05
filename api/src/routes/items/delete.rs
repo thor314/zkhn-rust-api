@@ -22,9 +22,9 @@ pub async fn delete_item(
   Path(id): Path<Uuid>,
 ) -> ApiResult<StatusCode> {
   debug!("delete_item called with id: {id:?}");
-  let session_user = auth_session.get_assert_user_from_session()?;
   let item = db::queries::items::get_assert_item(&state.pool, id).await?;
   item.assert_editable(&state.pool).await?;
+  let _user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
 
   // payload.title.sanitize() // backlog(sanitize)
   // backlog(sanitize) item text

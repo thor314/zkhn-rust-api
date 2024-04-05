@@ -156,3 +156,17 @@ impl EditItemPayload {
     Self { id, title: title.into(), text: text.into(), category: category.into() }
   }
 }
+
+/// A payload for getting items by different sorting methods
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, ToSchema)]
+pub enum ItemKind {
+  Ranked,
+  Newest,
+  Ask,
+  BySiteDomain,
+  ByUser,
+  ByDay,
+}
+impl Default for ItemKind {
+  fn default() -> Self { Self::Ranked }
+}
