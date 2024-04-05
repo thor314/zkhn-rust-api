@@ -123,7 +123,7 @@ pub struct HiddenPayload {
   pub hidden: HiddenPayloadEnum,
 }
 impl HiddenPayload {
-  pub fn new(id: Uuid, hidden: HiddenPayloadEnum) -> Self { Self { id, hidden} }
+  pub fn new(id: Uuid, hidden: HiddenPayloadEnum) -> Self { Self { id, hidden } }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]

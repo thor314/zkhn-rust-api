@@ -47,3 +47,25 @@ pub async fn get_item(
     Ok(Json(get_item_response))
   }
 }
+
+#[utoipa::path(
+  get,
+  path = "/items/get-edit-item-page-data",
+  params( ("id" = String, Path, example = Uuid::new_v4),
+          ("page" = i32, Query, example = Page::default) ),
+  responses( (status = 422, description = "Invalid id"),
+             (status = 404, description = "User not found"),
+             (status = 200, description = "Success", body = GetItemResponse) ),
+  )]
+/// todo idk
+///
+///
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L462
+/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L191
+pub async fn get_edit_item_page_data(
+  State(state): State<SharedState>,
+  Path(id): Path<Uuid>,
+  Query(page): Query<Page>,
+  auth_session: AuthSession,
+) -> ApiResult<Json<GetItemResponse>> {
+}
