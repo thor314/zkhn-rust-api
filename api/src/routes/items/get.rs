@@ -122,71 +122,18 @@ pub async fn get_items_by_page(
         Some(&item_ids_hidden_by_user),
       )
       .await?;
-    // let (user_votes, count) = queries::votes::get_user_votes_on_items_after(
-    //   &state.pool,
-    //   &user.username,
-    //   &start_date,
-    //   &page,
-    // )
-    // .await?;
-
+      // todo: query for any item ids in `items` that the user has voted on
+      // let (user_votes, count) = queries::votes::get_user_votes_on_items_after(
+      //   &state.pool,
+      //   &user.username,
+      //   &start_date,
+      //   &page,
+      // )
+      // .await?;
+      // todo: assign item rank 1..n per age
+      // todo: is item allowed to be edited or deleted?
 
       todo!()
     },
   }))
 }
-
-// be ready to retrieve the user's upvote history from the db
-// let arrayOfItemIds = [];
-//
-// for (let i = 0; i < items.length; i++) {
-// arrayOfItemIds.push(items[i].id);
-// }
-//
-// const [userItemVoteDocs, totalItemCount] = await Promise.all([
-// UserVoteModel.find({
-// username: authUser.username,
-// date: { $gte: startDate },
-// id: { $in: arrayOfItemIds },
-// type: "item",
-// }).lean(),
-// ItemModel.countDocuments(itemsDbQuery).lean(),
-// ]);
-//
-// for (let i = 0; i < items.length; i++) {
-// set item rank shown on each num of page, item rank [1, 2, 3, ..., 10, 11, 12]
-// items[i].rank = (page - 1) * config.itemsPerPage + (i + 1);
-//
-// is item allowed to be edited or deleted?
-// if (items[i].by === authUser.username) {
-// const hasEditAndDeleteExpired =
-// items[i].created + 3600 * config.hrsUntilEditAndDeleteExpires <
-// moment().unix() || items[i].commentCount > 0;
-//
-// items[i].editAndDeleteExpired = hasEditAndDeleteExpired;
-// }
-//
-// check if item has been voted by user
-// const voteDoc = userItemVoteDocs.find((voteDoc) => {
-// return voteDoc.id === items[i].id;
-// });
-//
-// if (voteDoc) {
-// items[i].votedOnByUser = true;
-// items[i].unvoteExpired =
-// voteDoc.date + 3600 * config.hrsUntilUnvoteExpires < moment().unix()
-// ? true
-// : false;
-// }
-// }
-//
-// return {
-// success: true,
-// items: items,
-// isMore:
-// totalItemCount >
-// (page - 1) * config.itemsPerPage + config.itemsPerPage
-// ? true
-// : false,
-// };
-// }

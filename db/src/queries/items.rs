@@ -38,12 +38,9 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   .execute(&mut *tx)
   .await?;
 
-  sqlx::query!(
-    "UPDATE users SET karma = karma + 1 WHERE username = $1",
-    username.0
-  )
-  .execute(&mut *tx)
-  .await?;
+  sqlx::query!("UPDATE users SET karma = karma + 1 WHERE username = $1", username.0)
+    .execute(&mut *tx)
+    .await?;
 
   Ok(tx.commit().await?)
 }
