@@ -1,16 +1,32 @@
 mod payload;
 mod response;
 
-use axum::Router;
-use db::{models::comment::Comment, CommentText, Title, Username};
+use std::sync::Arc;
+
+use anyhow::Context;
+use axum::{
+  extract::{Path, State},
+  http::StatusCode,
+  Json, Router,
+};
+use axum_login::AuthUser;
+use db::{
+  models::{
+    comment::{self, Comment},
+    user_vote::{self, UserVote, VoteState},
+  },
+  queries, CommentText, DbError, Title, Username,
+};
+use futures::{select, FutureExt};
 use garde::Validate;
 pub use payload::*;
 pub use response::*;
 use serde::Deserialize;
+use tokio::spawn;
 use uuid::Uuid;
 
 use super::SharedState;
-use crate::{error::ApiError, ApiResult};
+use crate::{error::ApiError, ApiResult, DbPool};
 
 // // todo
 // pub fn comments_router(state: SharedState) -> Router { Router::new().with_state(state) }

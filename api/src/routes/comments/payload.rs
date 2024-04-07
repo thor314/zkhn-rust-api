@@ -51,31 +51,6 @@ impl TryFrom<CommentPayload> for Comment {
 }
 
 impl CommentPayload {
-  pub fn new(
-    username: &str,
-    parent_item_id: &Uuid,
-    parent_item_title: &str,
-    is_parent: bool,
-    parent_comment_id: Uuid,
-    text: &str,
-    dead: bool,
-  ) -> Self {
-    {
-      Self {
-        username:          todo!(),
-        parent_item_id:    todo!(),
-        parent_item_title: todo!(),
-        is_parent:         todo!(),
-        root_comment_id:   todo!(),
-        parent_comment_id: todo!(),
-        text:              todo!(),
-        dead:              todo!(),
-      }
-    }
-  }
-}
-
-impl CommentPayload {
   /// Assume Comment Payload has already been validated.
   fn into_comment(self) -> Comment {
     Comment::new(
@@ -90,31 +65,3 @@ impl CommentPayload {
     )
   }
 }
-
-use std::sync::Arc;
-
-use anyhow::Context;
-use axum::{
-  extract::{Path, State},
-  http::StatusCode,
-  Json, Router,
-};
-use axum_login::AuthUser;
-use db::{
-  models::{
-    comment::{self, Comment},
-    user_vote::{self, UserVote, VoteState},
-  },
-  queries, DbError,
-};
-use futures::{select, FutureExt};
-use garde::Validate;
-use tokio::spawn;
-use uuid::Uuid;
-
-use crate::{
-  // auth::{self, assert_authenticated, AuthSession},
-  error::ApiError,
-  ApiResult,
-  DbPool,
-};
