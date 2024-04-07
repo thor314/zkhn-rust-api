@@ -119,6 +119,7 @@ pub async fn get_items_created_after(
   pool: &DbPool,
   start_date: &Timestamp,
   page: &Page,
+  exclude_hiddens: Option<&[Uuid]>,
 ) -> DbResult<(Vec<Item>, usize)> {
   // ItemModel.find({ created: { $gt: startDate }, dead: false })
   // .sort({ score: -1, _id: -1 })

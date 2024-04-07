@@ -102,53 +102,40 @@ pub async fn get_items_by_page(
 ) -> ApiResult<Json<GetItemsPageResponse>> {
   debug!("get_items_by_page with page: {page:?} and kind: {item_kind:?}");
   let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::hours(24));
-  let (items, count) =
-    queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
   let session_user = auth_session.get_user_from_session();
 
   Ok(Json(match session_user {
-    None => GetItemsPageResponse::new(items, count, page),
+    None => {
+      let (items, count) =
+        queries::items::get_items_created_after(&state.pool, &start_date, &page, None).await?;
+      GetItemsPageResponse::new(items, count, page)
+    },
     Some(user) => {
-      //
+      let item_ids_hidden_by_user =
+        queries::hiddens::get_hidden_item_ids_after(&state.pool, &user.username, start_date)
+          .await?;
+      // backlog(show_dead)
+      let (items, count) = queries::items::get_items_created_after(
+        &state.pool,
+        &start_date,
+        &page,
+        Some(&item_ids_hidden_by_user),
+      )
+      .await?;
+    // let (user_votes, count) = queries::votes::get_user_votes_on_items_after(
+    //   &state.pool,
+    //   &user.username,
+    //   &start_date,
+    //   &page,
+    // )
+    // .await?;
+
+
       todo!()
     },
   }))
 }
 
-// GET DATA FOR A SIGNED-IN USER
-// const hiddenDocs = await UserHiddenModel.find({
-// username: authUser.username,
-// itemCreationDate: { $gte: startDate },
-// })
-// .lean()
-// .exec();
-//
-// filter id of each hidden item
-// let arrayOfHiddenItems = [];
-//
-// for (let i = 0; i < hiddenDocs.length; i++) {
-// arrayOfHiddenItems.push(hiddenDocs[i].id);
-// }
-//
-// query all items and exclude($nin) hidden items
-// let itemsDbQuery = {
-// created: {
-// $gte: startDate,
-// },
-// id: {
-// $nin: arrayOfHiddenItems,
-// },
-// };
-//
-// if (!authUser.showDead) itemsDbQuery.dead = false;
-//
-// const items = await ItemModel.find(itemsDbQuery)
-// .sort({ score: -1, _id: -1 })
-// .skip((page - 1) * config.itemsPerPage)
-// .limit(config.itemsPerPage)
-// .lean()
-// .exec();
-//
 // be ready to retrieve the user's upvote history from the db
 // let arrayOfItemIds = [];
 //

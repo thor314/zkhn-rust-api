@@ -123,7 +123,7 @@ pub async fn hide_item(
   let user = auth_session.get_assert_user_from_session()?;
   let (item, hide) = tokio::try_join!(
     queries::items::get_assert_item(&state.pool, payload.id),
-    queries::user_hiddens::get_hidden(&state.pool, &user.username, payload.id),
+    queries::hiddens::get_hidden(&state.pool, &user.username, payload.id),
   )?;
 
   Ok(())
