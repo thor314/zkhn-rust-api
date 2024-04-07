@@ -59,14 +59,12 @@ impl FavoritePayload {
   pub fn new(id: Uuid, favorite: FavoritePayloadEnum) -> Self { Self { id, favorite } }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum FavoritePayloadEnum {
+  #[default]
   Favorite,
   Unfavorite,
-}
-impl Default for FavoritePayloadEnum {
-  fn default() -> Self { Self::Favorite }
 }
 
 /// A payload for hiding an item or comment
@@ -81,14 +79,12 @@ impl HiddenPayload {
   pub fn new(id: Uuid, hidden: HiddenPayloadEnum) -> Self { Self { id, hidden } }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum HiddenPayloadEnum {
+  #[default]
   Hidden,
   UnHidden,
-}
-impl Default for HiddenPayloadEnum {
-  fn default() -> Self { Self::Hidden }
 }
 
 /// A payload for editing an item
@@ -113,9 +109,10 @@ impl EditItemPayload {
 }
 
 /// A payload for getting items by different sorting methods
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, ToSchema)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Deserialize, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum ItemKind {
+  #[default]
   Ranked,
   Newest,
   RankedShow,
@@ -123,9 +120,6 @@ pub enum ItemKind {
   BySiteDomain,
   ByUser,
   ByDay,
-}
-impl Default for ItemKind {
-  fn default() -> Self { Self::Ranked }
 }
 
 // ranked, newest, rankedshow, newestshow, rankedask, sitedomain, submittedbyuser, rankedbyday,
