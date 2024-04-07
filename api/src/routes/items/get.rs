@@ -1,11 +1,3 @@
-use std::f32::consts::E;
-
-use axum::extract::Query;
-use db::{Page, PasswordHash, Timestamp};
-use serde::{Deserialize, Serialize};
-use serde_json::Number;
-use tokio::try_join;
-
 use super::*;
 
 #[utoipa::path(
@@ -133,7 +125,8 @@ pub async fn get_items_by_page(
       // todo: assign item rank 1..n per age
       // todo: is item allowed to be edited or deleted?
 
-      todo!()
+      // todo!()
+      GetItemsPageResponse::new(items, count, page)
     },
   }))
 }

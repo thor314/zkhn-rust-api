@@ -1,9 +1,12 @@
-use db::{models::comment::Comment, CommentText, Title, Username};
-use garde::Validate;
-use serde::Deserialize;
-use uuid::Uuid;
+//! Provided methods:
+//! - `create_comment`
+//! - `get_comment`
+//! - `update_comment_vote`
+//! - `update_comment_favorite`
+//! - `update_comment_text`
+//! - `delete_comment`
 
-use crate::{error::ApiError, ApiResult};
+use super::*;
 
 // corresponding to `add_new_comment` in API
 #[derive(Debug, Deserialize, Validate)]
@@ -87,3 +90,31 @@ impl CommentPayload {
     )
   }
 }
+
+use std::sync::Arc;
+
+use anyhow::Context;
+use axum::{
+  extract::{Path, State},
+  http::StatusCode,
+  Json, Router,
+};
+use axum_login::AuthUser;
+use db::{
+  models::{
+    comment::{self, Comment},
+    user_vote::{self, UserVote, VoteState},
+  },
+  queries, DbError,
+};
+use futures::{select, FutureExt};
+use garde::Validate;
+use tokio::spawn;
+use uuid::Uuid;
+
+use crate::{
+  // auth::{self, assert_authenticated, AuthSession},
+  error::ApiError,
+  ApiResult,
+  DbPool,
+};

@@ -2,20 +2,27 @@
 
 mod payload;
 mod response;
+
 use axum::{
   extract::{Path, State},
   http::StatusCode,
   routing, Json, Router,
 };
-use db::{models::user::User, queries::users, AuthToken, Username};
+use db::{
+  models::user::User, queries::users, About, AuthToken, Email, Password, PasswordHash,
+  ResetPasswordToken, Timestamp, Username,
+};
 use garde::Validate;
+use serde::{Deserialize, Serialize};
 use tracing::{debug, trace};
+use utoipa::ToSchema;
 
 pub use self::{payload::*, response::*};
 use super::SharedState;
 use crate::{
   auth::{AuthSession, AuthenticationExt, PasswordExt},
-  ApiError, ApiResult,
+  error::ApiError,
+  ApiResult, MINIMUM_KARMA_TO_DOWNVOTE,
 };
 
 /// Router to be mounted at "/users"
@@ -160,8 +167,6 @@ pub(super) mod post {
 }
 
 pub(super) mod put {
-  use db::{ResetPasswordToken, Timestamp};
-
   use super::*;
 
   #[utoipa::path(

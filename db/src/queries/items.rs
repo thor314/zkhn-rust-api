@@ -116,17 +116,9 @@ pub async fn get_items_created_after(
   pool: &DbPool,
   start_date: &Timestamp,
   page: &Page,
-  exclude_hiddens: Option<&[Uuid]>,
+  exclude_hiddens: Option<&[Uuid]>, // todo
 ) -> DbResult<(Vec<Item>, usize)> {
-  // ItemModel.find({ created: { $gt: startDate }, dead: false })
-  // .sort({ score: -1, _id: -1 })
   // .skip((page - 1) * config.itemsPerPage)
-  // .limit(config.itemsPerPage)
-  // .lean(),
-  // ItemModel.countDocuments({
-  // created: { $gt: startDate },
-  // dead: false,
-  // }).lean(),
   sqlx::query_as!(
     Item,
     "SELECT
@@ -144,7 +136,7 @@ pub async fn get_items_created_after(
       dead
       FROM items WHERE created > $1 
       ORDER BY score DESC",
-    start_date.0
+    start_date.0 // WHERE created > $1 AND id <> ALL($2)
   )
   .fetch_all(pool)
   .await

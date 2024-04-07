@@ -1,15 +1,4 @@
-use db::{
-  models::{
-    comment::Comment,
-    item::{Item, ItemCategory, ItemType},
-  },
-  AuthToken, Domain, Page, Text, Timestamp, Title, Url, Username,
-};
-use serde::{Deserialize, Serialize};
-use utoipa::{OpenApi, ToSchema};
-use uuid::Uuid;
-
-use crate::COMMENTS_PER_PAGE;
+use super::*;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
