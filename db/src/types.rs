@@ -29,6 +29,9 @@ impl std::ops::Add<TimeDelta> for Timestamp {
 
   fn add(self, other: TimeDelta) -> Self { Timestamp(self.0 + other) }
 }
+impl From<DateTime<Utc>> for Timestamp {
+  fn from(dt: DateTime<Utc>) -> Self { Self(dt) }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
 #[garde(transparent)]
@@ -56,6 +59,9 @@ impl Default for Username {
 }
 impl From<&str> for Username {
   fn from(s: &str) -> Self { Username(s.to_string()) }
+}
+impl From<String> for Username {
+  fn from(s: String) -> Self { Username(s) }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
@@ -87,6 +93,9 @@ impl From<&str> for Password {
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[repr(transparent)]
 pub struct PasswordHash(pub String);
+impl From<String> for PasswordHash {
+  fn from(s: String) -> Self { PasswordHash(s) }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[repr(transparent)]
@@ -114,6 +123,9 @@ impl Default for Title {
 }
 impl From<&str> for Title {
   fn from(s: &str) -> Self { Title(s.to_string()) }
+}
+impl From<String> for Title {
+  fn from(s: String) -> Self { Title(s) }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Validate)]
@@ -150,6 +162,7 @@ impl Default for Url {
 impl From<&str> for Url {
   fn from(s: &str) -> Self { Self(s.into()) }
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct Domain(pub String);
 impl Default for Domain {
@@ -164,6 +177,7 @@ impl From<Url> for Domain {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
+#[repr(transparent)]
 #[garde(transparent)]
 pub struct Text(#[garde(ascii, length(min = 10, max = 2000))] pub String);
 impl Default for Text {

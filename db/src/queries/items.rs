@@ -39,9 +39,7 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   .await?;
 
   sqlx::query!(
-    "UPDATE users
-    SET karma = karma + 1
-    WHERE username = $1",
+    "UPDATE users SET karma = karma + 1 WHERE username = $1",
     username.0
   )
   .execute(&mut *tx)
@@ -61,8 +59,8 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
     Item,
     "SELECT
       id,
-      username as \"username: Username\",
-      title as \"title: Title\",
+      username,
+      title,
       item_type as \"item_type: ItemType\",
       url as \"url: Url\",
       domain as \"domain: Domain\",
@@ -135,8 +133,8 @@ pub async fn get_items_created_after(
     Item,
     "SELECT
       id,
-      username as \"username: Username\",
-      title as \"title: Title\",
+      username,
+      title,
       item_type as \"item_type: ItemType\",
       url as \"url: Url\",
       domain as \"domain: Domain\",

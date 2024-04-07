@@ -107,10 +107,99 @@ pub async fn get_items_by_page(
   let session_user = auth_session.get_user_from_session();
 
   Ok(Json(match session_user {
+    None => GetItemsPageResponse::new(items, count, page),
     Some(user) => {
       //
       todo!()
     },
-    None => GetItemsPageResponse::new(items, count, page),
   }))
 }
+
+// GET DATA FOR A SIGNED-IN USER
+// const hiddenDocs = await UserHiddenModel.find({
+// username: authUser.username,
+// itemCreationDate: { $gte: startDate },
+// })
+// .lean()
+// .exec();
+//
+// filter id of each hidden item
+// let arrayOfHiddenItems = [];
+//
+// for (let i = 0; i < hiddenDocs.length; i++) {
+// arrayOfHiddenItems.push(hiddenDocs[i].id);
+// }
+//
+// query all items and exclude($nin) hidden items
+// let itemsDbQuery = {
+// created: {
+// $gte: startDate,
+// },
+// id: {
+// $nin: arrayOfHiddenItems,
+// },
+// };
+//
+// if (!authUser.showDead) itemsDbQuery.dead = false;
+//
+// const items = await ItemModel.find(itemsDbQuery)
+// .sort({ score: -1, _id: -1 })
+// .skip((page - 1) * config.itemsPerPage)
+// .limit(config.itemsPerPage)
+// .lean()
+// .exec();
+//
+// be ready to retrieve the user's upvote history from the db
+// let arrayOfItemIds = [];
+//
+// for (let i = 0; i < items.length; i++) {
+// arrayOfItemIds.push(items[i].id);
+// }
+//
+// const [userItemVoteDocs, totalItemCount] = await Promise.all([
+// UserVoteModel.find({
+// username: authUser.username,
+// date: { $gte: startDate },
+// id: { $in: arrayOfItemIds },
+// type: "item",
+// }).lean(),
+// ItemModel.countDocuments(itemsDbQuery).lean(),
+// ]);
+//
+// for (let i = 0; i < items.length; i++) {
+// set item rank shown on each num of page, item rank [1, 2, 3, ..., 10, 11, 12]
+// items[i].rank = (page - 1) * config.itemsPerPage + (i + 1);
+//
+// is item allowed to be edited or deleted?
+// if (items[i].by === authUser.username) {
+// const hasEditAndDeleteExpired =
+// items[i].created + 3600 * config.hrsUntilEditAndDeleteExpires <
+// moment().unix() || items[i].commentCount > 0;
+//
+// items[i].editAndDeleteExpired = hasEditAndDeleteExpired;
+// }
+//
+// check if item has been voted by user
+// const voteDoc = userItemVoteDocs.find((voteDoc) => {
+// return voteDoc.id === items[i].id;
+// });
+//
+// if (voteDoc) {
+// items[i].votedOnByUser = true;
+// items[i].unvoteExpired =
+// voteDoc.date + 3600 * config.hrsUntilUnvoteExpires < moment().unix()
+// ? true
+// : false;
+// }
+// }
+//
+// return {
+// success: true,
+// items: items,
+// isMore:
+// totalItemCount >
+// (page - 1) * config.itemsPerPage + config.itemsPerPage
+// ? true
+// : false,
+// };
+// }
