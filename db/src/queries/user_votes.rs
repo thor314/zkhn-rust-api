@@ -52,6 +52,14 @@ pub async fn vote_on_item(
 ) -> DbResult<()> {
   let mut tx = pool.begin().await?;
 
+  // todo
+  // if let Some(vote) = vote {
+  //   if vote.vote_state == payload.vote_state {
+  //     return Err(ApiError::UniqueViolation("user item vote duplication attempt".into()));
+  //   }
+  //   // todo - delete old vote
+  // }
+
   // insert the vote in the votes table
   sqlx::query!(
     "INSERT INTO user_votes (

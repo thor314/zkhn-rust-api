@@ -24,7 +24,7 @@ pub async fn create_item(
   payload.validate(&())?;
   let user = auth_session.get_assert_user_from_session()?;
   let item = payload.into_item(user.username).await;
-  db::queries::items::create_item(&state.pool, &item).await?;
+  queries::items::create_item(&state.pool, &item).await?;
 
   Ok(Json(item.id))
 }
@@ -55,18 +55,10 @@ pub async fn vote_item(
   debug!("vote_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
   let (item, vote) = tokio::try_join!(
-    db::queries::items::get_assert_item(&state.pool, payload.id),
-    db::queries::user_votes::get_item_vote(&state.pool, &user.username, payload.id),
+    queries::items::get_assert_item(&state.pool, payload.id),
+    queries::user_votes::get_item_vote(&state.pool, &user.username, payload.id),
   )?;
-  // note - diverge from reference, allow submitting user to vote on their own item
-  if let Some(vote) = vote {
-    if vote.vote_state == payload.vote_state {
-      return Err(ApiError::UniqueViolation("user item vote duplication attempt".into()));
-    }
-    // todo - delete old vote
-  }
-
-  db::queries::user_votes::vote_on_item(&state.pool, item.id, &user.username, payload.vote_state)
+  queries::user_votes::vote_on_item(&state.pool, item.id, &user.username, payload.vote_state)
     .await?;
   Ok(())
 }
@@ -97,8 +89,8 @@ pub async fn favorite_item(
   trace!("favorite_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
   let (item, favorite) = tokio::try_join!(
-    db::queries::items::get_assert_item(&state.pool, payload.id),
-    db::queries::user_favorites::get_favorite(&state.pool, &user.username, payload.id),
+    queries::items::get_assert_item(&state.pool, payload.id),
+    queries::user_favorites::get_favorite(&state.pool, &user.username, payload.id),
   )?;
 
   Ok(())
@@ -130,8 +122,8 @@ pub async fn hide_item(
   trace!("hide_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
   let (item, hide) = tokio::try_join!(
-    db::queries::items::get_assert_item(&state.pool, payload.id),
-    db::queries::user_hiddens::get_hidden(&state.pool, &user.username, payload.id),
+    queries::items::get_assert_item(&state.pool, payload.id),
+    queries::user_hiddens::get_hidden(&state.pool, &user.username, payload.id),
   )?;
 
   Ok(())

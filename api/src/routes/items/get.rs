@@ -1,9 +1,10 @@
 use std::f32::consts::E;
 
 use axum::extract::Query;
-use db::{Page, PasswordHash};
+use db::{Page, PasswordHash, Timestamp};
 use serde::{Deserialize, Serialize};
 use serde_json::Number;
+use tokio::try_join;
 
 use super::*;
 
@@ -98,11 +99,18 @@ pub async fn get_items_by_page(
   Path(item_kind): Path<ItemKind>,
   Query(page): Query<Page>,
   auth_session: AuthSession,
-) -> ApiResult<Json<()>> {
+) -> ApiResult<Json<GetItemsPageResponse>> {
   debug!("get_items_by_page with page: {page:?} and kind: {item_kind:?}");
-  // let user = auth_session.get_assert_user_from_session().unwrap_or_else(|_|
-  // User::new_logged_out());
+  let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::hours(24));
+  let (items, count) =
+    queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
+  let session_user = auth_session.get_user_from_session();
 
-  // Ok(Json(item.into()))
-  todo!();
+  Ok(Json(match session_user {
+    Some(user) => {
+      //
+      todo!()
+    },
+    None => GetItemsPageResponse::new(items, count, page),
+  }))
 }

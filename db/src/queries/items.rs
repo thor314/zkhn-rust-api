@@ -116,6 +116,50 @@ pub async fn delete_item(pool: &DbPool, item_id: Uuid, username: &Username) -> D
   Ok(tx.commit().await?)
 }
 
+/// Get all items created after `start_date`
+pub async fn get_items_created_after(
+  pool: &DbPool,
+  start_date: &Timestamp,
+  page: &Page,
+) -> DbResult<(Vec<Item>, usize)> {
+  // ItemModel.find({ created: { $gt: startDate }, dead: false })
+  // .sort({ score: -1, _id: -1 })
+  // .skip((page - 1) * config.itemsPerPage)
+  // .limit(config.itemsPerPage)
+  // .lean(),
+  // ItemModel.countDocuments({
+  // created: { $gt: startDate },
+  // dead: false,
+  // }).lean(),
+  sqlx::query_as!(
+    Item,
+    "SELECT
+      id,
+      username as \"username: Username\",
+      title as \"title: Title\",
+      item_type as \"item_type: ItemType\",
+      url as \"url: Url\",
+      domain as \"domain: Domain\",
+      text as \"text: Text\",
+      points,
+      score,
+      item_category as \"item_category: ItemCategory\",
+      created,
+      dead
+      FROM items WHERE created > $1 
+      ORDER BY score DESC",
+    start_date.0
+  )
+  .fetch_all(pool)
+  .await
+  .map(|items| {
+    let items_len = items.len();
+    // let items = todo(pagination)
+    (items, items_len)
+  })
+  .map_err(DbError::from)
+}
+
 // pub async fn update_item_category(
 //   pool: &DbPool,
 //   item_id: Uuid,

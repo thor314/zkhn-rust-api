@@ -127,7 +127,7 @@ impl From<&str> for CommentText {
   fn from(s: &str) -> Self { CommentText(s.to_string()) }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Validate)]
 #[garde(transparent)]
 /// A page of comments or items
 pub struct Page {
