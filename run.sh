@@ -15,5 +15,8 @@ fi
 pkill server
 echo "Server process killed."
 
+# Step 3.5: reset the db if we changed the tables at all
+sqlx db reset 
+
 # Step 4: Run the cargo shuttle command
 cargo shuttle run
