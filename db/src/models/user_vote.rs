@@ -1,12 +1,4 @@
-use core::fmt;
-
-use axum::{extract::State, response::IntoResponse};
-use chrono::{DateTime, NaiveDate};
-use serde::{Deserialize, Serialize};
-use utoipa::{ToResponse, ToSchema};
-use uuid::Uuid;
-
-use crate::{utils::now, Timestamp, Username};
+use super::*;
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, ToSchema)]
 /// Represents a vote cast by a user on an item or comment.

@@ -1,9 +1,4 @@
-use uuid::Uuid;
-
-use crate::{
-  error::DbError, models::user_hidden::UserHidden, utils::now, DbPool, DbResult, Timestamp,
-  Username,
-};
+use super::*;
 
 pub async fn get_assert_hidden(pool: &DbPool, username: &Username, id: Uuid) -> DbResult<()> {
   get_hidden(pool, username, id).await?.ok_or(DbError::NotFound("hidden".into()))

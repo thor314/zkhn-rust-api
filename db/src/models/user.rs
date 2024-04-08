@@ -1,15 +1,4 @@
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
-use uuid::Uuid;
-
-use super::{
-  user_favorite::UserFavorite,
-  user_hidden::UserHidden,
-  user_vote::{UserVote, VoteState},
-};
-use crate::{
-  utils::now, About, AuthToken, Email, PasswordHash, ResetPasswordToken, Timestamp, Username,
-};
+use super::*;
 
 #[derive(sqlx::FromRow, Serialize, Deserialize, Clone, ToSchema)]
 #[schema(example = User::default, default = User::default)]

@@ -1,11 +1,4 @@
-use uuid::Uuid;
-
-use crate::{
-  error::DbError,
-  models::{user_favorite::UserFavorite, user_vote::UserVote},
-  utils::now,
-  DbPool, DbResult, Username,
-};
+use super::*;
 
 pub async fn get_assert_favorite(pool: &DbPool, username: &Username, id: Uuid) -> DbResult<()> {
   get_favorite(pool, username, id).await?.ok_or(DbError::NotFound("favorite".into()))

@@ -1,9 +1,4 @@
-use axum::{extract::State, response::IntoResponse};
-use chrono::{DateTime, NaiveDate};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
-use crate::{utils::now, Timestamp};
+use super::*;
 
 /// Represents a single moderation action taken by a moderator.
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]

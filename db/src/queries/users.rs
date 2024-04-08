@@ -1,14 +1,4 @@
-use futures::TryFutureExt;
-use sqlx::postgres::PgQueryResult;
-use tracing::{debug, error, info, instrument, trace, warn};
-use uuid::Uuid;
-
-use crate::{
-  error::DbError,
-  models::{comment::Comment, item::Item, user::User},
-  About, AuthToken, CommentText, DbPool, DbResult, Email, Password, PasswordHash,
-  ResetPasswordToken, Timestamp, Title, Username,
-};
+use super::*;
 
 /// Geta user from the db.
 pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<User>> {

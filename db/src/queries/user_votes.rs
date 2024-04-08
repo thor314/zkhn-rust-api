@@ -1,5 +1,4 @@
 use super::*;
-use crate::Page;
 
 pub async fn get_assert_item_vote(
   pool: &DbPool,
