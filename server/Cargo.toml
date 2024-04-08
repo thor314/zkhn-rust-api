@@ -12,7 +12,7 @@ db  = { path = "../db" }
 anyhow="1.0"
 axum={ version="0.7.3", features=["macros"] }
 shuttle-axum="0.42.0"
-shuttle-runtime={ version="0.42", default-features=false }
+shuttle-runtime={ version="0.43", default-features=false }
 shuttle-shared-db = { version = "0.42.0", features = ["postgres", "sqlx"] }
 tracing="0.1"
 tracing-subscriber={ version="0.3", features=["env-filter", "fmt"] }
