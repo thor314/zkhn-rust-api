@@ -1,14 +1,5 @@
-use uuid::Uuid;
-
-use crate::{
-  error::DbError,
-  models::{
-    item::Item,
-    user_vote::{UserVote, VoteState, *},
-  },
-  utils::now,
-  DbPool, DbResult, Username,
-};
+use super::*;
+use crate::Page;
 
 pub async fn get_assert_item_vote(
   pool: &DbPool,
@@ -97,6 +88,32 @@ pub async fn vote_on_item(
     .await?;
 
   Ok(tx.commit().await?)
+}
+
+pub async fn get_user_votes_on_items_after(
+  pool: &DbPool,
+  username: &Username,
+  after: Timestamp,
+  page: Page, // todo
+) -> DbResult<Vec<UserVote>> {
+  sqlx::query_as!(
+    UserVote,
+    "SELECT 
+    username as \"username: Username\", 
+    vote_type as \"vote_type: ItemOrComment\", 
+    content_id, 
+    parent_item_id, 
+    vote_state as \"vote_state: VoteState\", 
+    created 
+    FROM user_votes WHERE username = $1 AND created > $2 
+    and vote_type = 'item' 
+    ORDER BY created DESC",
+    username.0,
+    after.0
+  )
+  .fetch_all(pool)
+  .await
+  .map_err(DbError::from)
 }
 
 // pub async fn get_user_vote_by_content_id(

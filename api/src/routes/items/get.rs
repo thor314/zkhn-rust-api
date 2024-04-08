@@ -115,13 +115,13 @@ pub async fn get_items_by_page(
       )
       .await?;
       // todo: query for any item ids in `items` that the user has voted on
-      // let (user_votes, count) = queries::votes::get_user_votes_on_items_after(
-      //   &state.pool,
-      //   &user.username,
-      //   &start_date,
-      //   &page,
-      // )
-      // .await?;
+      let user_votes = queries::user_votes::get_user_votes_on_items_after(
+        &state.pool,
+        &user.username,
+        start_date,
+        page,
+      )
+      .await?;
       // todo: assign item rank 1..n per age
       // todo: is item allowed to be edited or deleted?
 
