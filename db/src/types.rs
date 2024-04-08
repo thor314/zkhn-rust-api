@@ -179,11 +179,11 @@ impl From<Url> for Domain {
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
 #[repr(transparent)]
 #[garde(transparent)]
-pub struct Text(#[garde(ascii, length(min = 10, max = 2000))] pub String);
-impl Default for Text {
+pub struct ItemText(#[garde(ascii, length(min = 10, max = 2000))] pub String);
+impl Default for ItemText {
   fn default() -> Self { "Some text for your reading pleasure".into() }
 }
-impl From<&str> for Text {
+impl From<&str> for ItemText {
   fn from(s: &str) -> Self { Self(s.into()) }
 }
 
@@ -191,11 +191,11 @@ impl From<&str> for Text {
 #[serde(rename_all = "camelCase")]
 #[schema(default = TextOrUrl::default, example=TextOrUrl::default)]
 pub enum TextOrUrl {
-  Text(#[garde(dive)] Text),
+  Text(#[garde(dive)] ItemText),
   Url(#[garde(dive)] Url),
 }
 impl TextOrUrl {
-  pub fn url_domain_text(self) -> (Option<Url>, Option<Domain>, Option<Text>) {
+  pub fn url_domain_text(self) -> (Option<Url>, Option<Domain>, Option<ItemText>) {
     match self {
       TextOrUrl::Text(text) => (None, None, Some(text.clone())),
       TextOrUrl::Url(url) => (Some(url.clone()), Some(Domain::from(url)), None),

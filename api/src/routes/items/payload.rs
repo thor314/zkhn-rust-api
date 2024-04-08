@@ -1,3 +1,5 @@
+use db::CommentText;
+
 use super::*;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
@@ -97,7 +99,7 @@ pub struct EditItemPayload {
   #[garde(dive)]
   pub title:    Title,
   #[garde(dive)]
-  pub text:     Text,
+  pub text:     CommentText,
   #[garde(skip)]
   pub category: ItemCategory,
 }

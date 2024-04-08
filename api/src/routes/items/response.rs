@@ -27,7 +27,7 @@ pub struct GetEditItemResponse {
   pub item_type:        ItemType,
   pub url:              Option<Url>,
   pub domain:           Option<Domain>,
-  pub text:             Option<Text>,
+  pub text:             Option<ItemText>,
   /// how many upvotes
   pub points:           i32,
   /// internal algorithmic score to sort items on home page by popularity
@@ -37,7 +37,7 @@ pub struct GetEditItemResponse {
   pub created:          Timestamp,
   pub dead:             bool,
   /// unique to get-edit item page
-  pub text_for_editing: Option<Text>,
+  pub text_for_editing: Option<ItemText>,
 }
 impl From<Item> for GetEditItemResponse {
   fn from(item: Item) -> Self {

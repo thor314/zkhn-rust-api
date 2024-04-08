@@ -13,7 +13,7 @@ pub struct Item {
   pub item_type:     ItemType,
   pub url:           Option<Url>,
   pub domain:        Option<Domain>,
-  pub text:          Option<Text>,
+  pub text:          Option<ItemText>,
   /// upvotes for the item
   pub points:        i32,
   /// internal algorithmic score to sort items on home page by popularity
@@ -34,7 +34,7 @@ impl Default for Item {
       // but it's convenient to have both for testing and documentation purposes
       url:           Some(Url::default()),
       domain:        Some(Domain::default()),
-      text:          Some(Text::default()),
+      text:          Some(ItemText::default()),
       points:        1,
       score:         0,
       item_category: ItemCategory::default(),

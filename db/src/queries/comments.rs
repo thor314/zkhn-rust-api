@@ -41,6 +41,10 @@ pub async fn get_comments_page(
   Ok((comments, total_comments))
 }
 
+pub async fn create_comment(pool: &DbPool, new_comment: &Comment) -> DbResult<()> {
+    todo!()
+}
+
 // pub async fn get_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
 //   sqlx::query_as!(
 //     Comment,

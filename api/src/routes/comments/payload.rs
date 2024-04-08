@@ -9,8 +9,10 @@
 use super::*;
 
 // corresponding to `add_new_comment` in API
-#[derive(Debug, Deserialize, Validate)]
-pub struct CommentPayload {
+#[derive(Debug, Deserialize, Validate, Default, Clone, Serialize, ToSchema)]
+#[schema(default = CreateItemPayload::default, example=CreateItemPayload::default)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateCommentPayload {
   #[garde(dive)]
   pub username:          Username,
   #[garde(skip)]
@@ -29,10 +31,10 @@ pub struct CommentPayload {
   pub dead:              bool,
 }
 
-impl TryFrom<CommentPayload> for Comment {
+impl TryFrom<CreateCommentPayload> for Comment {
   type Error = ApiError;
 
-  fn try_from(payload: CommentPayload) -> ApiResult<Self> {
+  fn try_from(payload: CreateCommentPayload) -> ApiResult<Self> {
     payload.validate(&())?;
 
     let comment = Comment::new(
@@ -50,9 +52,9 @@ impl TryFrom<CommentPayload> for Comment {
   }
 }
 
-impl CommentPayload {
+impl CreateCommentPayload {
   /// Assume Comment Payload has already been validated.
-  fn into_comment(self) -> Comment {
+  pub fn into_comment(self) -> Comment {
     Comment::new(
       self.username,
       self.parent_item_id,

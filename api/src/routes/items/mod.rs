@@ -17,7 +17,7 @@ use db::{
     user::User,
     user_vote::VoteState,
   },
-  queries, Domain, Page, Text, TextOrUrl, Timestamp, Title, Url, Username,
+  queries, Domain, Page, ItemText, TextOrUrl, Timestamp, Title, Url, Username,
 };
 use garde::Validate;
 use serde::{Deserialize, Serialize};

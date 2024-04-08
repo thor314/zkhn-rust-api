@@ -7,7 +7,7 @@ use anyhow::Context;
 use axum::{
   extract::{Path, State},
   http::StatusCode,
-  Json, Router,
+  routing, Json, Router,
 };
 use axum_login::AuthUser;
 use db::{
@@ -15,19 +15,81 @@ use db::{
     comment::{self, Comment},
     user_vote::{self, UserVote, VoteState},
   },
-  queries, CommentText, DbError, Title, Username,
+  queries, CommentText, DbError, Page, Title, Username,
 };
 use futures::{select, FutureExt};
 use garde::Validate;
-pub use payload::*;
-pub use response::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::spawn;
+use tracing::debug;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
+pub use self::{payload::*, response::*};
 use super::SharedState;
-use crate::{error::ApiError, ApiResult, DbPool};
+use crate::{
+  auth::{AuthSession, AuthenticationExt},
+  error::ApiError,
+  ApiResult, CreateItemPayload, DbPool,
+};
 
+/// Router to be mounted at "/items"
+pub fn comments_router(state: SharedState) -> Router {
+  Router::new().route("/", routing::post(post::create_comment)).with_state(state)
+}
+
+pub mod post {
+  use super::*;
+
+  #[utoipa::path(
+  post,
+  path = "/",
+  request_body = CreateItemPayload,
+  responses(
+    (status = 401, description = "Unauthorized"),
+    (status = 403, description = "Forbidden"),
+    (status = 422, description = "Invalid Payload"),
+    (status = 409, description = "Duplication Conflict"),
+    (status = 200, body = Uuid),
+  ),
+  )]
+  /// Create a new comment
+  ///
+  /// https://github.com/thor314/zkhn/blob/main/rest-api/routes/comments/api.js
+  pub async fn create_comment(
+    State(state): State<SharedState>,
+    auth_session: AuthSession,
+    Json(payload): Json<CreateCommentPayload>,
+  ) -> ApiResult<Json<Uuid>> {
+    debug!("create_comment called with payload: {payload:?}");
+    payload.validate(&())?;
+    let user = auth_session.get_assert_user_from_session()?;
+    let comment = payload.into_comment();
+    queries::comments::create_comment(&state.pool, &comment).await?;
+
+    // todo
+    Ok(Json(comment.id))
+  }
+}
+// /// Add a new comment to the database.
+// /// Also update user karma, and item comment count, and tell the search-api.
+// pub async fn create_comment(
+//   State(state): State<SharedState>,
+//   Json(payload): Json<CommentPayload>,
+//   // auth_session: AuthSession,
+// ) -> ApiResult<StatusCode> {
+//   // assert_authenticated(&auth_session)?;
+//   // todo: item is dead
+//   // assert item exists?
+//   let item = queries::get_item(&state.pool, payload.parent_item_id)
+//     .await?
+//     .ok_or(ApiError::DbEntryNotFound("comment not found in db".into()))?;
+//   payload.validate(&())?;
+//   let comment = Comment::try_from(payload)?;
+//   queries::insert_comment(&state.pool, &comment).await?;
+
+//   Ok(StatusCode::CREATED)
+// }
 // // todo
 // pub fn comments_router(state: SharedState) -> Router { Router::new().with_state(state) }
 
