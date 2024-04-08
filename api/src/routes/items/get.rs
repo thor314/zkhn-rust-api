@@ -1,3 +1,5 @@
+use db::models::user_vote::UserVote;
+
 use super::*;
 
 #[utoipa::path(
@@ -114,15 +116,14 @@ pub async fn get_items_by_page(
         Some(&item_ids_hidden_by_user),
       )
       .await?;
-      // todo: query for any item ids in `items` that the user has voted on
-      let user_votes = queries::user_votes::get_user_votes_on_items_after(
+      let user_votes: Vec<UserVote> = queries::user_votes::get_user_votes_on_items_after(
         &state.pool,
         &user.username,
         start_date,
         page,
       )
       .await?;
-      // todo: assign item rank 1..n per age
+
       // todo: is item allowed to be edited or deleted?
 
       // todo!()
