@@ -1,9 +1,4 @@
-use db::{models::user::User, About, Email, Password, ResetPasswordToken, Username};
-use garde::Validate;
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
-
-use crate::{auth::PasswordExt, error::ApiError, ApiResult};
+use super::*;
 
 /// Username, password, and optionally email, and about.
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Validate, ToSchema)]

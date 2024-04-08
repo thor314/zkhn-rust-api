@@ -3,8 +3,8 @@ use argon2::{
   Argon2, PasswordHasher, PasswordVerifier,
 };
 use db::{Password, PasswordHash};
-use tokio::task::{block_in_place, spawn_blocking};
-use tracing::{debug, trace};
+use tokio::task::spawn_blocking;
+use tracing::debug;
 
 use crate::{ApiError, ApiResult};
 

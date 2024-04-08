@@ -1,12 +1,4 @@
-use tracing::{debug, warn};
-use uuid::Uuid;
-
-use crate::{
-  error::DbError,
-  models::{comment::Comment, item::*},
-  types::*,
-  DbPool, DbResult,
-};
+use super::*;
 
 /// Create a new item in the database.
 pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
@@ -38,14 +30,9 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   .execute(&mut *tx)
   .await?;
 
-  sqlx::query!(
-    "UPDATE users
-    SET karma = karma + 1
-    WHERE username = $1",
-    username.0
-  )
-  .execute(&mut *tx)
-  .await?;
+  sqlx::query!("UPDATE users SET karma = karma + 1 WHERE username = $1", username.0)
+    .execute(&mut *tx)
+    .await?;
 
   Ok(tx.commit().await?)
 }
@@ -61,8 +48,8 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
     Item,
     "SELECT
       id,
-      username as \"username: Username\",
-      title as \"title: Title\",
+      username,
+      title,
       item_type as \"item_type: ItemType\",
       url as \"url: Url\",
       domain as \"domain: Domain\",
@@ -114,6 +101,43 @@ pub async fn delete_item(pool: &DbPool, item_id: Uuid, username: &Username) -> D
   sqlx::query!("DELETE FROM items WHERE id = $1", item_id).execute(&mut *tx).await?;
 
   Ok(tx.commit().await?)
+}
+
+/// Get all items created after `start_date`
+pub async fn get_items_created_after(
+  pool: &DbPool,
+  start_date: &Timestamp,
+  page: &Page,
+  exclude_hiddens: Option<&[Uuid]>, // todo
+) -> DbResult<(Vec<Item>, usize)> {
+  // .skip((page - 1) * config.itemsPerPage)
+  sqlx::query_as!(
+    Item,
+    "SELECT
+      id,
+      username,
+      title,
+      item_type as \"item_type: ItemType\",
+      url as \"url: Url\",
+      domain as \"domain: Domain\",
+      text as \"text: Text\",
+      points,
+      score,
+      item_category as \"item_category: ItemCategory\",
+      created,
+      dead
+      FROM items WHERE created > $1 
+      ORDER BY score DESC",
+    start_date.0 // WHERE created > $1 AND id <> ALL($2)
+  )
+  .fetch_all(pool)
+  .await
+  .map(|items| {
+    let items_len = items.len();
+    // let items = todo(pagination)
+    (items, items_len)
+  })
+  .map_err(DbError::from)
 }
 
 // pub async fn update_item_category(

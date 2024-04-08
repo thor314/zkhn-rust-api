@@ -1,13 +1,4 @@
-use db::{
-  models::item::{self, Item, ItemCategory, ItemType},
-  Text, TextOrUrl, Title, Url, Username,
-};
-use garde::Validate;
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
-use uuid::Uuid;
-
-use crate::ApiResult;
+use super::*;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -49,22 +40,11 @@ impl CreateItemPayload {
 #[schema(default = VotePayload::default, example=VotePayload::default)]
 #[serde(rename_all = "camelCase")]
 pub struct VotePayload {
-  pub id:   Uuid,
-  pub vote: VotePayloadEnum,
+  pub id:         Uuid,
+  pub vote_state: VoteState,
 }
 impl VotePayload {
-  pub fn new(id: Uuid, vote: VotePayloadEnum) -> Self { Self { id, vote } }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase")]
-pub enum VotePayloadEnum {
-  Upvote,
-  Downvote,
-  Unvote,
-}
-impl Default for VotePayloadEnum {
-  fn default() -> Self { Self::Upvote }
+  pub fn new(id: Uuid, vote: VoteState) -> Self { Self { id, vote_state: vote } }
 }
 
 /// A payload for favoriting on an item or comment
@@ -79,14 +59,12 @@ impl FavoritePayload {
   pub fn new(id: Uuid, favorite: FavoritePayloadEnum) -> Self { Self { id, favorite } }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum FavoritePayloadEnum {
+  #[default]
   Favorite,
   Unfavorite,
-}
-impl Default for FavoritePayloadEnum {
-  fn default() -> Self { Self::Favorite }
 }
 
 /// A payload for hiding an item or comment
@@ -101,14 +79,12 @@ impl HiddenPayload {
   pub fn new(id: Uuid, hidden: HiddenPayloadEnum) -> Self { Self { id, hidden } }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum HiddenPayloadEnum {
+  #[default]
   Hidden,
   UnHidden,
-}
-impl Default for HiddenPayloadEnum {
-  fn default() -> Self { Self::Hidden }
 }
 
 /// A payload for editing an item
@@ -133,9 +109,10 @@ impl EditItemPayload {
 }
 
 /// A payload for getting items by different sorting methods
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, ToSchema)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Deserialize, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum ItemKind {
+  #[default]
   Ranked,
   Newest,
   RankedShow,
@@ -143,9 +120,6 @@ pub enum ItemKind {
   BySiteDomain,
   ByUser,
   ByDay,
-}
-impl Default for ItemKind {
-  fn default() -> Self { Self::Ranked }
 }
 
 // ranked, newest, rankedshow, newestshow, rankedask, sitedomain, submittedbyuser, rankedbyday,

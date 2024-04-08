@@ -1,9 +1,12 @@
-use db::{models::comment::Comment, CommentText, Title, Username};
-use garde::Validate;
-use serde::Deserialize;
-use uuid::Uuid;
+//! Provided methods:
+//! - `create_comment`
+//! - `get_comment`
+//! - `update_comment_vote`
+//! - `update_comment_favorite`
+//! - `update_comment_text`
+//! - `delete_comment`
 
-use crate::{error::ApiError, ApiResult};
+use super::*;
 
 // corresponding to `add_new_comment` in API
 #[derive(Debug, Deserialize, Validate)]
@@ -44,31 +47,6 @@ impl TryFrom<CommentPayload> for Comment {
     );
 
     Ok(comment)
-  }
-}
-
-impl CommentPayload {
-  pub fn new(
-    username: &str,
-    parent_item_id: &Uuid,
-    parent_item_title: &str,
-    is_parent: bool,
-    parent_comment_id: Uuid,
-    text: &str,
-    dead: bool,
-  ) -> Self {
-    {
-      Self {
-        username:          todo!(),
-        parent_item_id:    todo!(),
-        parent_item_title: todo!(),
-        is_parent:         todo!(),
-        root_comment_id:   todo!(),
-        parent_comment_id: todo!(),
-        text:              todo!(),
-        dead:              todo!(),
-      }
-    }
   }
 }
 

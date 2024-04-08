@@ -4,28 +4,34 @@ mod post;
 mod put;
 mod response;
 
-use anyhow::anyhow;
 use axum::{
   debug_handler,
-  extract::{Path, State},
+  extract::{Path, Query, State},
   http::StatusCode,
   routing, Json, Router,
 };
 use db::{
-  models::{item::Item, user::User},
-  AuthToken, DbError, Username,
+  models::{
+    comment::Comment,
+    item::{Item, ItemCategory, ItemType},
+    user::User,
+    user_vote::VoteState,
+  },
+  queries, Domain, Page, Text, TextOrUrl, Timestamp, Title, Url, Username,
 };
 use garde::Validate;
-pub use payload::*;
-pub use response::*;
+use serde::{Deserialize, Serialize};
+use tokio::try_join;
 use tracing::{debug, info, trace, warn};
+use utoipa::ToSchema;
 use uuid::Uuid;
 
+pub use self::{payload::*, response::*};
 use super::SharedState;
 use crate::{
   auth::{AuthSession, AuthenticationExt},
   error::ApiError,
-  ApiResult,
+  ApiResult, COMMENTS_PER_PAGE,
 };
 
 /// Router to be mounted at "/items"
@@ -77,7 +83,6 @@ mod delete {
 
     // payload.title.sanitize() // backlog(sanitize)
     // backlog(sanitize) item text
-    // backlog validate url
 
     // if title changed, we may need to change the item type; see routes/utils.js/getitemtype
     db::queries::items::delete_item(&state.pool, id, &user.username).await?;

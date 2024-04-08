@@ -1,9 +1,4 @@
-use axum::{extract::State, response::IntoResponse};
-use chrono::{DateTime, NaiveDate};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
-use crate::{Timestamp, Username};
+use super::*;
 
 // todo: this should have a uuid primary key
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]

@@ -2,7 +2,7 @@
 DROP TYPE IF EXISTS item_category_enum;
 CREATE TYPE item_category_enum as ENUM ('tweet', 'blog', 'paper', 'other');
 
-DROP TYPE IF EXISTS item_type;
+DROP TYPE IF EXISTS item_type_enum;
 CREATE TYPE item_type_enum as ENUM ('news', 'show', 'ask');
 
 DROP TABLE IF EXISTS items;

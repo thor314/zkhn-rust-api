@@ -17,10 +17,6 @@ static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[0-9A-Za-z_]+$")
 
 pub fn now() -> Timestamp { Utc::now().into() }
 
-impl From<DateTime<Utc>> for Timestamp {
-  fn from(dt: DateTime<Utc>) -> Self { Timestamp(dt) }
-}
-
 // todo(sanitize)
 /// Sanitize text:
 /// - Trim whitespace

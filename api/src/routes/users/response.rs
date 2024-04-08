@@ -1,8 +1,4 @@
-use db::{models::user::User, About, AuthToken, Email, PasswordHash, Timestamp, Username};
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
-
-use crate::MINIMUM_KARMA_TO_DOWNVOTE;
+use super::*;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[serde(rename_all = "camelCase")]

@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 
 use api::*;
+use db::models::user_vote::VoteState;
 use reqwest::Client;
 use serial_test::serial;
 
@@ -61,8 +62,18 @@ async fn item_crud() {
     send(&c, "", "GET", &format!("items/{id}?page=2"), 200, "5").await.json().await.unwrap();
   assert!(r.comments.is_empty());
 
-  // todo(test) vote_item
-  // send(&c, "", "GET", &format!("items/{id}?2"), 200, "6").await;
+  let upvote = VotePayload::new(id, VoteState::Upvote);
+  let downvote = VotePayload::new(id, VoteState::Downvote);
+  let unvote = VotePayload::new(id, VoteState::None);
+  send(&c, upvote.clone(), "POST", "items/vote", 200, "6").await;
+  send(&c, upvote.clone(), "POST", "items/vote", 409, "7").await;
+  send(&c, downvote.clone(), "POST", "items/vote", 200, "8").await;
+  send(&c, downvote.clone(), "POST", "items/vote", 409, "9").await;
+  send(&c, unvote.clone(), "POST", "items/vote", 200, "01").await;
+  send(&c, unvote.clone(), "POST", "items/vote", 409, "02").await;
+  send(&c, downvote.clone(), "POST", "items/vote", 200, "03").await;
+  send(&c, upvote.clone(), "POST", "items/vote", 200, "04").await;
+  // next: get user karma
   // send(&c, "", "GET", &format!("items/{id}?2"), 200, "7").await;
   // let upvote = VotePayload::new(id, VotePayloadEnum::Upvote);
   // let downvote = VotePayload::new(id, VotePayloadEnum::Downvote);

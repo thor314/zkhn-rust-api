@@ -1,9 +1,4 @@
-use std::f32::consts::E;
-
-use axum::extract::Query;
-use db::{Page, PasswordHash};
-use serde::{Deserialize, Serialize};
-use serde_json::Number;
+use db::models::user_vote::UserVote;
 
 use super::*;
 
@@ -98,11 +93,41 @@ pub async fn get_items_by_page(
   Path(item_kind): Path<ItemKind>,
   Query(page): Query<Page>,
   auth_session: AuthSession,
-) -> ApiResult<Json<()>> {
+) -> ApiResult<Json<GetItemsPageResponse>> {
   debug!("get_items_by_page with page: {page:?} and kind: {item_kind:?}");
-  // let user = auth_session.get_assert_user_from_session().unwrap_or_else(|_|
-  // User::new_logged_out());
+  let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::hours(24));
+  let session_user = auth_session.get_user_from_session();
 
-  // Ok(Json(item.into()))
-  todo!();
+  Ok(Json(match session_user {
+    None => {
+      let (items, count) =
+        queries::items::get_items_created_after(&state.pool, &start_date, &page, None).await?;
+      GetItemsPageResponse::new(items, count, page)
+    },
+    Some(user) => {
+      let item_ids_hidden_by_user =
+        queries::hiddens::get_hidden_item_ids_after(&state.pool, &user.username, start_date)
+          .await?;
+      // backlog(show_dead)
+      let (items, count) = queries::items::get_items_created_after(
+        &state.pool,
+        &start_date,
+        &page,
+        Some(&item_ids_hidden_by_user),
+      )
+      .await?;
+      let user_votes: Vec<UserVote> = queries::user_votes::get_user_votes_on_items_after(
+        &state.pool,
+        &user.username,
+        start_date,
+        page,
+      )
+      .await?;
+
+      // todo: is item allowed to be edited or deleted?
+
+      // todo!()
+      GetItemsPageResponse::new(items, count, page)
+    },
+  }))
 }

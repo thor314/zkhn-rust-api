@@ -1,22 +1,12 @@
-use futures::TryFutureExt;
-use sqlx::postgres::PgQueryResult;
-use tracing::{debug, error, info, instrument, trace, warn};
-use uuid::Uuid;
-
-use crate::{
-  error::DbError,
-  models::{comment::Comment, item::Item, user::User},
-  About, AuthToken, CommentText, DbPool, DbResult, Email, Password, PasswordHash,
-  ResetPasswordToken, Timestamp, Title, Username,
-};
+use super::*;
 
 /// Geta user from the db.
 pub async fn get_user(pool: &DbPool, username: &Username) -> DbResult<Option<User>> {
   trace!("get_user called w username: {username}");
   sqlx::query_as!(
     User,
-    "SELECT username as \"username: Username\", 
-            password_hash as \"password_hash: PasswordHash\", 
+    "SELECT username, 
+            password_hash, 
             reset_password_token as \"reset_password_token: ResetPasswordToken\", 
             reset_password_token_expiration as \"reset_password_token_expiration: Timestamp\",  
             email as \"email: Email\", 
@@ -57,12 +47,8 @@ pub async fn create_user(pool: &DbPool, new_user: &User) -> DbResult<()> {
 
   sqlx::query!(
     "INSERT INTO users
-    ( username,
-    password_hash,
-    reset_password_token,
-    reset_password_token_expiration,
-    email
-  ) VALUES ($1, $2, $3, $4, $5)",
+    ( username, password_hash, reset_password_token, reset_password_token_expiration, email ) 
+    VALUES ($1, $2, $3, $4, $5)",
     username.0,
     password_hash.0,
     reset_password_token.map(|s| s.0),
@@ -113,9 +99,7 @@ pub async fn update_user_password_token(
   trace!("update_user_password_token with: {username}");
   sqlx::query!(
     "UPDATE users SET 
-    reset_password_token = $1, 
-    reset_password_token_expiration = $2 
-    WHERE username = $3",
+    reset_password_token = $1,  reset_password_token_expiration = $2  WHERE username = $3",
     reset_password_token.0,
     reset_password_token_expiration.0,
     username.0
@@ -133,9 +117,7 @@ pub async fn update_user_password(
 ) -> DbResult<()> {
   trace!("update_user_password with: {username}");
   sqlx::query!(
-    "UPDATE users SET 
-    password_hash = $1
-    WHERE username = $2",
+    "UPDATE users SET  password_hash = $1 WHERE username = $2",
     new_password_hash.0,
     username.0,
   )

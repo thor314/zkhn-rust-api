@@ -1,20 +1,4 @@
-use std::collections::HashSet;
-
-use futures::future::join_all;
-use rayon::prelude::*;
-use sqlx::{Pool, Postgres, QueryBuilder, Transaction};
-use uuid::Uuid;
-
-use crate::{
-  error::DbError,
-  models::{
-    comment::{self, Comment},
-    item::Item,
-    user_vote::{UserVote, VoteState},
-  },
-  utils::now,
-  CommentText, DbPool, DbResult, Page, Title, Username,
-};
+use super::*;
 
 pub async fn get_comments_page(
   pool: &DbPool,

@@ -1,15 +1,4 @@
-use db::{
-  models::{
-    comment::Comment,
-    item::{Item, ItemCategory, ItemType},
-  },
-  AuthToken, Domain, Text, Timestamp, Title, Url, Username,
-};
-use serde::{Deserialize, Serialize};
-use utoipa::{OpenApi, ToSchema};
-use uuid::Uuid;
-
-use crate::COMMENTS_PER_PAGE;
+use super::*;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
@@ -69,5 +58,30 @@ impl From<Item> for GetEditItemResponse {
       dead: item.dead,
       text_for_editing,
     }
+  }
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[schema(default = GetItemsPageResponse::default, example=GetItemsPageResponse::default)]
+#[serde(rename_all = "camelCase")]
+pub struct GetItemsPageResponse {
+  /// The items for this page
+  // todo: should these items be transformed?
+  items: Vec<Item>,
+  /// whether there are more items after the page returned
+  is_more: bool,
+  /// total number of items matching query
+  count:   usize,
+}
+impl GetItemsPageResponse {
+  //   // isMore:
+  //   totalItemCount >
+  //   (page - 1) * config.itemsPerPage + config.itemsPerPage
+  //     ? true
+  //     : false,
+  // };
+  pub fn new(items: Vec<Item>, count: usize, page: Page) -> Self {
+    let is_more = count > page.page as usize * COMMENTS_PER_PAGE;
+    Self { items, is_more, count }
   }
 }

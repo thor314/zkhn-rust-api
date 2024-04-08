@@ -1,13 +1,5 @@
 // use axum::{extract::State, response::IntoResponse};
-use chrono::{DateTime, NaiveDate, Utc};
-use garde::Validate;
-use serde::{Deserialize, Serialize};
-use sqlx::{Decode, Encode};
-use uuid::Uuid;
-
-use crate::{
-  error::DbError, utils::now, CommentText, DbResult, Timestamp, Title, Username, MIN_COMMENT_POINTS,
-};
+use super::*;
 
 /// Comments on a post
 #[derive(sqlx::FromRow, Debug, Serialize, Encode, Clone, Deserialize)]
