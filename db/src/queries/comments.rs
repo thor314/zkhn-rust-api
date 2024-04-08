@@ -1,5 +1,32 @@
 use super::*;
 
+pub async fn get_assert_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<Comment> {
+  get_comment(pool, comment_id).await?.ok_or(DbError::NotFound("comment".into()))
+}
+
+pub async fn get_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
+  sqlx::query_as!(
+    Comment,
+    "SELECT
+      id,
+      username as \"username: Username\",
+      parent_item_id,
+      parent_item_title as \"parent_item_title: Title\",
+      comment_text as \"comment_text: CommentText\",
+      is_parent,
+      root_comment_id,
+      parent_comment_id,
+      points,
+      created,
+      dead
+    FROM comments WHERE id = $1",
+    comment_id
+  )
+  .fetch_optional(pool)
+  .await
+  .map_err(DbError::from)
+}
+
 pub async fn get_comments_page(
   pool: &DbPool,
   item_id: Uuid,
@@ -41,9 +68,7 @@ pub async fn get_comments_page(
   Ok((comments, total_comments))
 }
 
-pub async fn create_comment(pool: &DbPool, new_comment: &Comment) -> DbResult<()> {
-    todo!()
-}
+pub async fn create_comment(pool: &DbPool, new_comment: &Comment) -> DbResult<()> { todo!() }
 
 // pub async fn get_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {
 //   sqlx::query_as!(

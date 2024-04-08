@@ -38,13 +38,13 @@ pub fn comments_router(state: SharedState) -> Router {
   Router::new().route("/", routing::post(post::create_comment)).with_state(state)
 }
 
-pub mod post {
+pub(super) mod post {
   use super::*;
 
   #[utoipa::path(
   post,
   path = "/",
-  request_body = CreateItemPayload,
+  request_body = CreateCommentPayload,
   responses(
     (status = 401, description = "Unauthorized"),
     (status = 403, description = "Forbidden"),
@@ -55,7 +55,7 @@ pub mod post {
   )]
   /// Create a new comment
   ///
-  /// https://github.com/thor314/zkhn/blob/main/rest-api/routes/comments/api.js
+  /// https://github.com/thor314/zkhn/blob/main/rest-api/routes/comments/api.js#L18
   pub async fn create_comment(
     State(state): State<SharedState>,
     auth_session: AuthSession,
@@ -64,13 +64,68 @@ pub mod post {
     debug!("create_comment called with payload: {payload:?}");
     payload.validate(&())?;
     let user = auth_session.get_assert_user_from_session()?;
+    let item = queries::items::get_assert_item(&state.pool, payload.parent_item_id).await?;
+    // todo: commentdata.text sanitize
     let comment = payload.into_comment();
+    // todo: increment commenter karma
     queries::comments::create_comment(&state.pool, &comment).await?;
-
-    // todo
+    // removed: update item comment count & parent comment count
     Ok(Json(comment.id))
   }
+
+  pub async fn upvote_comment(
+    State(state): State<SharedState>,
+    auth_session: AuthSession,
+    Path((comment_id, parent_item_id)): Path<(Uuid, Uuid)>,
+  ) -> ApiResult<StatusCode> {
+    let username = auth_session.get_assert_user_from_session()?.username;
+    // let vote_state = VoteState::Upvote;
+    // let user_vote = queries::user_votes::get_comment_vote(&state.pool, &username, comment_id).await?;
+    // if let Some(user_vote) = user_vote {
+    //   if user_vote.vote_state == vote_state {
+    //     return Ok(StatusCode::OK);
+    //   }
+    // }
+    // queries::user_votes::submit_comment_vote(&state.pool, comment_id, &username, parent_item_id, vote_state).await?;
+    // Ok(StatusCode::OK)
+    todo!()
+  }
 }
+
+pub(super) mod get {
+  use super::*;
+
+  #[utoipa::path(
+  get,
+  path = "/{comment_id}",
+  responses(
+    (status = 404, description = "Comment not found"),
+    (status = 200, description = "Success", body = Comment),
+  ),
+  )]
+  /// Get a comment
+  ///
+  /// https://github.com/thor314/zkhn/blob/main/rest-api/routes/comments/api.js#L94
+  pub async fn get_comment(
+    State(state): State<SharedState>,
+    Path(comment_id): Path<Uuid>,
+    auth_session: AuthSession,
+  ) -> ApiResult<Json<GetCommentResponse>> {
+    debug!("get_comment called with comment_id: {comment_id:?}");
+    let comment = queries::comments::get_assert_comment(&state.pool, comment_id).await?;
+    let user = auth_session.get_user_from_session();
+    //     comment.pageMetadataTitle = comment.text.replace(/<[^>]+>/g, ""); todo
+    // todo: get sorted comment children by points then created
+    // todo get total number of children comments
+    // todo slice comments per page
+    // if user not signed in, return the comment
+    // todo: more if the user is signed in
+
+    // Ok(Json(comment))
+    todo!()
+  }
+}
+
 // /// Add a new comment to the database.
 // /// Also update user karma, and item comment count, and tell the search-api.
 // pub async fn create_comment(

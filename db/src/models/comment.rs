@@ -22,7 +22,7 @@ pub struct Comment {
   /// the id of the parent comment. This will only be added if the comment is a direct reply to
   /// another comment
   pub parent_comment_id: Option<Uuid>,
-  pub children_count:    i32,
+  // pub children_count:    i32, // removed feature
   /// sum total of upvotes and downvotes the comment has received. The minimum point value for a
   /// comment is -4
   pub points:            i32,
@@ -30,6 +30,25 @@ pub struct Comment {
   /// Dead comments cannot be commented on, and are not displayed by default.
   /// Comments submitted by shadow-banned users are dead.
   pub dead:              bool,
+}
+
+impl Default for Comment {
+  fn default() -> Self {
+    Comment {
+      id: Uuid::new_v4(),
+      username: Username::default(),
+      parent_item_id: Uuid::new_v4(),
+      parent_item_title: Title::default(),
+      comment_text: CommentText::default(),
+      is_parent: true,
+      root_comment_id: Uuid::new_v4(),
+      parent_comment_id: None,
+      points: 1,
+      created: now(),
+      dead: false,
+    }
+  }
+
 }
 
 impl Comment {
@@ -56,7 +75,6 @@ impl Comment {
       root_comment_id,
       parent_comment_id,
       comment_text: text,
-      children_count: 0,
       points: 1,
       created: now(),
       dead,
@@ -70,7 +88,7 @@ impl Comment {
   }
 
   pub fn create_child_comment(&mut self, by: Username, text: CommentText, dead: bool) -> Comment {
-    let comment = Comment::new(
+    Comment::new(
       by,
       self.parent_item_id,
       self.parent_item_title.clone(),
@@ -79,9 +97,6 @@ impl Comment {
       Some(self.id),
       text,
       dead,
-    );
-
-    self.children_count += 1;
-    comment
+    )
   }
 }
