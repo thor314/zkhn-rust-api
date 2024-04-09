@@ -54,14 +54,13 @@ async fn item_crud() {
   send(&c, CreateUserPayload::default(), "POST", "users", 200, "00").await;
   send(&c, CreateUserPayload::bob(), "POST", "users", 200, "01").await;
 
-  // post item for alice as unauth: 403
-  send(&c, CreateItemPayload::default(), "POST", "items", 403, "10").await;
+  // post item for alice as unauth: 401
+  send(&c, CreateItemPayload::default(), "POST", "items", 401, "10").await;
   // post item for alice as alice: 200
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "11").await;
   let id = send_get::<Uuid>(&c, CreateItemPayload::default(), "POST", "items", 200, "12").await;
   // post item for alice as alice with invalid payload: 422
   send(&c, GetUserResponse::default(), "POST", "items", 422, "13").await;
-  // let id: uuid::Uuid =
   // post duplicate item for alice as alice with invalid payload: 422
   send(&c, CreateItemPayload::default(), "POST", "items", 200, "14").await;
   // todo(testing) banned user post item: 401
@@ -69,14 +68,17 @@ async fn item_crud() {
   // get item with fake id: 404
   let fake_id = uuid::Uuid::new_v4();
   send(&c, "", "GET", &format!("items/{fake_id}?page=1"), 404, "20").await;
-  // get item with invalid id: 422
-  send(&c, "", "GET", "items/&invalid_id&?page=1", 422, "21").await;
+  // get item with invalid id: 400
+  send(&c, "", "GET", "items/&invalid_id&?page=1", 400, "21").await;
   // get item with with invalid page: 422
   send(&c, "", "GET", &format!("items/{id}?page=0"), 422, "22").await;
-  // get item with with empty page: todo
-  send(&c, "", "GET", &format!("items/{id}?page=3"), 422, "22a").await;
+  // get item with with negative page:
+  send(&c, "", "GET", &format!("items/{id}?page=-1"), 422, "22a").await;
+  // get item with without a page:
+  send(&c, "", "GET", &format!("items/{id}"), 400, "22b").await;
+  // get item with with too-high page: 200 (this is fine) 
+  send(&c, "", "GET", &format!("items/{id}?page=3"), 200, "22c").await;
   // get real item as alice: 200
-  send(&c, "", "GET", &format!("items/{id}?page=1"), 200, "23").await;
   let r: GetItemResponse = send_get(&c, "", "GET", &format!("items/{id}?page=1"), 200, "24").await;
   // get real item as logged out: 200
   send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "5").await;
@@ -87,14 +89,14 @@ async fn item_crud() {
   let upvote = VotePayload::new(id, VoteState::Upvote);
   let downvote = VotePayload::new(id, VoteState::Downvote);
   let unvote = VotePayload::new(id, VoteState::None);
-  send(&c, upvote.clone(), "POST", "items/vote", 200, "6").await;
-  send(&c, upvote.clone(), "POST", "items/vote", 409, "7").await;
-  send(&c, downvote.clone(), "POST", "items/vote", 200, "8").await;
-  send(&c, downvote.clone(), "POST", "items/vote", 409, "9").await;
-  send(&c, unvote.clone(), "POST", "items/vote", 200, "01").await;
-  send(&c, unvote.clone(), "POST", "items/vote", 409, "02").await;
-  send(&c, downvote.clone(), "POST", "items/vote", 200, "03").await;
-  send(&c, upvote.clone(), "POST", "items/vote", 200, "04").await;
+  send(&c, upvote.clone(), "POST", "items/vote", 200, "30").await;
+  send(&c, upvote.clone(), "POST", "items/vote", 409, "31").await;
+  send(&c, downvote.clone(), "POST", "items/vote", 200, "32").await;
+  send(&c, downvote.clone(), "POST", "items/vote", 409, "33").await;
+  send(&c, unvote.clone(), "POST", "items/vote", 200, "34").await;
+  send(&c, unvote.clone(), "POST", "items/vote", 409, "35").await;
+  send(&c, downvote.clone(), "POST", "items/vote", 200, "36").await;
+  send(&c, upvote.clone(), "POST", "items/vote", 200, "37").await;
   // next: get user karma
   // send(&c, "", "GET", &format!("items/{id}?2"), 200, "7").await;
   // let upvote = VotePayload::new(id, VotePayloadEnum::Upvote);

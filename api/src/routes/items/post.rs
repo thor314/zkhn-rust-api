@@ -38,9 +38,9 @@ pub async fn create_item(
   path = "/items/vote",
   request_body = VotePayload,
   responses(
+    (status = 400, description = "Invalid Id"),
     (status = 401, description = "Unauthorized"),
     (status = 403, description = "Forbidden"),
-    (status = 422, description = "Invalid Payload"),
     (status = 409, description = "Duplication Conflict"),
     (status = 200, body = Uuid),
   ),

@@ -44,7 +44,7 @@ impl GetItemResponseAuthenticated {
     // hidden_by_user,
     // edit_and_delete_expired,
     // }
-    todo!()
+    Default::default() // todo!()
   }
 }
 

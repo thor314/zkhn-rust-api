@@ -7,9 +7,8 @@ use super::*;
   path = "/items/{id}?page={page}",
   params( ("id" = String, Path, example = Uuid::new_v4),
           ("page" = i32, Query, example = Page::default) ),
-  responses( (status = 422, description = "Invalid id"),
+  responses( (status = 400, description = "Invalid id"),
              (status = 422, description = "Invalid page"),
-             // todo(page): what if page is empty?
              (status = 200, description = "Success", body = GetItemResponse) ),
   )]
 /// Get item:
