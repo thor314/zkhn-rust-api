@@ -1,7 +1,7 @@
 // hack(cookie) - remove user cookie data - https://github.com/thor314/zkhn/blob/main/rest-api/routes/users/index.js#L142
 
-mod payload;
-mod response;
+pub(super) mod payload;
+pub(super) mod response;
 
 use axum::{
   extract::{Path, State},
