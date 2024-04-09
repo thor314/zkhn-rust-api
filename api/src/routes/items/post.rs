@@ -49,7 +49,7 @@ pub async fn create_item(
 /// Submit an {up,down,un}vote on an item:
 /// - get the user from the session store
 /// - get the item from the database, and any previously existing vote on the item
-/// - if the user has already voted on the item in the same way: 409 Conflict 
+/// - if the user has already voted on the item in the same way: 409 Conflict
 /// - insert the new vote, replacing any prior vote
 /// - update the item's points
 /// - update recipient user karma
@@ -65,11 +65,15 @@ pub async fn vote_item(
   debug!("vote_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
   let (item, vote) = tokio::try_join!(
-    queries::items::get_assert_item(&state.pool, payload.id),
-    queries::user_votes::get_item_vote(&state.pool, &user.username, payload.id),
+    queries::items::get_assert_item(&state.pool, payload.content_id),
+    queries::user_votes::get_item_vote(&state.pool, &user.username, payload.content_id),
   )?;
-  if vote.as_ref().map(|v| v.vote_state == payload.vote_state).unwrap_or(false) {
-    return Err(ApiError::UniqueViolation("User has already voted on this item".into()));
+
+  let is_duplication = vote.as_ref().map(|v| v.vote_state == payload.vote_state).unwrap_or(false);
+  if is_duplication {
+    return Err(ApiError::UniqueViolation(
+      "User has already voted identically on this item".into(),
+    ));
   }
 
   queries::user_votes::vote_on_item(state.pool, item.id, user.username, payload.vote_state, vote)

@@ -14,7 +14,7 @@ CREATE TABLE items (
     url TEXT,
     domain TEXT,
     text TEXT,
-    points INT DEFAULT 1 CHECK (points >= 1) NOT NULL,
+    points INT DEFAULT 1 NOT NULL,
     score INT DEFAULT 0 NOT NULL,
     item_category ITEM_CATEGORY_ENUM NOT NULL DEFAULT 'other',
     created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),

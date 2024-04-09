@@ -48,26 +48,22 @@ pub async fn vote_on_item(
 ) -> DbResult<()> {
   let mut tx = pool.begin().await?;
 
-  if let Some(ref _v) = preexisting_vote {
+  if let Some(ref vote) = preexisting_vote {
     // delete the old vote if one exists
-    sqlx::query!(
-      "DELETE FROM user_votes WHERE username = $1 AND content_id = $2",
-      username.0,
-      item_id
-    )
-    .execute(&mut *tx)
-    .await?;
+    sqlx::query!("DELETE FROM user_votes WHERE id = $1", vote.id).execute(&mut *tx).await?;
   }
 
   // insert the vote in the votes table
   sqlx::query!(
     "INSERT INTO user_votes (
+    id,
     username, 
     vote_type, 
     content_id, 
     vote_state, 
     created 
-  ) VALUES ($1, $2, $3, $4, $5)",
+  ) VALUES ($1, $2, $3, $4, $5, $6)",
+    Uuid::new_v4(),
     username.0,
     ItemOrComment::Item as ItemOrComment,
     item_id,
@@ -84,9 +80,14 @@ pub async fn vote_on_item(
     i8::from(vote_state) - pre_existing
   } as i32;
 
+  if increment_value == 0 {
+    warn!("neutral points increment in vote_on_item, should be unreachable");
+    return Ok(tx.commit().await?);
+  }
+
   let submitter = sqlx::query!(
     "UPDATE items SET points = points + $1 WHERE id = $2 
-    RETURNING username as \"username: Username\"",
+        RETURNING username as \"username: Username\"",
     increment_value,
     item_id
   )

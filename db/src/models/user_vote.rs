@@ -3,7 +3,7 @@ use super::*;
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, ToSchema)]
 /// Represents a vote cast by a user on an item or comment.
 pub struct UserVote {
-  pub id:           Uuid,
+  pub id:             Uuid,
   /// The username of the user who cast the vote.
   pub username:       Username,
   /// The type of content voted on.
@@ -26,7 +26,15 @@ impl UserVote {
     parent_item_id: Option<Uuid>,
     vote_state: VoteState,
   ) -> Self {
-    Self {id: Uuid::new_v4(), username, vote_type, content_id, parent_item_id, vote_state, created: now() }
+    Self {
+      id: Uuid::new_v4(),
+      username,
+      vote_type,
+      content_id,
+      parent_item_id,
+      vote_state,
+      created: now(),
+    }
   }
 }
 
@@ -67,3 +75,18 @@ impl fmt::Display for ItemOrComment {
     }
   }
 }
+
+// let submitter =
+// if increment_value > 0 {
+//   sqlx::query!("UPDATE items SET points = points + $1 WHERE id = $2
+//   RETURNING username", increment_value, item_id)
+//     .execute(&mut *tx)
+//     .await?;
+// } else if increment_value < 0 {
+//   sqlx::query!("UPDATE items SET points = points - $1 WHERE id = $2
+//   RETURNING username", increment_value, item_id)
+//     .execute(&mut *tx)
+//     .await?;
+// } else{
+
+// }
