@@ -36,7 +36,7 @@ impl CreateItemPayload {
 }
 
 /// A payload for voting on an item or comment
-#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema,)]
 #[schema(default = VotePayload::default, example=VotePayload::default)]
 #[serde(rename_all = "camelCase")]
 pub struct VotePayload {

@@ -89,6 +89,7 @@ async fn item_crud() {
   let upvote = VotePayload::new(id, VoteState::Upvote);
   let downvote = VotePayload::new(id, VoteState::Downvote);
   let unvote = VotePayload::new(id, VoteState::None);
+  // todo: test
   send(&c, upvote.clone(), "POST", "items/vote", 200, "30").await;
   send(&c, upvote.clone(), "POST", "items/vote", 409, "31").await;
   send(&c, downvote.clone(), "POST", "items/vote", 200, "32").await;

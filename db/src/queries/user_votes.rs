@@ -31,24 +31,18 @@ pub async fn get_item_vote(
   .map_err(DbError::from)
 }
 
-/// submit an vote on an item.
+/// Submit an vote on an item. Assume the api has already checked for repeatedly submitted
+/// {up,down,un}votes.
 ///
 /// Insert the vote into the database, updating the item_submitter's karma and the item's points.
 pub async fn vote_on_item(
-  pool: &DbPool,
+  pool: DbPool,
   item_id: Uuid,
-  username: &Username,
+  username: Username,
   vote_state: VoteState,
+  preexisting_vote: Option<UserVote>,
 ) -> DbResult<()> {
   let mut tx = pool.begin().await?;
-
-  // todo
-  // if let Some(vote) = vote {
-  //   if vote.vote_state == payload.vote_state {
-  //     return Err(ApiError::UniqueViolation("user item vote duplication attempt".into()));
-  //   }
-  //   // todo - delete old vote
-  // }
 
   // insert the vote in the votes table
   sqlx::query!(
@@ -68,23 +62,30 @@ pub async fn vote_on_item(
   .execute(&mut *tx)
   .await?;
 
-  // todo: this assumes an upvote
   // Update item points and get the item submitter username
-  let item_submitter = sqlx::query!(
+  let increment_value = {
+    let pre_existing =
+      preexisting_vote.as_ref().map(|v| i8::from(v.vote_state)).unwrap_or_default();
+    i8::from(vote_state) - pre_existing
+  } as i32;
+
+  let submitter = sqlx::query!(
     "UPDATE items SET points = points + $1 WHERE id = $2 
     RETURNING username as \"username: Username\"",
-    vote_state as VoteState,
+    increment_value,
     item_id
   )
   .fetch_one(&mut *tx)
   .await?
   .username;
 
-  // todo: this assumes an upvote
-  // Update item-submitter user's karma
-  sqlx::query!("UPDATE users SET karma = karma + 1 WHERE username = $1", item_submitter.0)
-    .execute(&mut *tx)
-    .await?;
+  sqlx::query!(
+    "UPDATE users SET karma = karma + $1 WHERE username = $2",
+    increment_value,
+    submitter.0
+  )
+  .execute(&mut *tx)
+  .await?;
 
   Ok(tx.commit().await?)
 }

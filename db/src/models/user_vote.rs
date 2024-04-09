@@ -29,7 +29,7 @@ impl UserVote {
   }
 }
 
-#[derive(sqlx::Type, Default, PartialEq, Serialize, Deserialize, Debug, Clone, ToSchema)]
+#[derive(sqlx::Type, Default, PartialEq, Serialize, Deserialize, Debug, Clone, ToSchema, Copy)]
 #[sqlx(type_name = "vote_state_enum")]
 #[sqlx(rename_all = "lowercase")]
 pub enum VoteState {
@@ -38,13 +38,12 @@ pub enum VoteState {
   Downvote,
   None,
 }
-impl From<i8> for VoteState {
-  fn from(v: i8) -> Self {
+impl From<VoteState> for i8 {
+  fn from(v: VoteState) -> Self {
     match v {
-      1 => Self::Upvote,
-      0 => Self::None,
-      -1 => Self::Downvote,
-      _ => Self::None,
+      VoteState::Upvote => 1,
+      VoteState::Downvote => -1,
+      VoteState::None => 0,
     }
   }
 }
