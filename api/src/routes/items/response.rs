@@ -48,6 +48,7 @@ impl GetItemResponseAuthenticated {
   }
 }
 
+// todo(getitemresponsecomment)
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetItemResponseComment::default, example=GetItemResponseComment::default)]
 #[serde(rename_all = "camelCase")]

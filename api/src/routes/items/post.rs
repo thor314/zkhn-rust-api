@@ -15,7 +15,7 @@ use super::*;
 /// Create a new item. The user must be logged in to call this method.
 /// - validate payload
 /// - create a new item
-/// - increment user karma 
+/// - increment user karma
 /// - return the item's id
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L39

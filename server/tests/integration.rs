@@ -66,7 +66,6 @@ async fn item_crud() {
   send(&c, CreateItemPayload::default(), "POST", "items", 200, "14").await;
   // todo(testing) banned user post item: 401
 
-  // get item
   // get item with fake id: 404
   let fake_id = uuid::Uuid::new_v4();
   send(&c, "", "GET", &format!("items/{fake_id}?page=1"), 404, "20").await;
@@ -76,13 +75,15 @@ async fn item_crud() {
   send(&c, "", "GET", &format!("items/{id}?page=0"), 422, "22").await;
   // get item with with empty page: todo
   send(&c, "", "GET", &format!("items/{id}?page=3"), 422, "22a").await;
-  // get real item: 200
+  // get real item as alice: 200
   send(&c, "", "GET", &format!("items/{id}?page=1"), 200, "23").await;
-  let r: GetItemResponse =
-    send(&c, "", "GET", &format!("items/{id}?page=1"), 200, "24").await.json().await.unwrap();
+  let r: GetItemResponse = send_get(&c, "", "GET", &format!("items/{id}?page=1"), 200, "24").await;
+  // get real item as logged out: 200
+  send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "5").await;
+  let r_: GetItemResponse = send_get(&c, "", "GET", &format!("items/{id}?page=1"), 200, "25").await;
   assert!(r.comments.is_empty());
+  // todo: compare logged in and logged out responses
 
-  // vote item
   let upvote = VotePayload::new(id, VoteState::Upvote);
   let downvote = VotePayload::new(id, VoteState::Downvote);
   let unvote = VotePayload::new(id, VoteState::None);

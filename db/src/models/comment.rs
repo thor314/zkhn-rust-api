@@ -49,7 +49,6 @@ impl Default for Comment {
       dead:              false,
     }
   }
-
 }
 
 impl Comment {

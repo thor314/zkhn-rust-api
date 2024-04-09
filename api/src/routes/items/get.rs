@@ -16,9 +16,12 @@ use super::*;
 /// - validate page and item id
 /// - If user is logged out: get and return the item and the `page` of comments
 ///
-/// User is logged in:
-/// - get the user's votes, favorites, hiddens, and comment votes
-/// -
+/// User is logged in: (todo: blocked by comments upvotes, favorites, and items)
+/// - get the user's votes, favorites, hiddens, and comment votes for the item
+/// - validate whether the item may be edited
+/// - get the item's comments and update whether they may be edited
+/// - and whether they have been upvoted by the user
+/// - return the item and comments `page` with the user-specific metadata
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L92
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L52
