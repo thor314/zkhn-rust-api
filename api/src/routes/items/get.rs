@@ -95,7 +95,7 @@ pub async fn get_items_by_page(
   auth_session: AuthSession,
 ) -> ApiResult<Json<GetItemsPageResponse>> {
   debug!("get_items_by_page with page: {page:?} and kind: {item_kind:?}");
-  let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::hours(24));
+  let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::try_hours(24).unwrap());
   let session_user = auth_session.get_user_from_session();
 
   Ok(Json(match session_user {

@@ -39,7 +39,7 @@ pub(super) fn docs_router() -> Router {
 }
 
 // ref: https://github.com/juhaku/utoipa/blob/master/examples/todo-axum/src/main.rs#L22
-#[utoipauto(paths = "./api/src/routes/users/mod.rs", "./api/src/routes/items.mod.rs" )] 
+#[utoipauto(paths = "./api/src/routes/users/mod.rs", "./api/src/routes/items.mod.rs")]
 #[derive(OpenApi)]
 #[openapi(
   info(description = "API documentation for ZKHN"),

@@ -67,7 +67,9 @@ impl Item {
     Ok(())
   }
 
-  pub fn modification_expiration(&self) -> Timestamp { self.created + chrono::Duration::hours(1) }
+  pub fn modification_expiration(&self) -> Timestamp {
+    self.created + chrono::Duration::try_hours(1).unwrap()
+  }
 }
 
 #[derive(Default, Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
