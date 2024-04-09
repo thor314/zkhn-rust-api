@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_votes (\n    username, \n    vote_type, \n    content_id, \n    vote_state, \n    created \n  ) VALUES ($1, $2, $3, $4, $5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        {
+          "Custom": {
+            "name": "item_or_comment_enum",
+            "kind": {
+              "Enum": [
+                "item",
+                "comment"
+              ]
+            }
+          }
+        },
+        "Uuid",
+        {
+          "Custom": {
+            "name": "vote_state_enum",
+            "kind": {
+              "Enum": [
+                "upvote",
+                "downvote",
+                "none"
+              ]
+            }
+          }
+        },
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2f336f062ddd5a5cc11ff1621182aaf1a4011c2758e240ebf4f4a26f8f58b175"
+}

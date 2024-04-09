@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE users SET karma = karma + 1 WHERE username = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "514b47bb64ebc3e11c8bfdfe94d01bf607c2e1154d4bbe64dcdb47cc105859bf"
+}
