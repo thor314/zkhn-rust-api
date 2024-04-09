@@ -3,6 +3,7 @@ use super::*;
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, ToSchema)]
 /// Represents a vote cast by a user on an item or comment.
 pub struct UserVote {
+  pub id:           Uuid,
   /// The username of the user who cast the vote.
   pub username:       Username,
   /// The type of content voted on.
@@ -25,7 +26,7 @@ impl UserVote {
     parent_item_id: Option<Uuid>,
     vote_state: VoteState,
   ) -> Self {
-    Self { username, vote_type, content_id, parent_item_id, vote_state, created: now() }
+    Self {id: Uuid::new_v4(), username, vote_type, content_id, parent_item_id, vote_state, created: now() }
   }
 }
 

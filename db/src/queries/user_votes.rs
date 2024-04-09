@@ -16,7 +16,8 @@ pub async fn get_item_vote(
   sqlx::query_as!(
     UserVote,
     "SELECT 
-   username as \"username: Username\", 
+    id,
+    username, 
     vote_type as \"vote_type: ItemOrComment\", 
     content_id, 
     parent_item_id, 
@@ -31,10 +32,13 @@ pub async fn get_item_vote(
   .map_err(DbError::from)
 }
 
-/// Submit an vote on an item. Assume the api has already checked for repeatedly submitted
-/// {up,down,un}votes.
+/// Submit an vote on an item.
+/// Assume the api has already checked for repeatedly submitted {up,down,un}votes.
 ///
-/// Insert the vote into the database, updating the item_submitter's karma and the item's points.
+/// - delete the old vote if one exists
+/// - insert the vote into the database
+/// - update the submitter's karma
+/// - update the item's points
 pub async fn vote_on_item(
   pool: DbPool,
   item_id: Uuid,
@@ -43,6 +47,17 @@ pub async fn vote_on_item(
   preexisting_vote: Option<UserVote>,
 ) -> DbResult<()> {
   let mut tx = pool.begin().await?;
+
+  if let Some(ref _v) = preexisting_vote {
+    // delete the old vote if one exists
+    sqlx::query!(
+      "DELETE FROM user_votes WHERE username = $1 AND content_id = $2",
+      username.0,
+      item_id
+    )
+    .execute(&mut *tx)
+    .await?;
+  }
 
   // insert the vote in the votes table
   sqlx::query!(
@@ -99,7 +114,8 @@ pub async fn get_user_votes_on_items_after(
   sqlx::query_as!(
     UserVote,
     "SELECT 
-    username as \"username: Username\", 
+    id,
+    username, 
     vote_type as \"vote_type: ItemOrComment\", 
     content_id, 
     parent_item_id, 
