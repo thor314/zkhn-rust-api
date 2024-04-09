@@ -6,13 +6,17 @@ use super::*;
   request_body = CreateItemPayload,
   responses(
     (status = 401, description = "Unauthorized"),
-    (status = 403, description = "Forbidden"),
+    (status = 403, description = "ForbiddenBanned"),
     (status = 422, description = "Invalid Payload"),
-    (status = 409, description = "Duplication Conflict"),
+    // (status = 409, description = "Duplication Conflict"), - cannot occur, uuid generated on server
     (status = 200, body = Uuid),
   ),
   )]
-/// Create a new item
+/// Create a new item. The user must be logged in to call this method.
+/// - validate payload
+/// - create a new item
+/// - increment user karma 
+/// - return the item's id
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L39
 pub async fn create_item(

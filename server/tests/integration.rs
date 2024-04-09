@@ -6,9 +6,10 @@ use api::*;
 use db::models::user_vote::VoteState;
 use reqwest::Client;
 use serial_test::serial;
+use uuid::Uuid;
 
 use self::integration_utils::cargo_shuttle_run;
-use crate::integration_utils::send;
+use crate::integration_utils::{send, send_get};
 
 pub const WEBSERVER_URL: &str = "http://localhost:8000";
 
@@ -50,18 +51,38 @@ async fn user_crud() {
 async fn item_crud() {
   let mut _child_guard = cargo_shuttle_run().await;
   let c = Client::builder().cookie_store(true).build().unwrap();
-  send(&c, CreateUserPayload::default(), "POST", "users", 200, "1").await;
-  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "2").await;
-  let id: uuid::Uuid =
-    send(&c, CreateItemPayload::default(), "POST", "items", 200, "3").await.json().await.unwrap();
+  send(&c, CreateUserPayload::default(), "POST", "users", 200, "00").await;
+  send(&c, CreateUserPayload::bob(), "POST", "users", 200, "01").await;
+
+  // post item for alice as unauth: 403
+  send(&c, CreateItemPayload::default(), "POST", "items", 403, "10").await;
+  // post item for alice as alice: 200
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "11").await;
+  let id = send_get::<Uuid>(&c, CreateItemPayload::default(), "POST", "items", 200, "12").await;
+  // post item for alice as alice with invalid payload: 422
+  send(&c, GetUserResponse::default(), "POST", "items", 422, "13").await;
+  // let id: uuid::Uuid =
+  // post duplicate item for alice as alice with invalid payload: 422
+  send(&c, CreateItemPayload::default(), "POST", "items", 200, "14").await;
+  // todo(testing) banned user post item: 401
+
+  // get item
+  // get item with fake id: 404
   let fake_id = uuid::Uuid::new_v4();
-  send(&c, "", "GET", &format!("items/{fake_id}?page=1"), 404, "40").await;
-  send(&c, "", "GET", &format!("items/{id}?page=0"), 422, "41").await;
-  send(&c, "", "GET", &format!("items/{id}?page=1"), 200, "4").await;
+  send(&c, "", "GET", &format!("items/{fake_id}?page=1"), 404, "20").await;
+  // get item with invalid id: 422
+  send(&c, "", "GET", "items/&invalid_id&?page=1", 422, "21").await;
+  // get item with with invalid page: 422
+  send(&c, "", "GET", &format!("items/{id}?page=0"), 422, "22").await;
+  // get item with with empty page: todo
+  send(&c, "", "GET", &format!("items/{id}?page=3"), 422, "22a").await;
+  // get real item: 200
+  send(&c, "", "GET", &format!("items/{id}?page=1"), 200, "23").await;
   let r: GetItemResponse =
-    send(&c, "", "GET", &format!("items/{id}?page=2"), 200, "5").await.json().await.unwrap();
+    send(&c, "", "GET", &format!("items/{id}?page=1"), 200, "24").await.json().await.unwrap();
   assert!(r.comments.is_empty());
 
+  // vote item
   let upvote = VotePayload::new(id, VoteState::Upvote);
   let downvote = VotePayload::new(id, VoteState::Downvote);
   let unvote = VotePayload::new(id, VoteState::None);

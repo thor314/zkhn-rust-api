@@ -36,6 +36,10 @@ impl CreateUserPayload {
     payload.validate(&())?;
     Ok(payload)
   }
+
+  pub fn bob() -> Self {
+    Self::new("bob", "password", Some("bob@email.com"), Some("about bob")).unwrap()
+  }
 }
 
 /// Update user details.
@@ -137,4 +141,6 @@ impl CredentialsPayload {
   pub fn new(username: &str, password: &str, next: Option<String>) -> Self {
     Self { username: username.into(), password: password.into(), next }
   }
+
+  pub fn bob() -> Self { Self::new("bob", "password", None) }
 }

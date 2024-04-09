@@ -1,6 +1,7 @@
 use std::{process, process::Command, time};
 
 use reqwest::{Client, RequestBuilder, Response};
+use serde::de::DeserializeOwned;
 
 pub const WEBSERVER_URL: &str = "http://localhost:8000";
 
@@ -23,6 +24,17 @@ pub async fn send(
   };
   assert_eq!(res.status(), status, "Test {} failed", tag);
   res
+}
+
+pub async fn send_get<T: DeserializeOwned>(
+  client: &Client,
+  payload: impl serde::Serialize,
+  method: &str,
+  path: &str,
+  status: u16,
+  tag: &str,
+) -> T {
+  send(client, payload, method, path, status, tag).await.json().await.unwrap()
 }
 
 /// Run the shuttle server

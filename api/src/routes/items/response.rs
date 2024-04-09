@@ -4,16 +4,59 @@ use super::*;
 #[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
 #[serde(rename_all = "camelCase")]
 pub struct GetItemResponse {
-  pub item:             Item,
-  pub comments:         Vec<Comment>, // todo: transform reduce comment
+  pub item: Item,
+  pub comments: Vec<GetItemResponseComment>, // todo: transform reduce comment
   pub is_more_comments: bool,
+  pub get_item_response_authenticated: Option<GetItemResponseAuthenticated>,
 }
 
 impl GetItemResponse {
-  pub fn new(item: Item, comments: Vec<Comment>, page: usize) -> Self {
+  pub fn new(
+    item: Item,
+    comments: Vec<Comment>,
+    page: usize,
+    get_item_response_authenticated: Option<GetItemResponseAuthenticated>,
+  ) -> Self {
     let is_more_comments = comments.len() > page * COMMENTS_PER_PAGE;
-    Self { item, comments, is_more_comments }
+    let comments = comments.into_iter().map(GetItemResponseComment::from).collect();
+    Self { item, comments, is_more_comments, get_item_response_authenticated }
   }
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[schema(default = GetItemResponseAuthenticated::default, example=GetItemResponseAuthenticated::default)]
+#[serde(rename_all = "camelCase")]
+pub struct GetItemResponseAuthenticated {
+  voted_on_by_user:        bool,
+  unvote_expired:          bool,
+  favorited_by_user:       bool,
+  hidden_by_user:          bool,
+  edit_and_delete_expired: bool,
+  // user_comment_votes: Vec<CommentVote>,
+}
+
+impl GetItemResponseAuthenticated {
+  pub fn new(item: &Item) -> Self {
+    // Self {
+    // voted_on_by_user,
+    // unvote_expired,
+    // favorited_by_user,
+    // hidden_by_user,
+    // edit_and_delete_expired,
+    // }
+    todo!()
+  }
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[schema(default = GetItemResponseComment::default, example=GetItemResponseComment::default)]
+#[serde(rename_all = "camelCase")]
+pub struct GetItemResponseComment {
+  comment: Comment,
+}
+
+impl From<Comment> for GetItemResponseComment {
+  fn from(comment: Comment) -> Self { Self { comment } }
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
