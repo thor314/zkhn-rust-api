@@ -32,6 +32,25 @@ pub struct Comment {
   pub dead:              bool,
 }
 
+impl Default for Comment {
+  fn default() -> Self {
+    Comment {
+      id:                Uuid::new_v4(),
+      username:          Username::default(),
+      parent_item_id:    Uuid::new_v4(),
+      parent_item_title: Title::default(),
+      comment_text:      CommentText::default(),
+      is_parent:         false,
+      root_comment_id:   Uuid::new_v4(),
+      parent_comment_id: None,
+      children_count:    0,
+      points:            1,
+      created:           now(),
+      dead:              false,
+    }
+  }
+}
+
 impl Comment {
   pub fn new(
     username: Username,
@@ -40,7 +59,7 @@ impl Comment {
     is_parent: bool,
     root_comment_id: Option<Uuid>,
     parent_comment_id: Option<Uuid>,
-    text: CommentText,
+    comment_text: CommentText,
     dead: bool,
   ) -> Self {
     // if root_comment_id is None, then this is the root comment
@@ -48,18 +67,15 @@ impl Comment {
     // let text = crate::utils::sanitize_text(&text); // todo
 
     Comment {
-      id: Uuid::new_v4(),
       username,
       parent_item_id,
       parent_item_title,
       is_parent,
       root_comment_id,
       parent_comment_id,
-      comment_text: text,
-      children_count: 0,
-      points: 1,
-      created: now(),
+      comment_text,
       dead,
+      ..Default::default()
     }
   }
 

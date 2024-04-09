@@ -1,8 +1,8 @@
-mod get;
-mod payload;
-mod post;
-mod put;
-mod response;
+pub(super) mod get;
+pub(super) mod payload;
+pub(super) mod post;
+pub(super) mod put;
+pub(super) mod response;
 
 use axum::{
   debug_handler,
@@ -35,7 +35,7 @@ use crate::{
 };
 
 /// Router to be mounted at "/items"
-pub fn items_router(state: SharedState) -> Router {
+pub(super) fn items_router(state: SharedState) -> Router {
   Router::new()
     .route("/:id", routing::get(get::get_item))
     .route("/edit-item", routing::put(put::edit_item))
@@ -52,7 +52,7 @@ pub fn items_router(state: SharedState) -> Router {
 // todo(score): update scores every 10m
 // todo(search): tell algolia things
 
-mod delete {
+pub(super) mod delete {
   use super::*;
 
   /// Delete an item

@@ -40,11 +40,11 @@ impl CreateItemPayload {
 #[schema(default = VotePayload::default, example=VotePayload::default)]
 #[serde(rename_all = "camelCase")]
 pub struct VotePayload {
-  pub id:         Uuid,
+  pub content_id: Uuid,
   pub vote_state: VoteState,
 }
 impl VotePayload {
-  pub fn new(id: Uuid, vote: VoteState) -> Self { Self { id, vote_state: vote } }
+  pub fn new(content_id: Uuid, vote: VoteState) -> Self { Self { content_id, vote_state: vote } }
 }
 
 /// A payload for favoriting on an item or comment

@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE items SET points = points + $1 WHERE id = $2 \n    RETURNING username as \"username: Username\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "username: Username",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1360a354c1adba7897507ef65f6a7db78d093a23fcc6d2f4b2a4887af1a12d31"
+}

@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT \n    id,\n    username, \n    vote_type as \"vote_type: ItemOrComment\", \n    content_id, \n    parent_item_id, \n    vote_state as \"vote_state: VoteState\", \n    created \n    FROM user_votes WHERE username = $1 AND created > $2 \n    and vote_type = 'item' \n    ORDER BY created DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "vote_type: ItemOrComment",
+        "type_info": {
+          "Custom": {
+            "name": "item_or_comment_enum",
+            "kind": {
+              "Enum": [
+                "item",
+                "comment"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "content_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "parent_item_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "vote_state: VoteState",
+        "type_info": {
+          "Custom": {
+            "name": "vote_state_enum",
+            "kind": {
+              "Enum": [
+                "upvote",
+                "downvote",
+                "none"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "created",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "8500ab43991bedbf28da3107013597ea482f2e88f6726588a9fc1a9dd1b672b0"
+}

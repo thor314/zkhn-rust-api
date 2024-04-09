@@ -1,16 +1,16 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT username as \"username: Username\", \n            password_hash as \"password_hash: PasswordHash\", \n            reset_password_token as \"reset_password_token: ResetPasswordToken\", \n            reset_password_token_expiration as \"reset_password_token_expiration: Timestamp\",  \n            email as \"email: Email\", \n            created, \n            karma, \n            about as \"about: About\", \n            show_dead, \n            is_moderator, \n            banned \n     FROM users WHERE username = $1",
+  "query": "SELECT username, \n            password_hash, \n            reset_password_token as \"reset_password_token: ResetPasswordToken\", \n            reset_password_token_expiration as \"reset_password_token_expiration: Timestamp\",  \n            email as \"email: Email\", \n            created, \n            karma, \n            about as \"about: About\", \n            show_dead, \n            is_moderator, \n            banned \n     FROM users WHERE username = $1",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "username: Username",
+        "name": "username",
         "type_info": "Text"
       },
       {
         "ordinal": 1,
-        "name": "password_hash: PasswordHash",
+        "name": "password_hash",
         "type_info": "Text"
       },
       {
@@ -78,5 +78,5 @@
       false
     ]
   },
-  "hash": "5e0bc410901c257a76ae2405fc7de9b88bf0faef3a4ffe5b928297aeb04cd3ba"
+  "hash": "9b1a9f35c4f4205a331215096bb2c38efabac2f4f9cfa3bf873a02b75e557de1"
 }

@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO users\n    ( username, password_hash, reset_password_token, reset_password_token_expiration, email ) \n    VALUES ($1, $2, $3, $4, $5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c2a24421f4e5045138b1249e9cc9f3017da60a197631596e13b5e5481327d042"
+}

@@ -7,12 +7,20 @@ use super::*;
   path = "/items/{id}?page={page}",
   params( ("id" = String, Path, example = Uuid::new_v4),
           ("page" = i32, Query, example = Page::default) ),
-  responses( (status = 422, description = "Invalid id"),
+  responses( (status = 400, description = "Invalid id"),
              (status = 422, description = "Invalid page"),
-             (status = 404, description = "User not found"),
              (status = 200, description = "Success", body = GetItemResponse) ),
   )]
-/// Get item.
+/// Get item:
+/// - validate page and item id
+/// - If user is logged out: get and return the item and the `page` of comments
+///
+/// User is logged in: (todo: blocked by comments upvotes, favorites, and items)
+/// - get the user's votes, favorites, hiddens, and comment votes for the item
+/// - validate whether the item may be edited
+/// - get the item's comments and update whether they may be edited
+/// - and whether they have been upvoted by the user
+/// - return the item and comments `page` with the user-specific metadata
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L92
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L52
@@ -25,24 +33,25 @@ pub async fn get_item(
   debug!("get_item called with id: {id} and page: {page:?}");
   page.validate(&())?;
 
-  let user = auth_session.get_assert_user_from_session().unwrap_or_else(|_| User::new_logged_out());
+  let user = auth_session.get_user_from_session();
+  let show_dead = user.as_ref().map(|u| u.show_dead).unwrap_or(false);
+
   let (item, (comments, total_comments)) = tokio::try_join!(
     db::queries::items::get_assert_item(&state.pool, id),
-    db::queries::comments::get_comments_page(&state.pool, id, page, user.show_dead),
+    db::queries::comments::get_comments_page(&state.pool, id, page, show_dead),
   )?;
 
-  let get_item_response = GetItemResponse::new(item, comments, total_comments);
   // backlog(refactor) - matching off janky empty username is mega code smell
-  if user.username.0.is_empty() {
-    // Unauthenticated user
-    Ok(Json(get_item_response))
-  } else {
-    // Authenticated user
-    // get user's itemVotes, itemFavorites, itemHiddens, and commentVotes, and update item_response
-    //
-    // let (item_votes, item_favorites, item_hiddens, comment_votes) = tokio::try_join!(todo)
-    Ok(Json(get_item_response))
-  }
+  Ok(Json(match user {
+    None => GetItemResponse::new(item, comments, total_comments, None),
+    Some(user) => {
+      // let (votes, favorites, hiddens, comment_votes) = todo!();
+      let item_auth_data = GetItemResponseAuthenticated::new(&item);
+      // let auth_data = todo!();
+      // todo!()
+      GetItemResponse::new(item, comments, total_comments, Some(item_auth_data))
+    },
+  }))
 }
 
 #[utoipa::path(
@@ -95,7 +104,7 @@ pub async fn get_items_by_page(
   auth_session: AuthSession,
 ) -> ApiResult<Json<GetItemsPageResponse>> {
   debug!("get_items_by_page with page: {page:?} and kind: {item_kind:?}");
-  let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::hours(24));
+  let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::try_hours(24).unwrap());
   let session_user = auth_session.get_user_from_session();
 
   Ok(Json(match session_user {

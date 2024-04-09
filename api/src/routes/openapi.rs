@@ -26,9 +26,10 @@ use utoipa::OpenApi;
 use utoipa_rapidoc::RapiDoc;
 use utoipauto::utoipauto;
 
-// use super::items::{get::*, post::*, put::*, *};
-use super::items::*;
-use super::users::{get::*, post::*, put::*, *};
+use super::{
+  items::{delete::*, get::*, post::*, put::*, *},
+  users::{get::*, post::*, put::*, *},
+};
 
 /// router fragment supplying OpenAPI documentation and ui routes
 /// View rapidoc documentation page at: http://localhost:3000/docs/rapidoc
@@ -39,7 +40,7 @@ pub(super) fn docs_router() -> Router {
 }
 
 // ref: https://github.com/juhaku/utoipa/blob/master/examples/todo-axum/src/main.rs#L22
-#[utoipauto(paths = "./api/src/routes/users/mod.rs")] // auto-detect api paths
+#[utoipauto(paths = "api/src/routes/")]
 #[derive(OpenApi)]
 #[openapi(
   info(description = "API documentation for ZKHN"),

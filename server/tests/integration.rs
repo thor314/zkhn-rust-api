@@ -3,12 +3,13 @@
 #![allow(dead_code)]
 
 use api::*;
-use db::models::user_vote::VoteState;
+use db::models::{item::Item, user_vote::VoteState};
 use reqwest::Client;
 use serial_test::serial;
+use uuid::Uuid;
 
 use self::integration_utils::cargo_shuttle_run;
-use crate::integration_utils::send;
+use crate::integration_utils::{send, send_get};
 
 pub const WEBSERVER_URL: &str = "http://localhost:8000";
 
@@ -50,34 +51,73 @@ async fn user_crud() {
 async fn item_crud() {
   let mut _child_guard = cargo_shuttle_run().await;
   let c = Client::builder().cookie_store(true).build().unwrap();
-  send(&c, CreateUserPayload::default(), "POST", "users", 200, "1").await;
-  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "2").await;
-  let id: uuid::Uuid =
-    send(&c, CreateItemPayload::default(), "POST", "items", 200, "3").await.json().await.unwrap();
-  let fake_id = uuid::Uuid::new_v4();
-  send(&c, "", "GET", &format!("items/{fake_id}?page=1"), 404, "40").await;
-  send(&c, "", "GET", &format!("items/{id}?page=0"), 422, "41").await;
-  send(&c, "", "GET", &format!("items/{id}?page=1"), 200, "4").await;
-  let r: GetItemResponse =
-    send(&c, "", "GET", &format!("items/{id}?page=2"), 200, "5").await.json().await.unwrap();
-  assert!(r.comments.is_empty());
+  send(&c, CreateUserPayload::default(), "POST", "users", 200, "00").await;
+  send(&c, CreateUserPayload::bob(), "POST", "users", 200, "01").await;
 
+  // post item for alice as unauth: 401
+  send(&c, CreateItemPayload::default(), "POST", "items", 401, "10").await;
+  // post item for alice as alice: 200
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "11").await;
+  let id = send_get::<Uuid>(&c, CreateItemPayload::default(), "POST", "items", 200, "12").await;
+  // post item for alice as alice with invalid payload: 422
+  send(&c, GetUserResponse::default(), "POST", "items", 422, "13").await;
+  // post duplicate item for alice as alice with invalid payload: 422
+  send(&c, CreateItemPayload::default(), "POST", "items", 200, "14").await;
+  // todo(testing, banned) banned user post item: 401
+
+  // get item with fake id: 404
+  let fake_id = uuid::Uuid::new_v4();
+  send(&c, "", "GET", &format!("items/{fake_id}?page=1"), 404, "20").await;
+  // get item with invalid id: 400
+  send(&c, "", "GET", "items/&invalid_id&?page=1", 400, "21").await;
+  // get item with with invalid page: 422
+  send(&c, "", "GET", &format!("items/{id}?page=0"), 422, "22").await;
+  // get item with with negative page:
+  send(&c, "", "GET", &format!("items/{id}?page=-1"), 422, "22a").await;
+  // get item with without a page:
+  send(&c, "", "GET", &format!("items/{id}"), 400, "22b").await;
+  // get item with with too-high page: 200 (this is fine)
+  send(&c, "", "GET", &format!("items/{id}?page=3"), 200, "22c").await;
+  // get real item as alice: 200
+  let r: GetItemResponse = send_get(&c, "", "GET", &format!("items/{id}?page=1"), 200, "24").await;
+  // get real item as logged out: 200
+  send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "5").await;
+  let r_: GetItemResponse = send_get(&c, "", "GET", &format!("items/{id}?page=1"), 200, "25").await;
+  assert!(r.comments.is_empty());
+  // todo: compare logged in and logged out responses
+
+  // get item score and user karma
+  let (_points, _karma) = get_points_karma(&c, id).await;
+
+  // unauthorized user 401
+  send(&c, VotePayload::default(), "POST", "items/vote", 401, "30").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "30a").await;
+  // bad payload 422
+  send(&c, GetItemResponse::default(), "POST", "items/vote", 422, "31").await;
+  // normal upvote 200
   let upvote = VotePayload::new(id, VoteState::Upvote);
+  send(&c, upvote.clone(), "POST", "items/vote", 200, "32").await;
+  let (points, karma) = get_points_karma(&c, id).await;
+  assert_eq!(points, _points + 1);
+  assert_eq!(karma, _karma + 1);
+  // duplicate upvote 409
+  send(&c, upvote.clone(), "POST", "items/vote", 409, "33").await;
+
+  // vote score and karma checks
   let downvote = VotePayload::new(id, VoteState::Downvote);
+  send(&c, downvote.clone(), "POST", "items/vote", 200, "34a").await;
+  let (points, karma) = get_points_karma(&c, id).await;
+  assert_eq!(points, _points - 1);
+  assert_eq!(karma, _karma - 1);
+  send(&c, upvote.clone(), "POST", "items/vote", 200, "34b").await;
+  let (points, karma) = get_points_karma(&c, id).await;
+  assert_eq!(points, _points + 1);
+  assert_eq!(karma, _karma + 1);
   let unvote = VotePayload::new(id, VoteState::None);
-  send(&c, upvote.clone(), "POST", "items/vote", 200, "6").await;
-  send(&c, upvote.clone(), "POST", "items/vote", 409, "7").await;
-  send(&c, downvote.clone(), "POST", "items/vote", 200, "8").await;
-  send(&c, downvote.clone(), "POST", "items/vote", 409, "9").await;
-  send(&c, unvote.clone(), "POST", "items/vote", 200, "01").await;
-  send(&c, unvote.clone(), "POST", "items/vote", 409, "02").await;
-  send(&c, downvote.clone(), "POST", "items/vote", 200, "03").await;
-  send(&c, upvote.clone(), "POST", "items/vote", 200, "04").await;
-  // next: get user karma
-  // send(&c, "", "GET", &format!("items/{id}?2"), 200, "7").await;
-  // let upvote = VotePayload::new(id, VotePayloadEnum::Upvote);
-  // let downvote = VotePayload::new(id, VotePayloadEnum::Downvote);
-  // send(&c, upvote, "POST", "items/vote", 200, "8").await;
+  send(&c, unvote.clone(), "POST", "items/vote", 200, "34c").await;
+  let (points, karma) = get_points_karma(&c, id).await;
+  assert_eq!(points, _points);
+  assert_eq!(karma, _karma);
 
   // todo(test) favorite_item
   // todo(test) hide_item
@@ -86,4 +126,15 @@ async fn item_crud() {
   // edit item
   // get delete item
   // delete item
+}
+
+async fn get_points_karma(c: &Client, id: Uuid) -> (i32, i32) {
+  let points =
+    send_get::<GetItemResponse>(c, "", "GET", &format!("items/{id}?page=1"), 200, "get_points")
+      .await
+      .item
+      .points;
+  let karma =
+    send_get::<GetUserResponse>(c, "", "GET", "users/alice", 200, "get_karma").await.karma;
+  (points, karma)
 }
