@@ -119,8 +119,28 @@ async fn item_crud() {
   assert_eq!(points, _points);
   assert_eq!(karma, _karma);
 
-  // todo(test) favorite_item
-  // todo(test) hide_item
+  // bad payload: 400
+  send(&c, VotePayload::default(), "POST", "items/favorite", 400, "36").await;
+  // normal favorites and unfavorites: 200; duplicate favorite: 409
+  let favorite = FavoritePayload::new(id, FavoritePayloadEnum::Favorite);
+  send(&c, favorite.clone(), "POST", "items/favorite", 200, "35").await;
+  send(&c, favorite.clone(), "POST", "items/favorite", 409, "35a").await;
+  let unfavorite = FavoritePayload::new(id, FavoritePayloadEnum::Unfavorite);
+  send(&c, unfavorite.clone(), "POST", "items/favorite", 200, "35b").await;
+  send(&c, unfavorite.clone(), "POST", "items/favorite", 409, "35c").await;
+  send(&c, favorite.clone(), "POST", "items/favorite", 200, "35d").await;
+  // logged out: 401
+  send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "5").await;
+  send(&c, unfavorite.clone(), "POST", "items/favorite", 401, "36").await;
+
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "37").await;
+
+  let hide = HiddenPayload::new(id, HiddenPayloadEnum::Hidden);
+  send(&c, hide.clone(), "POST", "items/hide", 200, "38").await;
+  send(&c, hide, "POST", "items/hide", 400, "38a").await;
+  let unhide = HiddenPayload::new(id, HiddenPayloadEnum::UnHidden);
+  send(&c, unhide.clone(), "POST", "items/hide", 200, "38b").await;
+  send(&c, unhide, "POST", "items/hide", 400, "38c").await;
 
   // get edit item
   // edit item

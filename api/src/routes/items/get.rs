@@ -22,6 +22,8 @@ use super::*;
 /// - and whether they have been upvoted by the user
 /// - return the item and comments `page` with the user-specific metadata
 ///
+/// backlog: fetching and recursively updating comment children
+///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L92
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L52
 pub async fn get_item(

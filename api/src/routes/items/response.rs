@@ -87,9 +87,12 @@ impl GetItemCommentResponse {
     let vote_state = user_comment_votes
       .iter()
       .find(|v| v.content_id == comment.id)
-      .ok_or(ApiError::OtherISE("Comment vote not found".to_string()))?.vote_state;
+      .ok_or(ApiError::OtherISE("Comment vote not found".to_string()))?
+      .vote_state;
 
-    Ok(Self { comment, edit_and_delete_expired, vote_state})
+    // backlog: dropped recursively updating comment children
+
+    Ok(Self { comment, edit_and_delete_expired, vote_state })
   }
 }
 
