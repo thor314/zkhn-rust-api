@@ -47,27 +47,27 @@ pub async fn get_user_comments(
   username: &Username,
   id: Uuid,
 ) -> DbResult<Vec<Comment>> {
-  todo!()
-  // sqlx::query_as!(
-  //   Comment,
-  //   "SELECT
-  //     id,
-  //     username,
-  //     parent_item_id,
-  //     parent_item_title as \"parent_item_title: Title\",
-  //     comment_text as \"comment_text: CommentText\",
-  //     is_parent,
-  //     root_comment_id,
-  //     parent_comment_id,
-  //     points,
-  //     created,
-  //     dead
-  //   FROM comments WHERE username = $1 AND parent_item_id = $2",
-  //   username.0,
-  //   id
-  // )
-  // .fetch_all(&pool)
-  // .await?
+  Ok(vec![]) // todo!()
+             // sqlx::query_as!(
+             //   Comment,
+             //   "SELECT
+             //     id,
+             //     username,
+             //     parent_item_id,
+             //     parent_item_title as \"parent_item_title: Title\",
+             //     comment_text as \"comment_text: CommentText\",
+             //     is_parent,
+             //     root_comment_id,
+             //     parent_comment_id,
+             //     points,
+             //     created,
+             //     dead
+             //   FROM comments WHERE username = $1 AND parent_item_id = $2",
+             //   username.0,
+             //   id
+             // )
+             // .fetch_all(&pool)
+             // .await?
 }
 
 // pub async fn get_comment(pool: &DbPool, comment_id: Uuid) -> DbResult<Option<Comment>> {

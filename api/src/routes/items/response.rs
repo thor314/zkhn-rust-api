@@ -59,7 +59,7 @@ impl GetItemResponseAuthenticated {
     hidden: &Option<UserHidden>,
     user: &User,
   ) -> Self {
-    let edit_and_delete_expired = item.username != user.username || !item.is_editable(pool).await;
+    let edit_and_delete_expired = item.username != user.username || !item.is_editable(pool);
     Self {
       voted_on_by_user: vote.is_some(),
       unvote_expired: false,

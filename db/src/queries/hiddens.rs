@@ -14,7 +14,7 @@ pub async fn get_hidden(
   username: &Username,
   id: Uuid,
 ) -> DbResult<Option<UserHidden>> {
-  todo!()
+  Ok(None) // todo!()
 }
 
 pub async fn get_hidden_item_ids_after(

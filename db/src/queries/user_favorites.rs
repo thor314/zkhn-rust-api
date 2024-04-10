@@ -14,7 +14,8 @@ pub async fn get_favorite(
   username: &Username,
   id: Uuid,
 ) -> DbResult<Option<UserFavorite>> {
-  todo!()
+  // todo!()
+  Ok(None)
 }
 
 // pub async fn get_user_favorite_by_username_and_item_id(
