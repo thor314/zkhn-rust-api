@@ -1,11 +1,19 @@
 use super::*;
 
-pub async fn get_assert_hidden(pool: &DbPool, username: &Username, id: Uuid) -> DbResult<()> {
+pub async fn get_assert_hidden(
+  pool: &DbPool,
+  username: &Username,
+  id: Uuid,
+) -> DbResult<UserHidden> {
   get_hidden(pool, username, id).await?.ok_or(DbError::NotFound("hidden".into()))
 }
 
 // todo(hidden) + get_assert_hidden
-pub async fn get_hidden(pool: &DbPool, username: &Username, id: Uuid) -> DbResult<Option<()>> {
+pub async fn get_hidden(
+  pool: &DbPool,
+  username: &Username,
+  id: Uuid,
+) -> DbResult<Option<UserHidden>> {
   todo!()
 }
 

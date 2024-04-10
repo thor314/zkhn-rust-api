@@ -1,11 +1,19 @@
 use super::*;
 
-pub async fn get_assert_favorite(pool: &DbPool, username: &Username, id: Uuid) -> DbResult<()> {
+pub async fn get_assert_favorite(
+  pool: &DbPool,
+  username: &Username,
+  id: Uuid,
+) -> DbResult<UserFavorite> {
   get_favorite(pool, username, id).await?.ok_or(DbError::NotFound("favorite".into()))
 }
 
 // todo(favorite) + get_assert_favorite
-pub async fn get_favorite(pool: &DbPool, username: &Username, id: Uuid) -> DbResult<Option<()>> {
+pub async fn get_favorite(
+  pool: &DbPool,
+  username: &Username,
+  id: Uuid,
+) -> DbResult<Option<UserFavorite>> {
   todo!()
 }
 

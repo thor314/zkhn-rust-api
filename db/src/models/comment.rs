@@ -100,4 +100,11 @@ impl Comment {
     self.children_count += 1;
     comment
   }
+
+  pub fn is_editable(&self) -> bool {
+    if self.created + chrono::Duration::try_hours(1).unwrap() < now() || self.children_count > 0 {
+      return false;
+    }
+    true
+  }
 }

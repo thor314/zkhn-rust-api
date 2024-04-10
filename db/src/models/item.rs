@@ -57,8 +57,15 @@ impl Item {
     Item { username, title, item_type, url, domain, text, item_category, ..Default::default() }
   }
 
+  // todo(refactor) - should not be async, store a `number comments` or `has comments` field on the
+  // struct
+  pub async fn is_editable(&self, pool: &DbPool) -> bool {
+    !(crate::queries::items::item_has_comments(pool, self.id).await
+      || now() > self.modification_expiration())
+  }
+
   /// An item is editable if it was created less than 1 hour ago, and has no comments.
-  pub async fn assert_editable(&self, pool: &DbPool) -> DbResult<()> {
+  pub async fn assert_is_editable(&self, pool: &DbPool) -> DbResult<()> {
     if crate::queries::items::item_has_comments(pool, self.id).await {
       return Err(DbError::NotEditable("has comments".into()));
     } else if now() > self.modification_expiration() {

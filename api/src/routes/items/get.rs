@@ -1,4 +1,4 @@
-use db::models::user_vote::UserVote;
+use db::models::{user_favorite::UserFavorite, user_hidden::UserHidden, user_vote::UserVote};
 
 use super::*;
 
@@ -33,23 +33,45 @@ pub async fn get_item(
   debug!("get_item called with id: {id} and page: {page:?}");
   page.validate(&())?;
 
-  let user = auth_session.get_user_from_session();
-  let show_dead = user.as_ref().map(|u| u.show_dead).unwrap_or(false);
+  let session_user = auth_session.get_user_from_session();
+  let show_dead = session_user.as_ref().map(|u| u.show_dead).unwrap_or(false);
 
   let (item, (comments, total_comments)) = tokio::try_join!(
     db::queries::items::get_assert_item(&state.pool, id),
     db::queries::comments::get_comments_page(&state.pool, id, page, show_dead),
   )?;
 
-  // backlog(refactor) - matching off janky empty username is mega code smell
-  Ok(Json(match user {
-    None => GetItemResponse::new(item, comments, total_comments, None),
+  Ok(Json(match session_user {
+    None => GetItemResponse::new(
+      item,
+      comments.into_iter().map(GetItemCommentResponse::new).collect(),
+      total_comments,
+      None,
+      None,
+    ),
     Some(user) => {
-      // let (votes, favorites, hiddens, comment_votes) = todo!();
-      let item_auth_data = GetItemResponseAuthenticated::new(&item);
-      // let auth_data = todo!();
-      // todo!()
-      GetItemResponse::new(item, comments, total_comments, Some(item_auth_data))
+      // get the user-related metadata
+      let (vote, favorite, hidden, comment_votes): (
+        Option<UserVote>,
+        Option<UserFavorite>,
+        Option<UserHidden>,
+        Vec<Comment>,
+      ) = tokio::try_join!(
+        queries::user_votes::get_item_vote(&state.pool, &user.username, item.id),
+        queries::user_favorites::get_favorite(&state.pool, &user.username, item.id),
+        queries::hiddens::get_hidden(&state.pool, &user.username, item.id),
+        queries::comments::get_user_comments(&state.pool, &user.username, item.id),
+      )?;
+
+      let item_metadata =
+        GetItemResponseAuthenticated::new(&state.pool, &item, &vote, &favorite, &hidden, &user)
+          .await;
+
+      // get the comment related nonsense
+      let comments: Vec<GetItemCommentResponse> =
+        comments.into_iter().map(GetItemCommentResponse::new).collect();
+
+      GetItemResponse::new(item, comments, total_comments, Some(item_metadata), Some(user))
     },
   }))
 }
@@ -77,7 +99,7 @@ pub async fn get_edit_item_page_data(
 ) -> ApiResult<Json<GetEditItemResponse>> {
   debug!("get_edit_item called with id: {id}");
   let item = db::queries::items::get_assert_item(&state.pool, id).await?;
-  item.assert_editable(&state.pool).await?;
+  item.assert_is_editable(&state.pool).await?;
   let _user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
 
   Ok(Json(item.into()))

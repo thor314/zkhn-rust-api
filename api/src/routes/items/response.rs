@@ -1,25 +1,40 @@
+use db::{
+  models::{user_favorite::UserFavorite, user_hidden::UserHidden, user_vote::UserVote},
+  DbPool,
+};
+
 use super::*;
+use crate::AuthUserResponseInternal;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
 #[serde(rename_all = "camelCase")]
 pub struct GetItemResponse {
-  pub item: Item,
-  pub comments: Vec<GetItemResponseComment>, // todo: transform reduce comment
+  pub item:             Item,
+  pub comments:         Vec<GetItemCommentResponse>, // todo: transform reduce comment
   pub is_more_comments: bool,
-  pub get_item_response_authenticated: Option<GetItemResponseAuthenticated>,
+  pub authenticated:    Option<GetItemResponseAuthenticated>,
+  pub auth_user:        AuthUserResponseInternal,
 }
 
 impl GetItemResponse {
   pub fn new(
     item: Item,
-    comments: Vec<Comment>,
+    comments: Vec<GetItemCommentResponse>,
     page: usize,
     get_item_response_authenticated: Option<GetItemResponseAuthenticated>,
+    session_user: Option<User>,
   ) -> Self {
     let is_more_comments = comments.len() > page * COMMENTS_PER_PAGE;
-    let comments = comments.into_iter().map(GetItemResponseComment::from).collect();
-    Self { item, comments, is_more_comments, get_item_response_authenticated }
+    let comments = comments.into_iter().map(GetItemCommentResponse::from).collect();
+    let auth_user = AuthUserResponseInternal::new(session_user);
+    Self {
+      item,
+      comments,
+      is_more_comments,
+      authenticated: get_item_response_authenticated,
+      auth_user,
+    }
   }
 }
 
@@ -28,36 +43,49 @@ impl GetItemResponse {
 #[serde(rename_all = "camelCase")]
 pub struct GetItemResponseAuthenticated {
   voted_on_by_user:        bool,
+  /// backlog: remove unvote expired as extraneous
   unvote_expired:          bool,
   favorited_by_user:       bool,
   hidden_by_user:          bool,
   edit_and_delete_expired: bool,
-  // user_comment_votes: Vec<CommentVote>,
 }
 
 impl GetItemResponseAuthenticated {
-  pub fn new(item: &Item) -> Self {
-    // Self {
-    // voted_on_by_user,
-    // unvote_expired,
-    // favorited_by_user,
-    // hidden_by_user,
-    // edit_and_delete_expired,
-    // }
-    Default::default() // todo!()
+  pub async fn new(
+    pool: &DbPool,
+    item: &Item,
+    vote: &Option<UserVote>,
+    favorite: &Option<UserFavorite>,
+    hidden: &Option<UserHidden>,
+    user: &User,
+  ) -> Self {
+    let edit_and_delete_expired = item.username != user.username || !item.is_editable(pool).await;
+    Self {
+      voted_on_by_user: vote.is_some(),
+      unvote_expired: false,
+      favorited_by_user: favorite.is_some(),
+      hidden_by_user: hidden.is_some(),
+      edit_and_delete_expired,
+    }
   }
 }
 
 // todo(getitemresponsecomment)
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
-#[schema(default = GetItemResponseComment::default, example=GetItemResponseComment::default)]
+#[schema(default = GetItemCommentResponse::default, example=GetItemCommentResponse::default)]
 #[serde(rename_all = "camelCase")]
-pub struct GetItemResponseComment {
-  comment: Comment,
+pub struct GetItemCommentResponse {
+  comment:                 Comment,
+  edit_and_delete_expired: bool,
 }
 
-impl From<Comment> for GetItemResponseComment {
-  fn from(comment: Comment) -> Self { Self { comment } }
+impl GetItemCommentResponse {
+  pub fn new(comment: Comment) -> Self {
+    let edit_and_delete_expired = !comment.is_editable();
+    // todo
+
+    Self { comment, edit_and_delete_expired }
+  }
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
