@@ -32,6 +32,11 @@ pub async fn get_item_vote(
   .map_err(DbError::from)
 }
 
+/// get the comment-votes a user has submitted on an item with `id`
+pub async fn get_comment_votes_for_item(pool: &DbPool, username: &Username, item_id: Uuid) -> DbResult<Vec<UserVote>> {
+  Ok(vec![]) // todo
+}
+
 /// Submit an vote on an item.
 /// Assume the api has already checked for repeatedly submitted {up,down,un}votes.
 ///

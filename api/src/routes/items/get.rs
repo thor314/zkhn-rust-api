@@ -44,23 +44,26 @@ pub async fn get_item(
   Ok(Json(match session_user {
     None => GetItemResponse::new(
       item,
-      comments.into_iter().map(GetItemCommentResponse::new).collect(),
+      comments
+        .into_iter()
+        .map(|comment| GetItemCommentResponse::new(comment, &[]))
+        .collect::<ApiResult<Vec<_>>>()?,
       total_comments,
       None,
       None,
     ),
     Some(user) => {
       // get the user-related metadata
-      let (vote, favorite, hidden, comment_votes): (
+      let (vote, favorite, hidden, user_comment_votes): (
         Option<UserVote>,
         Option<UserFavorite>,
         Option<UserHidden>,
-        Vec<Comment>,
+        Vec<UserVote>,
       ) = tokio::try_join!(
         queries::user_votes::get_item_vote(&state.pool, &user.username, item.id),
         queries::user_favorites::get_favorite(&state.pool, &user.username, item.id),
         queries::hiddens::get_hidden(&state.pool, &user.username, item.id),
-        queries::comments::get_user_comments(&state.pool, &user.username, item.id),
+        queries::user_votes::get_comment_votes_for_item(&state.pool, &user.username, item.id),
       )?;
 
       let item_metadata =
@@ -68,8 +71,10 @@ pub async fn get_item(
           .await;
 
       // get the comment related nonsense
-      let comments: Vec<GetItemCommentResponse> =
-        comments.into_iter().map(GetItemCommentResponse::new).collect();
+      let comments = comments
+        .into_iter()
+        .map(|comment| GetItemCommentResponse::new(comment, &user_comment_votes))
+        .collect::<ApiResult<Vec<_>>>()?;
 
       GetItemResponse::new(item, comments, total_comments, Some(item_metadata), Some(user))
     },

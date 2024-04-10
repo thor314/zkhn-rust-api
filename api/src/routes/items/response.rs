@@ -77,14 +77,19 @@ impl GetItemResponseAuthenticated {
 pub struct GetItemCommentResponse {
   comment:                 Comment,
   edit_and_delete_expired: bool,
+  // unvote_expired:           bool, - feature removed
+  vote_state:              VoteState,
 }
 
 impl GetItemCommentResponse {
-  pub fn new(comment: Comment) -> Self {
+  pub fn new(comment: Comment, user_comment_votes: &[UserVote]) -> ApiResult<Self> {
     let edit_and_delete_expired = !comment.is_editable();
-    // todo
+    let vote_state = user_comment_votes
+      .iter()
+      .find(|v| v.content_id == comment.id)
+      .ok_or(ApiError::OtherISE("Comment vote not found".to_string()))?.vote_state;
 
-    Self { comment, edit_and_delete_expired }
+    Ok(Self { comment, edit_and_delete_expired, vote_state})
   }
 }
 
