@@ -72,7 +72,7 @@ pub async fn vote_item(
   let user = auth_session.get_assert_user_from_session()?;
   let item = queries::items::get_assert_item(&state.pool, payload.content_id).await?;
   let vote_state =
-    queries::user_votes::vote_on_item(&state.pool, item.id, &user.username, payload.vote_state)
+    queries::user_votes::vote_item(&state.pool, item.id, &user.username, payload.vote_state)
       .await?;
 
   Ok(Json(vote_state))

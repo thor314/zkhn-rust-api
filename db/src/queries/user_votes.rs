@@ -69,7 +69,7 @@ pub async fn get_user_related_votes_for_item(
 /// - update the item's points
 ///
 /// return the new vote state
-pub async fn vote_on_item(
+pub async fn vote_item(
   pool: &DbPool,
   item_id: Uuid,
   username: &Username,
