@@ -47,7 +47,7 @@ pub enum VoteState {
   Downvote,
   None,
 }
-impl From<VoteState> for i8 {
+impl From<VoteState> for i32 {
   fn from(v: VoteState) -> Self {
     match v {
       VoteState::Upvote => 1,
