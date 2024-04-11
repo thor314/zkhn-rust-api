@@ -1,5 +1,5 @@
 use db::{
-  models::{user_favorite::UserFavorite, user_hidden::UserHidden, user_vote::UserVote},
+  models::{user_favorite::UserFavorite, user_vote::UserVote},
   DbPool,
 };
 
@@ -48,9 +48,9 @@ impl GetItemResponse {
 pub struct GetItemResponseAuthenticated {
   voted_on_by_user:        bool,
   /// note: remove unvote expired as extraneous
+  /// note: hidden removed
   unvote_expired:          bool,
   favorited_by_user:       bool,
-  hidden_by_user:          bool,
   edit_and_delete_expired: bool,
 }
 
@@ -60,7 +60,6 @@ impl GetItemResponseAuthenticated {
     item: &Item,
     vote: &Option<UserVote>,
     favorite: &Option<UserFavorite>,
-    hidden: &Option<UserHidden>,
     user: &User,
   ) -> Self {
     let edit_and_delete_expired = item.username != user.username || !item.is_editable(pool);
@@ -68,7 +67,6 @@ impl GetItemResponseAuthenticated {
       voted_on_by_user: vote.is_some(),
       unvote_expired: false,
       favorited_by_user: favorite.is_some(),
-      hidden_by_user: hidden.is_some(),
       edit_and_delete_expired,
     }
   }

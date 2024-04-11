@@ -61,10 +61,6 @@ impl User {
   //   UserFavorite { username: self.username.clone(), item_type, item_id, date: now() }
   // }
 
-  // pub fn hide(&self, item_id: Uuid, item_creation_date: Timestamp) -> UserHidden {
-  //   UserHidden { username: self.username.clone(), item_id, date: now(), item_creation_date }
-  // }
-
   // pub fn vote(
   //   &self,
   //   vote_type: String,

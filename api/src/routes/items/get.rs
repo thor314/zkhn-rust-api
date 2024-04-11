@@ -1,4 +1,4 @@
-use db::models::{user_favorite::UserFavorite, user_hidden::UserHidden, user_vote::UserVote};
+use db::models::{user_favorite::UserFavorite, user_vote::UserVote};
 
 use super::*;
 
@@ -16,7 +16,7 @@ use super::*;
 /// - If user is logged out: get and return the item and the `page` of comments
 ///
 /// User is logged in: (todo: blocked by comments upvotes, favorites, and items)
-/// - get the user's votes, favorites, hiddens, and comment votes for the item
+/// - get the user's votes, favorites, and comment votes for the item
 /// - validate whether the item may be edited
 /// - get the item's comments and update whether they may be edited
 /// - and whether they have been upvoted by the user
@@ -47,23 +47,20 @@ pub async fn get_item(
   Ok(Json(match session_user {
     None => GetItemResponse::new(item, comments_page, total_comments, None, None, None)?,
     Some(user) => {
-      // get the user-related item-votes, favorites, hiddens, and comment-votes for this item
-      let (vote, favorite, hidden, user_comment_votes): (
+      // get the user-related item-votes, favorites, and comment-votes for this item
+      let (vote, favorite, user_comment_votes): (
         Option<UserVote>,
         Option<UserFavorite>,
-        Option<UserHidden>,
         Vec<UserVote>,
       ) = tokio::try_join!(
         queries::user_votes::get_item_vote(&state.pool, &user.username, item.id),
         queries::user_favorites::get_favorite(&state.pool, &user.username, item.id),
-        queries::hiddens::get_hidden(&state.pool, &user.username, item.id),
         queries::user_votes::get_user_related_votes_for_item(&state.pool, &user.username, item.id),
       )?;
 
       // create the user-related item metadata from the obtained item-related data
       let item_metadata =
-        GetItemResponseAuthenticated::new(&state.pool, &item, &vote, &favorite, &hidden, &user)
-          .await;
+        GetItemResponseAuthenticated::new(&state.pool, &item, &vote, &favorite, &user).await;
 
       // compute the item response from the item, comments, and user-related item metadata
       GetItemResponse::new(
@@ -134,21 +131,13 @@ pub async fn get_items_by_page(
   Ok(Json(match session_user {
     None => {
       let (items, count) =
-        queries::items::get_items_created_after(&state.pool, &start_date, &page, None).await?;
+        queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
       GetItemsPageResponse::new(items, count, page)
     },
     Some(user) => {
-      let item_ids_hidden_by_user =
-        queries::hiddens::get_hidden_item_ids_after(&state.pool, &user.username, start_date)
-          .await?;
       // backlog(show_dead)
-      let (items, count) = queries::items::get_items_created_after(
-        &state.pool,
-        &start_date,
-        &page,
-        Some(&item_ids_hidden_by_user),
-      )
-      .await?;
+      let (items, count) =
+        queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
       let user_votes: Vec<UserVote> = queries::user_votes::get_user_votes_on_items_after(
         &state.pool,
         &user.username,

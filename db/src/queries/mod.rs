@@ -1,5 +1,4 @@
 pub mod comments;
-pub mod hiddens;
 pub mod items;
 pub mod user_favorites;
 pub mod user_votes;
@@ -13,7 +12,7 @@ use sqlx::{postgres::PgQueryResult, Pool, Postgres, QueryBuilder, Transaction};
 use tracing::{debug, error, info, instrument, trace, warn};
 use uuid::Uuid;
 
-pub use self::{comments::*, hiddens::*, items::*, user_favorites::*, user_votes::*, users::*};
+pub use self::{comments::*, items::*, user_favorites::*, user_votes::*, users::*};
 use crate::{
   error::DbError,
   models::{
@@ -21,7 +20,6 @@ use crate::{
     item::{Item, *},
     user::User,
     user_favorite::UserFavorite,
-    user_hidden::UserHidden,
     user_vote::{UserVote, VoteState, *},
   },
   types::*,

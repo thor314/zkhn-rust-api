@@ -112,37 +112,3 @@ pub async fn favorite_item(
 
   Ok(Json(favorite_state))
 }
-
-#[utoipa::path(
-  post,
-  path = "/items/hide",
-  request_body = HidePayload,
-  responses(
-    (status = 400, description = "Payload Parsing failed"),
-    (status = 401, description = "Unauthorized"),
-    (status = 403, description = "Forbidden"),
-    (status = 422, description = "Invalid Payload"),
-    (status = 409, description = "Duplication Conflict"),
-    (status = 200),
-  ),
-  )]
-/// Submit an [un]hide on an item.
-///
-/// Return conflict if user has already [un]hidden the item.
-///
-/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L414
-/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L153
-pub async fn hide_item(
-  State(state): State<SharedState>,
-  auth_session: AuthSession,
-  Json(payload): Json<HiddenPayload>,
-) -> ApiResult<()> {
-  trace!("hide_item called with payload: {payload:?}");
-  let user = auth_session.get_assert_user_from_session()?;
-  let (item, hide) = tokio::try_join!(
-    queries::items::get_assert_item(&state.pool, payload.id),
-    queries::hiddens::get_hidden(&state.pool, &user.username, payload.id),
-  )?;
-
-  Ok(())
-}

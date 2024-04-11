@@ -109,7 +109,6 @@ pub async fn get_items_created_after(
   pool: &DbPool,
   start_date: &Timestamp,
   page: &Page,
-  exclude_hiddens: Option<&[Uuid]>, // todo
 ) -> DbResult<(Vec<Item>, usize)> {
   // .skip((page - 1) * config.itemsPerPage)
   sqlx::query_as!(

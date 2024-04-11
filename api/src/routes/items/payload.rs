@@ -61,26 +61,6 @@ impl FavoritePayload {
   pub fn new(id: Uuid, favorite: FavoriteStateEnum) -> Self { Self { id, favorite } }
 }
 
-/// A payload for hiding an item or comment
-#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
-#[schema(default = HiddenPayload::default, example=HiddenPayload::default)]
-#[serde(rename_all = "camelCase")]
-pub struct HiddenPayload {
-  pub id:     Uuid,
-  pub hidden: HiddenPayloadEnum,
-}
-impl HiddenPayload {
-  pub fn new(id: Uuid, hidden: HiddenPayloadEnum) -> Self { Self { id, hidden } }
-}
-
-#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase")]
-pub enum HiddenPayloadEnum {
-  #[default]
-  Hidden,
-  UnHidden,
-}
-
 /// A payload for editing an item
 #[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema, Validate)]
 #[schema(default = EditItemPayload::default, example=EditItemPayload::default)]
@@ -117,4 +97,4 @@ pub enum ItemKind {
 }
 
 // ranked, newest, rankedshow, newestshow, rankedask, sitedomain, submittedbyuser, rankedbyday,
-// farovitedbypage, hiddenbypage, upvotedbypage,
+// farovitedbypage, upvotedbypage,
