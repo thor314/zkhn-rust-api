@@ -44,7 +44,7 @@ pub(super) fn items_router(state: SharedState) -> Router {
     .route("/vote", routing::post(post::vote_item))
     .route("/favorite", routing::post(post::favorite_item))
     .route("/edit-item", routing::put(put::edit_item))
-    .route("/delete-item", routing::delete(delete::delete_item))
+    .route("/delete-item/:id", routing::delete(delete::delete_item))
     .with_state(state)
 }
 
@@ -59,8 +59,8 @@ pub(super) mod delete {
   /// https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L559
   /// https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L262
   #[utoipa::path(
-  put,
-  path = "/items/delete-item",
+  delete,
+  path = "/items/delete-item/{id}",
   request_body = ItemPayload,
   responses(
     (status = 401, description = "Unauthorized"),
@@ -79,12 +79,7 @@ pub(super) mod delete {
     let item = db::queries::items::get_assert_item(&state.pool, id).await?;
     item.assert_is_editable(&state.pool).await?;
     let user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
-
-    // payload.title.sanitize() // backlog(sanitize)
-    // backlog(sanitize) item text
-
-    // if title changed, we may need to change the item type; see routes/utils.js/getitemtype
-    db::queries::items::delete_item(&state.pool, id, &user.username).await?;
+    db::queries::items::delete_item(&state.pool, &item, &user.username).await?;
 
     // backlog(search)
     // await searchApi.deleteItem(itemId, newItemTitle, newItemText, newItemCategory);

@@ -4,7 +4,7 @@
 
 use api::*;
 use db::models::{
-  item::Item,
+  item::{Item, ItemCategory, ItemType},
   user_favorite::{FavoriteStateEnum, UserFavorite},
   user_vote::VoteState,
 };
@@ -126,9 +126,36 @@ async fn item_crud() {
   send(&c, "", "GET", &format!("items/get-edit-item-page-data/{id}"), 401, "38a").await;
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "38li").await;
 
-  // send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "37").await;
+  // edit item
+  let edit = EditItemPayload::new(id, "new title", "new text", ItemCategory::Paper, ItemType::News);
+  send(&c, edit, "PUT", "items/edit-item", 422, "39").await;
+  let edit = EditItemPayload::new(
+    id,
+    "new title",
+    "new text text text",
+    ItemCategory::Paper,
+    ItemType::News,
+  );
+  send(&c, edit, "PUT", "items/edit-item", 200, "39a").await;
+  let item =
+    send_get::<GetItemResponse>(&c, "", "GET", &format!("items/{id}?page=1"), 200, "40").await.item;
+  assert_eq!(item.title, "new title".into());
+  assert_eq!(item.text.unwrap(), "new text text text".into());
+  assert_eq!(item.item_category, ItemCategory::Paper);
+  assert_eq!(item.item_type, ItemType::News);
+  let edit = EditItemPayload::new(
+    bob_item_id,
+    "new title",
+    "new text text text",
+    ItemCategory::Paper,
+    ItemType::News,
+  );
+  send(&c, edit.clone(), "PUT", "items/edit-item", 403, "41").await;
 
-  // todo: test get_items_by_page
+  // delete
+  send(&c, "", "DELETE", &format!("items/delete-item/{id}"), 200, "100").await;
+  send(&c, "", "DELETE", &format!("items/delete-item/{id}"), 404, "100a").await;
+  send(&c, "", "GET", &format!("items/{id}?page=1"), 404, "100b").await;
 }
 
 async fn favorite(

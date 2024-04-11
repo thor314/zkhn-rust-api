@@ -81,7 +81,9 @@ impl Item {
   }
 }
 
-#[derive(Default, Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize, Copy)]
+#[derive(
+  Default, Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize, Copy,
+)]
 #[sqlx(type_name = "item_category_enum", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum ItemCategory {

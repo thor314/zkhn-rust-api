@@ -177,7 +177,7 @@ impl From<Url> for Domain {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, Type, PartialEq)]
 #[repr(transparent)]
 #[garde(transparent)]
 pub struct Text(#[garde(ascii, length(min = 10, max = 2000))] pub String);
