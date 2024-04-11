@@ -21,7 +21,7 @@
 //! Derive IntoParams for Payloads sent as Path or Query params.
 //! Derive ToSchema for Payloads and Responses.
 use axum::{routing, Json, Router};
-use db::models::{user::User, user_vote::*};
+use db::models::{user::User, user_favorite::FavoriteStateEnum, user_vote::*};
 use utoipa::OpenApi;
 use utoipa_rapidoc::RapiDoc;
 use utoipauto::utoipauto;
@@ -48,9 +48,9 @@ pub(super) fn docs_router() -> Router {
   components(schemas(
     User, UserUpdatePayload, ChangePasswordPayload, CreateUserPayload,
     CredentialsPayload, GetUserResponse, AuthenticateUserResponse, AuthUserResponseInternal,
-    CreateItemPayload,
+    CreateItemPayload, FavoriteStateEnum,
     GetItemResponse, GetEditItemResponse, ItemOrComment,
-    VotePayload, VoteState, FavoritePayload, FavoritePayloadEnum, HiddenPayload, HiddenPayloadEnum))
+    VotePayload, VoteState, FavoritePayload, HiddenPayload, HiddenPayloadEnum))
   // runtime modification, e.g. for jwt: https://docs.rs/utoipa/latest/utoipa/trait.Modify.html
   // low-priority, but could gate moderator methods with an auth token.
   // modifiers(..) 

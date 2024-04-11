@@ -14,6 +14,7 @@ pub struct Item {
   pub url:           Option<Url>,
   pub domain:        Option<Domain>,
   pub text:          Option<Text>,
+  pub comment_count: i32,
   /// upvotes for the item
   pub points:        i32,
   /// internal algorithmic score to sort items on home page by popularity
@@ -35,6 +36,7 @@ impl Default for Item {
       url:           Some(Url::default()),
       domain:        Some(Domain::default()),
       text:          Some(Text::default()),
+      comment_count: 0,
       points:        1,
       score:         0,
       item_category: ItemCategory::default(),
@@ -57,8 +59,15 @@ impl Item {
     Item { username, title, item_type, url, domain, text, item_category, ..Default::default() }
   }
 
+  // todo(refactor) - should not be async, store a `number comments` or `has comments` field on the
+  // struct
+  pub fn is_editable(&self, pool: &DbPool) -> bool {
+    // !(crate::queries::items::item_has_comments(pool, self.id).
+    self.comment_count > 0 || now() > self.modification_expiration()
+  }
+
   /// An item is editable if it was created less than 1 hour ago, and has no comments.
-  pub async fn assert_editable(&self, pool: &DbPool) -> DbResult<()> {
+  pub async fn assert_is_editable(&self, pool: &DbPool) -> DbResult<()> {
     if crate::queries::items::item_has_comments(pool, self.id).await {
       return Err(DbError::NotEditable("has comments".into()));
     } else if now() > self.modification_expiration() {

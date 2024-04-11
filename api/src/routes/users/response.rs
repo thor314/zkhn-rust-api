@@ -20,8 +20,8 @@ pub struct GetUserResponse {
 
 impl GetUserResponse {
   pub fn new(user: User, session_user: Option<User>) -> Self {
-    let auth_user = AuthUserResponseInternal::new(session_user.clone());
     let authentication_match = session_user.as_ref().map_or(false, |u| u.username == user.username);
+    let auth_user = AuthUserResponseInternal::new(session_user);
     let email = user.email.filter(|_| authentication_match);
     let show_dead = Some(user.show_dead).filter(|_| authentication_match);
     Self {

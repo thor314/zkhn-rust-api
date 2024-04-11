@@ -1,25 +1,44 @@
+use db::{
+  models::{user_favorite::UserFavorite, user_hidden::UserHidden, user_vote::UserVote},
+  DbPool,
+};
+
 use super::*;
+use crate::AuthUserResponseInternal;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
 #[serde(rename_all = "camelCase")]
 pub struct GetItemResponse {
-  pub item: Item,
-  pub comments: Vec<GetItemResponseComment>, // todo: transform reduce comment
-  pub is_more_comments: bool,
-  pub get_item_response_authenticated: Option<GetItemResponseAuthenticated>,
+  pub item:                    Item,
+  pub comments:                Vec<GetItemCommentResponse>, // todo: transform reduce comment
+  pub is_more_comments:        bool,
+  pub authenticated_item_data: Option<GetItemResponseAuthenticated>,
+  pub auth_user:               AuthUserResponseInternal,
 }
 
 impl GetItemResponse {
+  /// - compute whether there are more comments beyond this page
+  /// - transform the comments into responses
+  /// - the user authentication information
   pub fn new(
     item: Item,
     comments: Vec<Comment>,
     page: usize,
-    get_item_response_authenticated: Option<GetItemResponseAuthenticated>,
-  ) -> Self {
+    authenticated_item_data: Option<GetItemResponseAuthenticated>,
+    session_user: Option<User>,
+    mut user_comment_votes: Option<Vec<UserVote>>,
+  ) -> ApiResult<Self> {
     let is_more_comments = comments.len() > page * COMMENTS_PER_PAGE;
-    let comments = comments.into_iter().map(GetItemResponseComment::from).collect();
-    Self { item, comments, is_more_comments, get_item_response_authenticated }
+    let comments = comments
+      .into_iter()
+      .map(|comment| {
+        GetItemCommentResponse::new(comment, user_comment_votes.take().unwrap_or_default())
+      })
+      .collect::<ApiResult<Vec<_>>>()?;
+    let auth_user = AuthUserResponseInternal::new(session_user);
+
+    Ok(Self { item, comments, is_more_comments, authenticated_item_data, auth_user })
   }
 }
 
@@ -28,36 +47,58 @@ impl GetItemResponse {
 #[serde(rename_all = "camelCase")]
 pub struct GetItemResponseAuthenticated {
   voted_on_by_user:        bool,
+  /// note: remove unvote expired as extraneous
   unvote_expired:          bool,
   favorited_by_user:       bool,
   hidden_by_user:          bool,
   edit_and_delete_expired: bool,
-  // user_comment_votes: Vec<CommentVote>,
 }
 
 impl GetItemResponseAuthenticated {
-  pub fn new(item: &Item) -> Self {
-    // Self {
-    // voted_on_by_user,
-    // unvote_expired,
-    // favorited_by_user,
-    // hidden_by_user,
-    // edit_and_delete_expired,
-    // }
-    Default::default() // todo!()
+  pub async fn new(
+    pool: &DbPool,
+    item: &Item,
+    vote: &Option<UserVote>,
+    favorite: &Option<UserFavorite>,
+    hidden: &Option<UserHidden>,
+    user: &User,
+  ) -> Self {
+    let edit_and_delete_expired = item.username != user.username || !item.is_editable(pool);
+    Self {
+      voted_on_by_user: vote.is_some(),
+      unvote_expired: false,
+      favorited_by_user: favorite.is_some(),
+      hidden_by_user: hidden.is_some(),
+      edit_and_delete_expired,
+    }
   }
 }
 
 // todo(getitemresponsecomment)
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
-#[schema(default = GetItemResponseComment::default, example=GetItemResponseComment::default)]
+#[schema(default = GetItemCommentResponse::default, example=GetItemCommentResponse::default)]
 #[serde(rename_all = "camelCase")]
-pub struct GetItemResponseComment {
-  comment: Comment,
+pub struct GetItemCommentResponse {
+  comment:                 Comment,
+  edit_and_delete_expired: bool,
+  // unvote_expired:           bool, - feature removed
+  vote_state:              VoteState,
 }
 
-impl From<Comment> for GetItemResponseComment {
-  fn from(comment: Comment) -> Self { Self { comment } }
+impl GetItemCommentResponse {
+  /// - compute whether the comment is editable
+  /// - get the user's vote for this comment
+  /// - return the comment, the vote, and whether the comment is editable
+  pub fn new(comment: Comment, user_comment_votes: Vec<UserVote>) -> ApiResult<Self> {
+    let edit_and_delete_expired = !comment.is_editable();
+    let vote_state = user_comment_votes
+      .iter()
+      .find(|v| v.content_id == comment.id)
+      .ok_or(ApiError::OtherISE("Comment vote not found".to_string()))?
+      .vote_state;
+
+    Ok(Self { comment, edit_and_delete_expired, vote_state })
+  }
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]

@@ -3,7 +3,11 @@
 #![allow(dead_code)]
 
 use api::*;
-use db::models::{item::Item, user_vote::VoteState};
+use db::models::{
+  item::Item,
+  user_favorite::{FavoriteStateEnum, UserFavorite},
+  user_vote::VoteState,
+};
 use reqwest::Client;
 use serial_test::serial;
 use uuid::Uuid;
@@ -86,7 +90,7 @@ async fn item_crud() {
   assert!(r.comments.is_empty());
   // todo: compare logged in and logged out responses
 
-  // get item score and user karma
+  // get initial item score and user karma
   let (_points, _karma) = get_points_karma(&c, id).await;
 
   // unauthorized user 401
@@ -94,38 +98,57 @@ async fn item_crud() {
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "30a").await;
   // bad payload 422
   send(&c, GetItemResponse::default(), "POST", "items/vote", 422, "31").await;
-  // normal upvote 200
+
   let upvote = VotePayload::new(id, VoteState::Upvote);
-  send(&c, upvote.clone(), "POST", "items/vote", 200, "32").await;
-  let (points, karma) = get_points_karma(&c, id).await;
-  assert_eq!(points, _points + 1);
-  assert_eq!(karma, _karma + 1);
-  // duplicate upvote 409
-  send(&c, upvote.clone(), "POST", "items/vote", 409, "33").await;
-
-  // vote score and karma checks
   let downvote = VotePayload::new(id, VoteState::Downvote);
-  send(&c, downvote.clone(), "POST", "items/vote", 200, "34a").await;
-  let (points, karma) = get_points_karma(&c, id).await;
-  assert_eq!(points, _points - 1);
-  assert_eq!(karma, _karma - 1);
-  send(&c, upvote.clone(), "POST", "items/vote", 200, "34b").await;
-  let (points, karma) = get_points_karma(&c, id).await;
-  assert_eq!(points, _points + 1);
-  assert_eq!(karma, _karma + 1);
-  let unvote = VotePayload::new(id, VoteState::None);
-  send(&c, unvote.clone(), "POST", "items/vote", 200, "34c").await;
-  let (points, karma) = get_points_karma(&c, id).await;
-  assert_eq!(points, _points);
-  assert_eq!(karma, _karma);
+  let nonevote = VotePayload::new(id, VoteState::None);
+  vote(&c, &upvote, id, _points, _karma, 1, "32").await;
+  vote(&c, &upvote, id, _points, _karma, 0, "33").await;
+  vote(&c, &downvote, id, _points, _karma, -1, "34a").await;
+  vote(&c, &downvote, id, _points, _karma, 0, "34b").await;
+  vote(&c, &upvote, id, _points, _karma, 1, "34c").await;
+  vote(&c, &nonevote, id, _points, _karma, 0, "34d").await;
 
-  // todo(test) favorite_item
-  // todo(test) hide_item
+  // bad payload: 422
+  send(&c, VotePayload::default(), "POST", "items/favorite", 422, "36").await;
+  let fpayload = FavoritePayload::new(id, FavoriteStateEnum::Favorite);
+  favorite(&c, &fpayload, id, "37a", FavoriteStateEnum::Favorite).await;
+  // favorite(&c, &fpayload, id, "37b", FavoriteStateEnum::None).await;
 
-  // get edit item
-  // edit item
-  // get delete item
-  // delete item
+  // send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "37").await;
+}
+
+async fn favorite(
+  c: &Client,
+  favorite: &FavoritePayload,
+  id: Uuid,
+  tag: &str,
+  expect: FavoriteStateEnum,
+) {
+  let favorite =
+    send_get::<FavoriteStateEnum>(c, favorite, "POST", "items/favorite", 200, tag).await;
+  assert_eq!(expect, favorite);
+}
+
+async fn vote(
+  c: &Client,
+  vote: &VotePayload,
+  id: Uuid,
+  _points: i32,
+  _karma: i32,
+  inc: i32,
+  tag: &str,
+) {
+  let state = send_get::<VoteState>(c, vote.clone(), "POST", "items/vote", 200, tag).await;
+  let expected_state = match inc {
+    1 => VoteState::Upvote,
+    -1 => VoteState::Downvote,
+    _ => VoteState::None,
+  };
+  assert_eq!(state, expected_state);
+  let (points, karma) = get_points_karma(c, id).await;
+  assert_eq!(points, _points + inc);
+  assert_eq!(karma, _karma + inc);
 }
 
 async fn get_points_karma(c: &Client, id: Uuid) -> (i32, i32) {

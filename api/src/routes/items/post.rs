@@ -1,3 +1,5 @@
+use db::models::user_favorite::FavoriteStateEnum;
+
 use super::*;
 
 #[utoipa::path(
@@ -41,15 +43,21 @@ pub async fn create_item(
   responses(
     (status = 400, description = "Payload Parsing failed"),
     (status = 401, description = "Unauthorized"),
-    // (status = 403, description = "Forbidden"),
-    (status = 409, description = "Duplication Conflict"),
     (status = 200, body = Uuid),
   ),
   )]
 /// Submit an {up,down,un}vote on an item:
 /// - get the user from the session store
 /// - get the item from the database, and any previously existing vote on the item
-/// - if the user has already voted on the item in the same way: 409 Conflict
+///
+/// | State \\ Payload | Up     | Down |
+/// | ---------------- | ----   | ---- |
+/// | None             | Up     | Down |
+/// | Up               | None^1 | Down |
+/// | Down             | Down   | None |
+///
+/// ^1: i.e., with prior state Upvote, submitting an Upvote results in None vote.
+///
 /// - insert the new vote, replacing any prior vote
 /// - update the item's points
 /// - update recipient user karma
@@ -61,25 +69,15 @@ pub async fn vote_item(
   State(state): State<SharedState>,
   auth_session: AuthSession,
   Json(payload): Json<VotePayload>,
-) -> ApiResult<StatusCode> {
+) -> ApiResult<Json<VoteState>> {
   debug!("vote_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
-  let (item, vote) = tokio::try_join!(
-    queries::items::get_assert_item(&state.pool, payload.content_id),
-    queries::user_votes::get_item_vote(&state.pool, &user.username, payload.content_id),
-  )?;
+  let item = queries::items::get_assert_item(&state.pool, payload.content_id).await?;
+  let vote_state =
+    queries::user_votes::vote_item(&state.pool, item.id, &user.username, payload.vote_state)
+      .await?;
 
-  let is_duplication = vote.as_ref().map(|v| v.vote_state == payload.vote_state).unwrap_or(false);
-  if is_duplication {
-    return Err(ApiError::UniqueViolation(
-      "User has already voted identically on this item".into(),
-    ));
-  }
-
-  queries::user_votes::vote_on_item(state.pool, item.id, user.username, payload.vote_state, vote)
-    .await?;
-
-  Ok(StatusCode::OK)
+  Ok(Json(vote_state))
 }
 
 #[utoipa::path(
@@ -87,11 +85,9 @@ pub async fn vote_item(
   path = "/items/favorite",
   request_body = FavoritePayload,
   responses(
-    (status = 400, description = "Payload Parsing failed"),
     (status = 401, description = "Unauthorized"),
     (status = 403, description = "Forbidden"),
     (status = 422, description = "Invalid Payload"),
-    (status = 409, description = "Duplication Conflict"),
     (status = 200),
   ),
   )]
@@ -105,15 +101,16 @@ pub async fn favorite_item(
   State(state): State<SharedState>,
   auth_session: AuthSession,
   Json(payload): Json<FavoritePayload>,
-) -> ApiResult<()> {
+) -> ApiResult<Json<FavoriteStateEnum>> {
   trace!("favorite_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
-  let (item, favorite) = tokio::try_join!(
-    queries::items::get_assert_item(&state.pool, payload.id),
-    queries::user_favorites::get_favorite(&state.pool, &user.username, payload.id),
-  )?;
+  let item = queries::items::get_assert_item(&state.pool, payload.id).await?;
 
-  Ok(())
+  // post the favorite
+  let favorite_state =
+    queries::user_favorites::favorite_item(&state.pool, &user.username, item.id).await?;
+
+  Ok(Json(favorite_state))
 }
 
 #[utoipa::path(

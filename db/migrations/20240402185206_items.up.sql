@@ -13,6 +13,7 @@ CREATE TABLE items (
     item_type ITEM_TYPE_ENUM NOT NULL DEFAULT 'news',
     url TEXT,
     domain TEXT,
+    comment_count INT DEFAULT 0 NOT NULL,
     text TEXT,
     points INT DEFAULT 1 NOT NULL,
     score INT DEFAULT 0 NOT NULL,

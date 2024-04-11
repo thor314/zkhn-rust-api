@@ -24,7 +24,7 @@ pub async fn edit_item(
   debug!("update_item called with payload: {payload:?}");
   payload.validate(&())?;
   let item = db::queries::items::get_assert_item(&state.pool, payload.id).await?;
-  item.assert_editable(&state.pool).await?;
+  item.assert_is_editable(&state.pool).await?;
   let _user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
 
   // payload.title.sanitize() // backlog(sanitize)

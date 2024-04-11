@@ -1,3 +1,6 @@
+use axum::Json;
+use sqlx::{Executor, PgConnection, PgPool};
+
 use super::*;
 
 pub async fn get_assert_item_vote(
@@ -32,59 +35,94 @@ pub async fn get_item_vote(
   .map_err(DbError::from)
 }
 
+/// get the comments that `username` has submitted or voted on
+pub async fn get_user_related_votes_for_item(
+  pool: &DbPool,
+  username: &Username,
+  item_id: Uuid,
+) -> DbResult<Vec<UserVote>> {
+  sqlx::query_as!(
+    UserVote,
+    "SELECT 
+    id,
+    username, 
+    vote_type as \"vote_type: ItemOrComment\", 
+    content_id, 
+    parent_item_id, 
+    vote_state as \"vote_state: VoteState\", 
+    created 
+    FROM user_votes 
+    WHERE username = $1 and parent_item_id = $2",
+    username.0,
+    item_id
+  )
+  .fetch_all(pool)
+  .await
+  .map_err(DbError::from)
+}
+
 /// Submit an vote on an item.
-/// Assume the api has already checked for repeatedly submitted {up,down,un}votes.
 ///
 /// - delete the old vote if one exists
 /// - insert the vote into the database
 /// - update the submitter's karma
 /// - update the item's points
-pub async fn vote_on_item(
-  pool: DbPool,
+///
+/// return the new vote state
+pub async fn vote_item(
+  pool: &DbPool,
   item_id: Uuid,
-  username: Username,
+  username: &Username,
   vote_state: VoteState,
-  preexisting_vote: Option<UserVote>,
-) -> DbResult<()> {
+) -> DbResult<VoteState> {
   let mut tx = pool.begin().await?;
 
-  if let Some(ref vote) = preexisting_vote {
-    // delete the old vote if one exists
-    sqlx::query!("DELETE FROM user_votes WHERE id = $1", vote.id).execute(&mut *tx).await?;
+  let (vote_state, increment_value) = match get_item_vote(pool, username, item_id).await? {
+    None => (vote_state, i32::from(vote_state)),
+    Some(preexisting) => {
+      // remove the previous vote from the db
+      sqlx::query!("DELETE FROM user_votes WHERE id = $1", preexisting.id)
+        .execute(&mut *tx)
+        .await?;
+
+      // compute the new vote state
+      if preexisting.vote_state == vote_state {
+        (VoteState::None, -i32::from(vote_state))
+      } else {
+        (vote_state, i32::from(vote_state) - i32::from(preexisting.vote_state))
+      }
+    },
+  };
+
+  // insert the vote into the votes table
+  if vote_state != VoteState::None {
+    sqlx::query!(
+      "INSERT INTO user_votes (
+      id,
+      username, 
+      vote_type, 
+      content_id, 
+      vote_state, 
+      created 
+      ) VALUES ($1, $2, $3, $4, $5, $6)",
+      Uuid::new_v4(),
+      username.0,
+      ItemOrComment::Item as ItemOrComment,
+      item_id,
+      vote_state.clone() as VoteState,
+      now().0
+    )
+    .execute(&mut *tx)
+    .await?;
   }
-
-  // insert the vote in the votes table
-  sqlx::query!(
-    "INSERT INTO user_votes (
-    id,
-    username, 
-    vote_type, 
-    content_id, 
-    vote_state, 
-    created 
-  ) VALUES ($1, $2, $3, $4, $5, $6)",
-    Uuid::new_v4(),
-    username.0,
-    ItemOrComment::Item as ItemOrComment,
-    item_id,
-    vote_state.clone() as VoteState,
-    now().0
-  )
-  .execute(&mut *tx)
-  .await?;
-
-  // Update item points and get the item submitter username
-  let increment_value = {
-    let pre_existing =
-      preexisting_vote.as_ref().map(|v| i8::from(v.vote_state)).unwrap_or_default();
-    i8::from(vote_state) - pre_existing
-  } as i32;
 
   if increment_value == 0 {
     warn!("neutral points increment in vote_on_item, should be unreachable");
-    return Ok(tx.commit().await?);
+    tx.commit().await?;
+    return Ok(vote_state);
   }
 
+  // update the item's points and the submitter's karma
   let submitter = sqlx::query!(
     "UPDATE items SET points = points + $1 WHERE id = $2 
         RETURNING username as \"username: Username\"",
@@ -94,7 +132,6 @@ pub async fn vote_on_item(
   .fetch_one(&mut *tx)
   .await?
   .username;
-
   sqlx::query!(
     "UPDATE users SET karma = karma + $1 WHERE username = $2",
     increment_value,
@@ -103,7 +140,8 @@ pub async fn vote_on_item(
   .execute(&mut *tx)
   .await?;
 
-  Ok(tx.commit().await?)
+  tx.commit().await?;
+  Ok(vote_state)
 }
 
 pub async fn get_user_votes_on_items_after(

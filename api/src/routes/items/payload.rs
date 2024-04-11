@@ -1,3 +1,5 @@
+use db::models::user_favorite::FavoriteStateEnum;
+
 use super::*;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
@@ -53,18 +55,10 @@ impl VotePayload {
 #[serde(rename_all = "camelCase")]
 pub struct FavoritePayload {
   pub id:       Uuid,
-  pub favorite: FavoritePayloadEnum,
+  pub favorite: FavoriteStateEnum,
 }
 impl FavoritePayload {
-  pub fn new(id: Uuid, favorite: FavoritePayloadEnum) -> Self { Self { id, favorite } }
-}
-
-#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "camelCase")]
-pub enum FavoritePayloadEnum {
-  #[default]
-  Favorite,
-  Unfavorite,
+  pub fn new(id: Uuid, favorite: FavoriteStateEnum) -> Self { Self { id, favorite } }
 }
 
 /// A payload for hiding an item or comment

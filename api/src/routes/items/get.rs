@@ -1,4 +1,4 @@
-use db::models::user_vote::UserVote;
+use db::models::{user_favorite::UserFavorite, user_hidden::UserHidden, user_vote::UserVote};
 
 use super::*;
 
@@ -22,6 +22,8 @@ use super::*;
 /// - and whether they have been upvoted by the user
 /// - return the item and comments `page` with the user-specific metadata
 ///
+/// backlog: fetching and recursively updating comment children
+///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L92
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L52
 pub async fn get_item(
@@ -33,23 +35,45 @@ pub async fn get_item(
   debug!("get_item called with id: {id} and page: {page:?}");
   page.validate(&())?;
 
-  let user = auth_session.get_user_from_session();
-  let show_dead = user.as_ref().map(|u| u.show_dead).unwrap_or(false);
+  let session_user = auth_session.get_user_from_session();
+  let show_dead = session_user.as_ref().map(|u| u.show_dead).unwrap_or(false);
 
-  let (item, (comments, total_comments)) = tokio::try_join!(
+  let (item, (comments_page, total_comments)) = tokio::try_join!(
     db::queries::items::get_assert_item(&state.pool, id),
+    // todo: concerned about how this fetches a flat, non-recursive comments structure
     db::queries::comments::get_comments_page(&state.pool, id, page, show_dead),
   )?;
 
-  // backlog(refactor) - matching off janky empty username is mega code smell
-  Ok(Json(match user {
-    None => GetItemResponse::new(item, comments, total_comments, None),
+  Ok(Json(match session_user {
+    None => GetItemResponse::new(item, comments_page, total_comments, None, None, None)?,
     Some(user) => {
-      // let (votes, favorites, hiddens, comment_votes) = todo!();
-      let item_auth_data = GetItemResponseAuthenticated::new(&item);
-      // let auth_data = todo!();
-      // todo!()
-      GetItemResponse::new(item, comments, total_comments, Some(item_auth_data))
+      // get the user-related item-votes, favorites, hiddens, and comment-votes for this item
+      let (vote, favorite, hidden, user_comment_votes): (
+        Option<UserVote>,
+        Option<UserFavorite>,
+        Option<UserHidden>,
+        Vec<UserVote>,
+      ) = tokio::try_join!(
+        queries::user_votes::get_item_vote(&state.pool, &user.username, item.id),
+        queries::user_favorites::get_favorite(&state.pool, &user.username, item.id),
+        queries::hiddens::get_hidden(&state.pool, &user.username, item.id),
+        queries::user_votes::get_user_related_votes_for_item(&state.pool, &user.username, item.id),
+      )?;
+
+      // create the user-related item metadata from the obtained item-related data
+      let item_metadata =
+        GetItemResponseAuthenticated::new(&state.pool, &item, &vote, &favorite, &hidden, &user)
+          .await;
+
+      // compute the item response from the item, comments, and user-related item metadata
+      GetItemResponse::new(
+        item,
+        comments_page,
+        total_comments,
+        Some(item_metadata),
+        Some(user),
+        Some(user_comment_votes),
+      )?
     },
   }))
 }
@@ -77,7 +101,7 @@ pub async fn get_edit_item_page_data(
 ) -> ApiResult<Json<GetEditItemResponse>> {
   debug!("get_edit_item called with id: {id}");
   let item = db::queries::items::get_assert_item(&state.pool, id).await?;
-  item.assert_editable(&state.pool).await?;
+  item.assert_is_editable(&state.pool).await?;
   let _user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
 
   Ok(Json(item.into()))
