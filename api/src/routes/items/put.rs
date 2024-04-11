@@ -23,20 +23,17 @@ pub async fn edit_item(
 ) -> ApiResult<StatusCode> {
   debug!("update_item called with payload: {payload:?}");
   payload.validate(&())?;
-  let item = db::queries::items::get_assert_item(&state.pool, payload.id).await?;
+  let item = queries::items::get_assert_item(&state.pool, payload.id).await?;
   item.assert_is_editable(&state.pool).await?;
-  let _user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
+  let _session_user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
 
-  // payload.title.sanitize() // backlog(sanitize)
-  // backlog(sanitize) item text
-  // backlog validate url?
-
+  // payload.sanitize() // backlog(sanitize) - sanitize title and text
   // if title changed, we may need to change the item type; see routes/utils.js/getitemtype
-  // todo: list the fields that can change
-  // todo - update db
 
-  // await searchApi.editItem(itemId, newItemTitle, newItemText, newItemCategory);
-  // backlog(search)
+  queries::items::edit_item(&state.pool, item.id, &payload.title, payload.category, &payload.text)
+    .await?;
+
+  // backlog(search) search::editItem(itemId, newItemTitle, newItemText, newItemCategory).await?;
 
   Ok(StatusCode::OK)
 }

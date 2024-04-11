@@ -141,6 +141,28 @@ pub async fn get_items_created_after(
   .map_err(DbError::from)
 }
 
+pub async fn edit_item(
+  pool: &DbPool,
+  item_id: Uuid,
+  title: &Title,
+  category: ItemCategory,
+  text: &Text,
+) -> DbResult<()> {
+  sqlx::query!(
+    "UPDATE items
+    SET title = $1, item_category = $2, text = $3
+    WHERE id = $4",
+    title.0,
+    category as ItemCategory,
+    text.0,
+    item_id
+  )
+  .execute(pool)
+  .await?;
+
+  Ok(())
+}
+
 // pub async fn update_item_category(
 //   pool: &DbPool,
 //   item_id: Uuid,

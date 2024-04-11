@@ -106,9 +106,9 @@ pub async fn get_edit_item_page_data(
 
 #[utoipa::path(
   get,
-  path = "/items/get-items-by-page/{item_kind}?page={page}",
+  path = "/items/get-items-by-page/{item_kind}",
   params( ("item_kind" = ItemKind, Query, example = ItemKind::default), 
-          ("page" = i32, Query, example = Page::default) ),
+          Page ),
   responses( (status = 401, description = "Unauthorized"),
              (status = 403, description = "Forbidden"),
              (status = 404, description = "User not found"),
