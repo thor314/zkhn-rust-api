@@ -32,9 +32,30 @@ pub async fn get_item_vote(
   .map_err(DbError::from)
 }
 
-/// get the comment-votes a user has submitted on an item with `id`
-pub async fn get_comment_votes_for_item(pool: &DbPool, username: &Username, item_id: Uuid) -> DbResult<Vec<UserVote>> {
-  Ok(vec![]) // todo
+/// get the comments that `username` has submitted or voted on
+pub async fn get_user_related_votes_for_item(
+  pool: &DbPool,
+  username: &Username,
+  item_id: Uuid,
+) -> DbResult<Vec<UserVote>> {
+  sqlx::query_as!(
+    UserVote,
+    "SELECT 
+    id,
+    username, 
+    vote_type as \"vote_type: ItemOrComment\", 
+    content_id, 
+    parent_item_id, 
+    vote_state as \"vote_state: VoteState\", 
+    created 
+    FROM user_votes 
+    WHERE username = $1 and parent_item_id = $2",
+    username.0,
+    item_id
+  )
+  .fetch_all(pool)
+  .await
+  .map_err(DbError::from)
 }
 
 /// Submit an vote on an item.

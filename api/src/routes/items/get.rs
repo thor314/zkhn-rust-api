@@ -38,24 +38,16 @@ pub async fn get_item(
   let session_user = auth_session.get_user_from_session();
   let show_dead = session_user.as_ref().map(|u| u.show_dead).unwrap_or(false);
 
-  let (item, (comments, total_comments)) = tokio::try_join!(
+  let (item, (comments_page, total_comments)) = tokio::try_join!(
     db::queries::items::get_assert_item(&state.pool, id),
+    // todo: concerned about how this fetches a flat, non-recursive comments structure
     db::queries::comments::get_comments_page(&state.pool, id, page, show_dead),
   )?;
 
   Ok(Json(match session_user {
-    None => GetItemResponse::new(
-      item,
-      comments
-        .into_iter()
-        .map(|comment| GetItemCommentResponse::new(comment, &[]))
-        .collect::<ApiResult<Vec<_>>>()?,
-      total_comments,
-      None,
-      None,
-    ),
+    None => GetItemResponse::new(item, comments_page, total_comments, None, None, None)?,
     Some(user) => {
-      // get the user-related metadata
+      // get the user-related item-votes, favorites, hiddens, and comment-votes for this item
       let (vote, favorite, hidden, user_comment_votes): (
         Option<UserVote>,
         Option<UserFavorite>,
@@ -65,20 +57,23 @@ pub async fn get_item(
         queries::user_votes::get_item_vote(&state.pool, &user.username, item.id),
         queries::user_favorites::get_favorite(&state.pool, &user.username, item.id),
         queries::hiddens::get_hidden(&state.pool, &user.username, item.id),
-        queries::user_votes::get_comment_votes_for_item(&state.pool, &user.username, item.id),
+        queries::user_votes::get_user_related_votes_for_item(&state.pool, &user.username, item.id),
       )?;
 
+      // create the user-related item metadata from the obtained item-related data
       let item_metadata =
         GetItemResponseAuthenticated::new(&state.pool, &item, &vote, &favorite, &hidden, &user)
           .await;
 
-      // get the comment related nonsense
-      let comments = comments
-        .into_iter()
-        .map(|comment| GetItemCommentResponse::new(comment, &user_comment_votes))
-        .collect::<ApiResult<Vec<_>>>()?;
-
-      GetItemResponse::new(item, comments, total_comments, Some(item_metadata), Some(user))
+      // compute the item response from the item, comments, and user-related item metadata
+      GetItemResponse::new(
+        item,
+        comments_page,
+        total_comments,
+        Some(item_metadata),
+        Some(user),
+        Some(user_comment_votes),
+      )?
     },
   }))
 }
