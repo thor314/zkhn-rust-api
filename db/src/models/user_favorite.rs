@@ -9,3 +9,11 @@ pub struct UserFavorite {
   pub item_id:   Uuid,
   pub date:      Timestamp,
 }
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum FavoriteStateEnum {
+  #[default]
+  Favorite,
+  None,
+}

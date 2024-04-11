@@ -3,7 +3,11 @@
 #![allow(dead_code)]
 
 use api::*;
-use db::models::{item::Item, user_favorite::UserFavorite, user_vote::VoteState};
+use db::models::{
+  item::Item,
+  user_favorite::{FavoriteStateEnum, UserFavorite},
+  user_vote::VoteState,
+};
 use reqwest::Client;
 use serial_test::serial;
 use uuid::Uuid;
@@ -105,26 +109,25 @@ async fn item_crud() {
   vote(&c, &upvote, id, _points, _karma, 1, "34c").await;
   vote(&c, &nonevote, id, _points, _karma, 0, "34d").await;
 
-  // bad payload: 400
+  // bad payload: 422
   send(&c, VotePayload::default(), "POST", "items/favorite", 422, "36").await;
-  // normal favorites and unfavorites: 200; duplicate favorite: 409
-  let favorite = FavoritePayload::new(id, FavoritePayloadEnum::Favorite);
-  send(&c, favorite.clone(), "POST", "items/favorite", 200, "35").await;
-
-  // send(&c, favorite.clone(), "POST", "items/favorite", 409, "35a").await;
-  // let unfavorite = FavoritePayload::new(id, FavoritePayloadEnum::Unfavorite);
-  // send(&c, unfavorite.clone(), "POST", "items/favorite", 200, "35b").await;
-  // send(&c, unfavorite.clone(), "POST", "items/favorite", 409, "35c").await;
-  // send(&c, favorite.clone(), "POST", "items/favorite", 200, "35d").await;
-  // // logged out: 401
-  // send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "5").await;
-  // send(&c, unfavorite.clone(), "POST", "items/favorite", 401, "36").await;
+  let fpayload = FavoritePayload::new(id, FavoriteStateEnum::Favorite);
+  favorite(&c, &fpayload, id, "37a", FavoriteStateEnum::Favorite).await;
+  // favorite(&c, &fpayload, id, "37b", FavoriteStateEnum::None).await;
 
   // send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "37").await;
 }
 
-async fn favorite(c: &Client, favorite: &FavoritePayload, id: Uuid, tag: &str) {
-  let favorite = send_get::<UserFavorite>(c, favorite, "POST", "items/favorite", 200, tag).await;
+async fn favorite(
+  c: &Client,
+  favorite: &FavoritePayload,
+  id: Uuid,
+  tag: &str,
+  expect: FavoriteStateEnum,
+) {
+  let favorite =
+    send_get::<FavoriteStateEnum>(c, favorite, "POST", "items/favorite", 200, tag).await;
+  assert_eq!(expect, favorite);
 }
 
 async fn vote(

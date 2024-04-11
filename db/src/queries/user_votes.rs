@@ -81,7 +81,6 @@ pub async fn vote_item(
     None => (vote_state, i32::from(vote_state)),
     Some(preexisting) => {
       // remove the previous vote from the db
-      delete_vote(&mut tx, preexisting.id).await?;
       sqlx::query!("DELETE FROM user_votes WHERE id = $1", preexisting.id)
         .execute(&mut *tx)
         .await?;
@@ -143,11 +142,6 @@ pub async fn vote_item(
 
   tx.commit().await?;
   Ok(vote_state)
-}
-
-async fn delete_vote(tx: &mut PgConnection, id: Uuid) -> Result<(), DbError> {
-  sqlx::query!("DELETE FROM user_votes WHERE id = $1", id).execute(tx).await?;
-  Ok(())
 }
 
 pub async fn get_user_votes_on_items_after(

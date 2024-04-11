@@ -1,3 +1,5 @@
+use db::models::user_favorite::FavoriteStateEnum;
+
 use super::*;
 
 #[utoipa::path(
@@ -83,11 +85,9 @@ pub async fn vote_item(
   path = "/items/favorite",
   request_body = FavoritePayload,
   responses(
-    (status = 400, description = "Payload Parsing failed"),
     (status = 401, description = "Unauthorized"),
     (status = 403, description = "Forbidden"),
     (status = 422, description = "Invalid Payload"),
-    (status = 409, description = "Duplication Conflict"),
     (status = 200),
   ),
   )]
@@ -101,18 +101,16 @@ pub async fn favorite_item(
   State(state): State<SharedState>,
   auth_session: AuthSession,
   Json(payload): Json<FavoritePayload>,
-) -> ApiResult<()> {
+) -> ApiResult<Json<FavoriteStateEnum>> {
   trace!("favorite_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
-  let (item, favorite) = tokio::try_join!(
-    queries::items::get_assert_item(&state.pool, payload.id),
-    queries::user_favorites::get_favorite(&state.pool, &user.username, payload.id),
-  )?;
+  let item = queries::items::get_assert_item(&state.pool, payload.id).await?;
 
   // post the favorite
-  // queries::user_favorites::create_favorite
+  let favorite_state =
+    queries::user_favorites::favorite_item(&state.pool, &user.username, item.id).await?;
 
-  Ok(())
+  Ok(Json(favorite_state))
 }
 
 #[utoipa::path(
