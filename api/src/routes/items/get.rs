@@ -4,9 +4,9 @@ use super::*;
 
 #[utoipa::path(
   get,
-  path = "/items/{id}?page={page}",
+  path = "/items/{id}",
   params( ("id" = String, Path, example = Uuid::new_v4),
-          ("page" = i32, Query, example = Page::default) ),
+          Page ),
   responses( (status = 400, description = "Invalid id"),
              (status = 422, description = "Invalid page"),
              (status = 200, description = "Success", body = GetItemResponse) ),

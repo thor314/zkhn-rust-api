@@ -21,7 +21,10 @@
 //! Derive IntoParams for Payloads sent as Path or Query params.
 //! Derive ToSchema for Payloads and Responses.
 use axum::{routing, Json, Router};
-use db::models::{user::User, user_favorite::FavoriteStateEnum, user_vote::*};
+use db::{
+  models::{user::User, user_favorite::FavoriteStateEnum, user_vote::*},
+  Page,
+};
 use utoipa::OpenApi;
 use utoipa_rapidoc::RapiDoc;
 use utoipauto::utoipauto;

@@ -6,7 +6,7 @@ use garde::Validate;
 use serde::{Deserialize, Serialize};
 use sqlx::{prelude::Type, Decode, Encode};
 use tracing::warn;
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 use crate::{utils::now, DbResult};
@@ -139,8 +139,9 @@ impl From<&str> for CommentText {
   fn from(s: &str) -> Self { CommentText(s.to_string()) }
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, Validate)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Validate, IntoParams)]
 #[garde(transparent)]
+// #[into_params(parameter_in = Query)]
 /// A page of comments or items
 pub struct Page {
   #[garde(range(min = 1, max = 1000))]
