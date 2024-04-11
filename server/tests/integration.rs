@@ -58,6 +58,13 @@ async fn item_crud() {
   send(&c, CreateUserPayload::default(), "POST", "users", 200, "00").await;
   send(&c, CreateUserPayload::bob(), "POST", "users", 200, "01").await;
 
+  // create an item by a dummy user
+  let bob_creds = CredentialsPayload::new("bob", "password", None);
+  send(&c, bob_creds.clone(), "POST", "users/login", 200, "01li").await;
+  let bob_item_id =
+    send_get::<Uuid>(&c, CreateItemPayload::default(), "POST", "items", 200, "01a").await;
+  send(&c, bob_creds.clone(), "POST", "users/logout", 200, "01lo").await;
+
   // post item for alice as unauth: 401
   send(&c, CreateItemPayload::default(), "POST", "items", 401, "10").await;
   // post item for alice as alice: 200
@@ -88,15 +95,12 @@ async fn item_crud() {
   send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "5").await;
   let r_: GetItemResponse = send_get(&c, "", "GET", &format!("items/{id}?page=1"), 200, "25").await;
   assert!(r.comments.is_empty());
-  // todo: compare logged in and logged out responses
+  // todo(testing): compare logged in and logged out responses
 
   // get initial item score and user karma
   let (_points, _karma) = get_points_karma(&c, id).await;
-
-  // unauthorized user 401
   send(&c, VotePayload::default(), "POST", "items/vote", 401, "30").await;
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "30a").await;
-  // bad payload 422
   send(&c, GetItemResponse::default(), "POST", "items/vote", 422, "31").await;
 
   let upvote = VotePayload::new(id, VoteState::Upvote);
@@ -109,13 +113,22 @@ async fn item_crud() {
   vote(&c, &upvote, id, _points, _karma, 1, "34c").await;
   vote(&c, &nonevote, id, _points, _karma, 0, "34d").await;
 
-  // bad payload: 422
+  // favorite
   send(&c, VotePayload::default(), "POST", "items/favorite", 422, "36").await;
   let fpayload = FavoritePayload::new(id, FavoriteStateEnum::Favorite);
   favorite(&c, &fpayload, id, "37a", FavoriteStateEnum::Favorite).await;
   // favorite(&c, &fpayload, id, "37b", FavoriteStateEnum::None).await;
 
+  // get_edit_item_page_data
+  send(&c, "", "GET", &format!("items/get-edit-item-page-data/{id}"), 200, "38").await;
+  send(&c, "", "GET", &format!("items/get-edit-item-page-data/{bob_item_id}"), 403, "38a").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "38lo").await;
+  send(&c, "", "GET", &format!("items/get-edit-item-page-data/{id}"), 401, "38a").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "38li").await;
+
   // send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "37").await;
+
+  // todo: test get_items_by_page
 }
 
 async fn favorite(
