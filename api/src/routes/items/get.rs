@@ -119,9 +119,10 @@ pub async fn get_edit_item_page_data(
              (status = 401, description = "Unauthorized"),
              (status = 403, description = "Forbidden"),
              (status = 404, description = "User not found"),
-             (status = 200, description = "Success") ), // response body todo
+             (status = 200, description = "Success", body = GetItemsPageResponse) ),
   )]
-/// Get items by page, sorted by SortKind.
+/// Get items by page. 
+/// todo: only `ranked` is currently implemented for ItemKind.
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L611
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L282
