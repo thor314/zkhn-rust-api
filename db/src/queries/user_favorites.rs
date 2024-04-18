@@ -49,7 +49,7 @@ pub async fn favorite_item(
       sqlx::query!(
         "INSERT INTO user_favorites (id, username, item_type, item_id, date)
          VALUES ($1, $2, $3, $4, $5)",
-        Uuid::new_v4(),
+        ulid::Ulid::new().to_string(),
         username.0,
         "item",
         content_id,

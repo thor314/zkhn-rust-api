@@ -1,5 +1,5 @@
 //! Newtype wrappers for input validation and type-safety
-use std::fmt;
+use std::{fmt, str::FromStr};
 
 use chrono::{DateTime, TimeDelta, Utc};
 use garde::Validate;
@@ -211,3 +211,17 @@ impl Default for TextOrUrl {
 #[repr(transparent)]
 #[schema(default = UlidWrapper::default, example=UlidWrapper::default)]
 pub struct UlidWrapper(pub ulid::Ulid);
+impl From<ulid::Ulid> for UlidWrapper {
+  fn from(u: ulid::Ulid) -> Self { Self(u) }
+}
+impl From<String> for UlidWrapper {
+  fn from(s: String) -> Self {
+    match ulid::Ulid::from_str(&s) {
+      Ok(u) => UlidWrapper(u),
+      Err(e) => {
+        warn!("Error converting string to UlidWrapper: {}", e);
+        UlidWrapper::default()
+      },
+    }
+  }
+}
