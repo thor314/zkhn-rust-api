@@ -2,11 +2,11 @@ use super::*;
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct UserFavorite {
-  pub id:        UlidWrapper,
+  pub id:        Ulid,
   pub username:  Username,
   /// comment or item
   pub item_type: String,
-  pub item_id:   Uuid,
+  pub item_id:   Ulid,
   pub date:      Timestamp,
 }
 

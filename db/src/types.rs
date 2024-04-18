@@ -207,27 +207,30 @@ impl Default for TextOrUrl {
   fn default() -> Self { Self::Url(Url::default()) }
 }
 
-#[derive(Default, Debug, Clone, Copy, Serialize, Deserialize, Type, PartialEq, ToSchema)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, Type, PartialEq, ToSchema)]
 #[repr(transparent)]
-#[schema(default = UlidWrapper::default, example=UlidWrapper::default)]
-pub struct UlidWrapper(pub ulid::Ulid);
-impl From<ulid::Ulid> for UlidWrapper {
-  fn from(u: ulid::Ulid) -> Self { Self(u) }
+#[schema(default = Ulid::default, example=Ulid::default)]
+pub struct Ulid(pub String);
+impl From<ulid::Ulid> for Ulid {
+  fn from(u: ulid::Ulid) -> Self { Self(u.to_string()) }
 }
-impl From<String> for UlidWrapper {
+impl From<String> for Ulid {
   fn from(s: String) -> Self {
     match ulid::Ulid::from_str(&s) {
-      Ok(u) => UlidWrapper(u),
+      Ok(u) => Ulid(u.to_string()),
       Err(e) => {
         warn!("Error converting string to UlidWrapper: {}", e);
-        UlidWrapper::default()
+        Ulid::default()
       },
     }
   }
 }
-impl UlidWrapper {
-  pub fn new() -> Self { Self(ulid::Ulid::new()) }
+impl Ulid {
+  pub fn new() -> Self { Self(ulid::Ulid::new().to_string()) }
 }
-impl fmt::Display for UlidWrapper {
+impl fmt::Display for Ulid {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", self.0) }
+}
+impl From<Option<String>> for Option<Ulid> {
+  fn from(value: Option<String>) -> Self { todo!() }
 }

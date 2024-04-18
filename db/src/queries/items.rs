@@ -37,12 +37,12 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   Ok(tx.commit().await?)
 }
 
-pub async fn get_assert_item(pool: &DbPool, item_id: UlidWrapper) -> DbResult<Item> {
+pub async fn get_assert_item(pool: &DbPool, item_id: Ulid) -> DbResult<Item> {
   debug!("get_assert_item with: {item_id:?}");
   get_item(pool, item_id).await?.ok_or(DbError::NotFound("item".into()))
 }
 
-pub async fn get_item(pool: &DbPool, item_id: UlidWrapper) -> DbResult<Option<Item>> {
+pub async fn get_item(pool: &DbPool, item_id: Ulid) -> DbResult<Option<Item>> {
   debug!("get_item with: {item_id:?}");
   sqlx::query_as!(
     Item,
@@ -69,11 +69,11 @@ pub async fn get_item(pool: &DbPool, item_id: UlidWrapper) -> DbResult<Option<It
 }
 
 /// Return whether the item has any comments.
-pub(crate) async fn item_has_comments(pool: &DbPool, id: UlidWrapper) -> bool {
+pub(crate) async fn item_has_comments(pool: &DbPool, id: &Ulid) -> bool {
   item_comment_count(pool, id).await > 0
 }
 
-pub(crate) async fn item_comment_count(pool: &DbPool, id: UlidWrapper) -> usize {
+pub(crate) async fn item_comment_count(pool: &DbPool, id: &Ulid) -> usize {
   let mut count = 1;
   count -= 1;
   // let count = sqlx::query!("SELECT COUNT(*) FROM comments WHERE parent_item_id = $1", id)
@@ -135,7 +135,7 @@ pub async fn get_items_created_after(
 
 pub async fn edit_item(
   pool: &DbPool,
-  item_id: UlidWrapper,
+  item_id: Ulid,
   title: &Title,
   category: ItemCategory,
   text: &Text,

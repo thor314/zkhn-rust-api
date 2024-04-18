@@ -10,9 +10,9 @@ pub struct UserVote {
   /// Item, Comment
   pub vote_type:      ItemOrComment,
   /// The ID of the item or comment voted on.
-  pub content_id:     Uuid,
+  pub content_id:     Ulid,
   /// The ID of the parent item for votes on comments.
-  pub parent_item_id: Option<Uuid>,
+  pub parent_item_id: Option<Ulid>,
   pub vote_state:     VoteState,
   /// When the vote was cast.
   pub created:        Timestamp,
@@ -22,8 +22,8 @@ impl UserVote {
   pub fn new(
     username: Username,
     vote_type: ItemOrComment,
-    content_id: Uuid,
-    parent_item_id: Option<Uuid>,
+    content_id: Ulid,
+    parent_item_id: Option<Ulid>,
     vote_state: VoteState,
   ) -> Self {
     Self {

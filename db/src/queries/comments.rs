@@ -2,7 +2,7 @@ use super::*;
 
 pub async fn get_comments_page(
   pool: &DbPool,
-  item_id: Uuid,
+  item_id: Ulid,
   page: Page,
   show_dead_comments: bool, // backlog
 ) -> DbResult<(Vec<Comment>, usize)> {
@@ -45,7 +45,7 @@ pub async fn get_comments_page(
 pub async fn get_user_comments(
   pool: &DbPool,
   username: &Username,
-  id: Uuid,
+  item_id: Ulid,
 ) -> DbResult<Vec<Comment>> {
   Ok(vec![]) // todo!()
              // sqlx::query_as!(

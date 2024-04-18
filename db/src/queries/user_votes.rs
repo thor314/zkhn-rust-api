@@ -6,7 +6,7 @@ use super::*;
 pub async fn get_assert_item_vote(
   pool: &DbPool,
   username: &Username,
-  id: Uuid,
+  id: &Ulid,
 ) -> DbResult<UserVote> {
   get_item_vote(pool, username, id).await?.ok_or(DbError::NotFound("vote".into()))
 }
@@ -14,7 +14,7 @@ pub async fn get_assert_item_vote(
 pub async fn get_item_vote(
   pool: &DbPool,
   username: &Username,
-  id: Uuid,
+  item_id: &Ulid,
 ) -> DbResult<Option<UserVote>> {
   sqlx::query_as!(
     UserVote,
@@ -27,7 +27,7 @@ pub async fn get_item_vote(
     vote_state as \"vote_state: VoteState\", 
     created 
     FROM user_votes WHERE content_id = $1 and username = $2",
-    id,
+    item_id.to_string(),
     username.0
   )
   .fetch_optional(pool)
@@ -39,7 +39,7 @@ pub async fn get_item_vote(
 pub async fn get_user_related_votes_for_item(
   pool: &DbPool,
   username: &Username,
-  item_id: Uuid,
+  item_id: &Ulid,
 ) -> DbResult<Vec<UserVote>> {
   sqlx::query_as!(
     UserVote,
@@ -54,7 +54,7 @@ pub async fn get_user_related_votes_for_item(
     FROM user_votes 
     WHERE username = $1 and parent_item_id = $2",
     username.0,
-    item_id
+    item_id.to_string()
   )
   .fetch_all(pool)
   .await
@@ -71,7 +71,7 @@ pub async fn get_user_related_votes_for_item(
 /// return the new vote state
 pub async fn vote_item(
   pool: &DbPool,
-  item_id: Uuid,
+  item_id: &Ulid,
   username: &Username,
   vote_state: VoteState,
 ) -> DbResult<VoteState> {
@@ -105,10 +105,11 @@ pub async fn vote_item(
       vote_state, 
       created 
       ) VALUES ($1, $2, $3, $4, $5, $6)",
-      Uuid::new_v4(),
+      uuid::Uuid::new_v4(),
+      // Ulid::new().to_string(),
       username.0,
       ItemOrComment::Item as ItemOrComment,
-      item_id,
+      item_id.0,
       vote_state.clone() as VoteState,
       now().0
     )

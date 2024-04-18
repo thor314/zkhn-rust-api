@@ -12,8 +12,8 @@ CREATE TABLE user_votes (
     id UUID PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     vote_type ITEM_OR_COMMENT_ENUM NOT NULL,
-    content_id UUID NOT NULL,
-    parent_item_id UUID,
+    content_id VARCHAR(26) NOT NULL,
+    parent_item_id VARCHAR(26), 
     vote_state VOTE_STATE_ENUM NOT NULL DEFAULT 'upvote',
     created TIMESTAMP WITH TIME ZONE NOT NULL
 

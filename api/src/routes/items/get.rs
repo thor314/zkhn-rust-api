@@ -1,11 +1,14 @@
-use db::models::{user_favorite::UserFavorite, user_vote::UserVote};
+use db::{
+  models::{user_favorite::UserFavorite, user_vote::UserVote},
+  Ulid,
+};
 
 use super::*;
 
 #[utoipa::path(
   get,
   path = "/items/{id}",
-  params( ("id" = String, Path, example = Uuid::new_v4),
+  params( ("id" = String, Path, example = Ulid::new),
           Page ),
   responses( (status = 400, description = "Invalid id"),
              (status = 422, description = "Invalid page"),
@@ -28,7 +31,7 @@ use super::*;
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L52
 pub async fn get_item(
   State(state): State<SharedState>,
-  Path(id): Path<Uuid>,
+  Path(id): Path<Ulid>,
   Query(page): Query<Page>,
   auth_session: AuthSession,
 ) -> ApiResult<Json<GetItemResponse>> {
@@ -53,9 +56,9 @@ pub async fn get_item(
         Option<UserFavorite>,
         Vec<UserVote>,
       ) = tokio::try_join!(
-        queries::user_votes::get_item_vote(&state.pool, &user.username, item.id),
-        queries::user_favorites::get_favorite(&state.pool, &user.username, item.id),
-        queries::user_votes::get_user_related_votes_for_item(&state.pool, &user.username, item.id),
+        queries::user_votes::get_item_vote(&state.pool, &user.username, &item.id),
+        queries::user_favorites::get_favorite(&state.pool, &user.username, &item.id),
+        queries::user_votes::get_user_related_votes_for_item(&state.pool, &user.username, &item.id),
       )?;
 
       // create the user-related item metadata from the obtained item-related data
@@ -78,7 +81,7 @@ pub async fn get_item(
 #[utoipa::path(
   get,
   path = "/items/get-edit-item-page-data",
-  params( ("id" = String, Path, example = Uuid::new_v4) ),
+  params( ("id" = String, Path, example = Ulid::new) ),
   responses( (status = 422, description = "Invalid id"),
              (status = 401, description = "Unauthorized"),
              (status = 403, description = "Forbidden"),
@@ -92,7 +95,7 @@ pub async fn get_item(
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L191
 pub async fn get_edit_item_page_data(
   State(state): State<SharedState>,
-  Path(id): Path<Uuid>,
+  Path(id): Path<Ulid>,
   auth_session: AuthSession,
 ) -> ApiResult<Json<GetEditItemResponse>> {
   debug!("get_edit_item called with id: {id}");
