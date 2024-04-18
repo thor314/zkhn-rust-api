@@ -153,7 +153,7 @@ pub async fn get_items_by_page(
   Ok(Json(match session_user {
     None => {
       // not logged in: just return the page of items and the total number of items
-      GetItemsPageResponse::new(items, count, page, HashMap::new())
+      GetItemsPageResponse::new(items, count, page, HashMap::new(), None)
     },
     Some(user) => {
       // backlog(show_dead)
@@ -164,10 +164,7 @@ pub async fn get_items_by_page(
       let item_ids = items.iter().map(|item| item.id.to_string()).collect::<Vec<_>>();
       let item_votes =
         queries::user_votes::get_votes_matching_ids(&state.pool, &user.username, &item_ids).await?;
-      // todo: is item allowed to be edited or deleted?
-
-      // todo!()
-      GetItemsPageResponse::new(items, count, page, item_votes)
+      GetItemsPageResponse::new(items, count, page, item_votes, Some(&user.username))
     },
   }))
 }

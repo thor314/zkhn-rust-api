@@ -52,8 +52,8 @@ pub struct GetItemResponseAuthenticated {
   voted_on_by_user:        bool,
   /// note: remove unvote expired as extraneous
   /// note: hidden removed
-  unvote_expired:          bool,
-  favorited_by_user:       bool,
+  // unvote_expired:          bool, // unvote expired removed
+  favorited_by_user: bool,
   edit_and_delete_expired: bool,
 }
 
@@ -65,10 +65,9 @@ impl GetItemResponseAuthenticated {
     favorite: &Option<UserFavorite>,
     user: &User,
   ) -> Self {
-    let edit_and_delete_expired = item.username != user.username || !item.is_editable(pool);
+    let edit_and_delete_expired = item.username != user.username || !item.is_editable();
     Self {
       voted_on_by_user: vote.is_some(),
-      unvote_expired: false,
       favorited_by_user: favorite.is_some(),
       edit_and_delete_expired,
     }
@@ -82,7 +81,6 @@ impl GetItemResponseAuthenticated {
 pub struct GetItemCommentResponse {
   comment:                 Comment,
   edit_and_delete_expired: bool,
-  // unvote_expired:           bool, - feature removed
   vote_state:              VoteState,
 }
 
@@ -128,14 +126,20 @@ pub struct GetItemsPageResponse {
   count:   usize,
 }
 impl GetItemsPageResponse {
-  pub fn new(items: Vec<Item>, count: usize, page: Page, votes: HashMap<Ulid, UserVote>) -> Self {
+  pub fn new(
+    items: Vec<Item>,
+    count: usize,
+    page: Page,
+    votes: HashMap<Ulid, UserVote>,
+    username: Option<&Username>,
+  ) -> Self {
     let is_more = count > page.page as usize * ITEM_PAGE_SIZE as usize;
     let items = items
       .into_iter()
       .enumerate()
       .map(|(n, item)| {
         let vote = votes.get(&item.id).cloned();
-        RankedItemResponse::new(n, item, vote)
+        RankedItemResponse::new(n, item, vote, username)
       })
       .collect();
     Self { items, is_more, count }
@@ -146,12 +150,20 @@ impl GetItemsPageResponse {
 #[schema(default = RankedItemResponse::default, example=RankedItemResponse::default)]
 #[serde(rename_all = "camelCase")]
 pub struct RankedItemResponse {
-  pub page_rank: usize,
-  pub item:      Item,
-  pub vote:      Option<UserVote>,
+  pub page_rank:               usize,
+  pub item:                    Item,
+  pub vote:                    Option<UserVote>,
+  pub edit_and_delete_expired: bool,
 }
 impl RankedItemResponse {
-  pub fn new(page_rank: usize, item: Item, vote: Option<UserVote>) -> Self {
-    Self { page_rank, item, vote }
+  pub fn new(
+    page_rank: usize,
+    item: Item,
+    vote: Option<UserVote>,
+    username: Option<&Username>,
+  ) -> Self {
+    let edit_and_delete_expired =
+      item.username != username.cloned().unwrap_or_default() || !item.is_editable();
+    Self { page_rank, item, vote, edit_and_delete_expired }
   }
 }
