@@ -117,7 +117,7 @@ async fn item_crud() {
   send(&c, VotePayload::default(), "POST", "items/favorite", 422, "36").await;
   let fpayload = FavoritePayload::new(id, FavoriteStateEnum::Favorite);
   favorite(&c, &fpayload, id, "37a", FavoriteStateEnum::Favorite).await;
-  // favorite(&c, &fpayload, id, "37b", FavoriteStateEnum::None).await;
+  favorite(&c, &fpayload, id, "37b", FavoriteStateEnum::None).await;
 
   // get_edit_item_page_data
   send(&c, "", "GET", &format!("items/get-edit-item-page-data/{id}"), 200, "38").await;
