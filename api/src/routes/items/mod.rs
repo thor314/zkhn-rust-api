@@ -61,12 +61,13 @@ pub(super) mod delete {
   #[utoipa::path(
   delete,
   path = "/items/delete-item/{id}",
-  request_body = ItemPayload,
+  params( ("id" = String, Path, example = Uuid::new_v4) ),
   responses(
+    (status = 422, description = "Invalid Payload"),
     (status = 401, description = "Unauthorized"),
+    (status = 404, description = "Item not found"),
     (status = 403, description = "Forbidden"),
     (status = 403, description = "Forbidden not editable"),
-    (status = 422, description = "Invalid Payload"),
     (status = 200, description = "Success"), 
   ),
   )]
@@ -77,8 +78,8 @@ pub(super) mod delete {
   ) -> ApiResult<StatusCode> {
     debug!("delete_item called with id: {id:?}");
     let item = db::queries::items::get_assert_item(&state.pool, id).await?;
-    item.assert_is_editable(&state.pool).await?;
     let user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
+    item.assert_is_editable(&state.pool).await?;
     db::queries::items::delete_item(&state.pool, &item, &user.username).await?;
 
     // backlog(search)

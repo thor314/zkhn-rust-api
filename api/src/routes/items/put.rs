@@ -7,7 +7,7 @@ use super::*;
 #[utoipa::path(
   put,
   path = "/items/edit-item",
-  request_body = ItemPayload,
+  request_body = EditItemPayload,
   responses(
     (status = 401, description = "Unauthorized"),
     (status = 403, description = "Forbidden"),

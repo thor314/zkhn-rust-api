@@ -92,6 +92,7 @@ impl EditItemPayload {
 
 /// A payload for getting items by different sorting methods
 #[derive(Default, Debug, Clone, PartialEq, Eq, Deserialize, Serialize, ToSchema)]
+#[schema(default = ItemKind::default, example=ItemKind::default)]
 #[serde(rename_all = "camelCase")]
 pub enum ItemKind {
   #[default]
