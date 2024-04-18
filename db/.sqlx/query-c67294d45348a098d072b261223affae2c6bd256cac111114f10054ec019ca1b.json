@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE items SET points = points + $1 WHERE id = $2 \n    RETURNING username as \"username: Username\"",
+  "query": "UPDATE items SET points = points + $1 WHERE id = $2 \n        RETURNING username as \"username: Username\"",
   "describe": {
     "columns": [
       {
@@ -19,5 +19,5 @@
       false
     ]
   },
-  "hash": "1360a354c1adba7897507ef65f6a7db78d093a23fcc6d2f4b2a4887af1a12d31"
+  "hash": "c67294d45348a098d072b261223affae2c6bd256cac111114f10054ec019ca1b"
 }

@@ -1,8 +1,8 @@
 use super::*;
 
-// todo: this should have a uuid primary key
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct UserFavorite {
+  pub id:       Uuid,
   pub username:  Username,
   /// comment or item
   pub item_type: String,
@@ -12,6 +12,7 @@ pub struct UserFavorite {
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, ToSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
+#[schema(default = FavoriteStateEnum::default, example = FavoriteStateEnum::default)]
 pub enum FavoriteStateEnum {
   #[default]
   Favorite,
