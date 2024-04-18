@@ -217,22 +217,11 @@ impl From<ulid::Ulid> for Ulid {
   fn from(u: ulid::Ulid) -> Self { Self(u.to_string()) }
 }
 impl From<String> for Ulid {
-  fn from(s: String) -> Self {
-    match ulid::Ulid::from_str(&s) {
-      Ok(u) => Ulid(u.to_string()),
-      Err(e) => {
-        warn!("Error converting string to UlidWrapper: {}", e);
-        Ulid::default()
-      },
-    }
-  }
-}
-impl Ulid {
-  pub fn new() -> Self { Self(ulid::Ulid::new().to_string()) }
+  fn from(s: String) -> Self { Self(s) }
 }
 impl fmt::Display for Ulid {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", self.0) }
 }
-// impl From<Option<String>> for Option<Ulid> {
-//   fn from(value: Option<String>) -> Self { todo!() }
-// }
+impl Ulid {
+  pub fn new() -> Self { Self(ulid::Ulid::new().to_string()) }
+}

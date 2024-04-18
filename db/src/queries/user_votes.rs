@@ -96,7 +96,7 @@ pub async fn vote_item(
 
   // insert the vote into the votes table
   if vote_state != VoteState::None {
-    let id = Ulid::new();
+    let id = Ulid::new().to_string();
     sqlx::query!(
       "INSERT INTO user_votes (
       id,
@@ -106,8 +106,7 @@ pub async fn vote_item(
       vote_state, 
       created 
       ) VALUES ($1, $2, $3, $4, $5, $6)",
-      // Ulid::new().to_string(),
-      id.to_string(),
+      Ulid::new().to_string(),
       username.0,
       ItemOrComment::Item as ItemOrComment,
       item_id.0,

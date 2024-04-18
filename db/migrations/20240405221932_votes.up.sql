@@ -9,14 +9,12 @@ CREATE TYPE vote_state_enum AS ENUM ('upvote', 'downvote', 'none');
 
 CREATE TYPE item_or_comment_enum AS ENUM ('item', 'comment');
 
-CREATE DOMAIN ulid AS VARCHAR(26);
-
 CREATE TABLE user_votes (
-    id ULID PRIMARY KEY,
+    id VARCHAR(26) PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     vote_type ITEM_OR_COMMENT_ENUM NOT NULL,
-    content_id ULID NOT NULL,
-    parent_item_id ULID, 
+    content_id VARCHAR(26) NOT NULL,
+    parent_item_id VARCHAR(26), 
     vote_state VOTE_STATE_ENUM NOT NULL DEFAULT 'upvote',
     created TIMESTAMP WITH TIME ZONE NOT NULL
 
