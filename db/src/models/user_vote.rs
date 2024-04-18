@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(sqlx::FromRow, Debug, Serialize, Deserialize, ToSchema)]
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize, ToSchema, Clone)]
 /// Represents a vote cast by a user on an item or comment.
 pub struct UserVote {
   pub id:             Ulid,

@@ -209,7 +209,9 @@ impl Default for TextOrUrl {
 /// `ulid::Ulid` does not implement encode, so define a newtype wrapping a String instead
 ///
 /// a bit janky
-#[derive(Default, Debug, Clone, Serialize, Deserialize, Type, PartialEq, ToSchema, Validate)]
+#[derive(
+  Default, Hash, Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq, ToSchema, Validate,
+)]
 #[repr(transparent)]
 #[schema(default = Ulid::default, example=Ulid::default)]
 pub struct Ulid(#[garde(ascii, length(min = 26, max = 26))] pub String);

@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 use db::{
   models::{user_favorite::UserFavorite, user_vote::UserVote},
   Ulid,
@@ -107,14 +109,6 @@ pub async fn get_edit_item_page_data(
   Ok(Json(GetEditItemResponse::new(item, Some(session_user))))
 }
 
-/// Step 1 - If the user is not signed-in, retrieve:
-///          - The items that have been submitted within the past config.maxAgeOfRankedItemsInDays
-///            days
-///          sorted by their points and creation date values.
-///          - Total number of items submitted in the config.maxAgeOfRankedItemsInDays days
-///          will be used for pagination purposes.
-/// Step 2 - If the user is signed-in, retrieve this data:
-///          - All the user's hidden item documents from the past config.maxAgeOfRankedItemsInDays.
 ///          - The items that have been submitted within the past config.maxAgeOfRankedItemsInDays
 ///          sorted by their points and creation date values.
 ///          - any item that is hidden by the user will not be included.
@@ -153,30 +147,27 @@ pub async fn get_items_by_page(
   debug!("get_items_by_page with page: {page:?} and kind: {item_kind:?}");
   let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::try_hours(48).unwrap());
   let session_user = auth_session.get_user_from_session();
+  let (items, count) =
+    queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
 
   Ok(Json(match session_user {
     None => {
       // not logged in: just return the page of items and the total number of items
-      let (items, count) =
-        queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
-      GetItemsPageResponse::new(items, count, page)
+      GetItemsPageResponse::new(items, count, page, HashMap::new())
     },
     Some(user) => {
       // backlog(show_dead)
-      let (items, count) =
-        queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
-      let user_votes: Vec<UserVote> = queries::user_votes::get_user_votes_on_items_after(
-        &state.pool,
-        &user.username,
-        start_date,
-        page,
-      )
-      .await?;
-
+      // user is logged in:
+      // - retreive the user's votes (if any) on the items in the retreived page
+      // - for each item, annotate, whether the item may be edit/deleted, and whether the user has
+      //   voted on the item
+      let item_ids = items.iter().map(|item| item.id.to_string()).collect::<Vec<_>>();
+      let item_votes =
+        queries::user_votes::get_votes_matching_ids(&state.pool, &user.username, &item_ids).await?;
       // todo: is item allowed to be edited or deleted?
 
       // todo!()
-      GetItemsPageResponse::new(items, count, page)
+      GetItemsPageResponse::new(items, count, page, item_votes)
     },
   }))
 }

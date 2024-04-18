@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use axum::Json;
 use sqlx::{Executor, PgConnection, PgPool};
 
@@ -170,6 +172,35 @@ pub async fn get_user_votes_on_items_after(
   .fetch_all(pool)
   .await
   .map_err(DbError::from)
+}
+
+// get the votes in the set
+pub async fn get_votes_matching_ids(
+  pool: &DbPool,
+  username: &Username,
+  item_ids: &[String],
+) -> DbResult<HashMap<Ulid, UserVote>> {
+  let votes = sqlx::query_as!(
+    UserVote,
+    "SELECT 
+    id,
+    username, 
+    vote_type as \"vote_type: ItemOrComment\", 
+    content_id, 
+    parent_item_id, 
+    vote_state as \"vote_state: VoteState\", 
+    created 
+    FROM user_votes WHERE username = $1 AND content_id = ANY($2) 
+    AND vote_type = 'item' 
+    ORDER BY created DESC",
+    username.0,
+    item_ids
+  )
+  .fetch_all(pool)
+  .await
+  .map_err(DbError::from)?;
+
+  Ok(votes.into_iter().map(|v| (v.content_id.clone(), v)).collect())
 }
 
 // pub async fn get_user_vote_by_content_id(

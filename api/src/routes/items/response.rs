@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use db::{
   models::{user_favorite::UserFavorite, user_vote::UserVote},
   queries::ITEM_PAGE_SIZE,
-  DbPool,
+  DbPool, Ulid,
 };
 
 use super::*;
@@ -126,10 +128,16 @@ pub struct GetItemsPageResponse {
   count:   usize,
 }
 impl GetItemsPageResponse {
-  pub fn new(items: Vec<Item>, count: usize, page: Page) -> Self {
+  pub fn new(items: Vec<Item>, count: usize, page: Page, votes: HashMap<Ulid, UserVote>) -> Self {
     let is_more = count > page.page as usize * ITEM_PAGE_SIZE as usize;
-    let items =
-      items.into_iter().enumerate().map(|(n, item)| RankedItemResponse::new(n, item)).collect();
+    let items = items
+      .into_iter()
+      .enumerate()
+      .map(|(n, item)| {
+        let vote = votes.get(&item.id).cloned();
+        RankedItemResponse::new(n, item, vote)
+      })
+      .collect();
     Self { items, is_more, count }
   }
 }
@@ -140,7 +148,10 @@ impl GetItemsPageResponse {
 pub struct RankedItemResponse {
   pub page_rank: usize,
   pub item:      Item,
+  pub vote:      Option<UserVote>,
 }
 impl RankedItemResponse {
-  pub fn new(page_rank: usize, item: Item) -> Self { Self { page_rank, item } }
+  pub fn new(page_rank: usize, item: Item, vote: Option<UserVote>) -> Self {
+    Self { page_rank, item, vote }
+  }
 }
