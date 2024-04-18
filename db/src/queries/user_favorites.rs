@@ -61,37 +61,3 @@ pub async fn favorite_item(
     },
   }
 }
-
-// /// Insert a new user favorite for comment
-// pub async fn insert_or_delete_user_favorite_for_comment(
-//   pool: &sqlx::Pool<sqlx::Postgres>,
-//   username: &str,
-//   maybe_favorite: Option<UserFavorite>,
-//   comment_id: Uuid,
-// ) -> DbResult<()> {
-//   match maybe_favorite {
-//     Some(favorite) => {
-//       sqlx::query!(
-//         "DELETE FROM user_favorites
-//       WHERE item_id = $1",
-//         favorite.item_id,
-//       )
-//       .execute(pool)
-//       .await?;
-//       Ok(())
-//     },
-//     None => {
-//       sqlx::query!(
-//         "INSERT INTO user_favorites (username, item_type, item_id, date)
-//          VALUES ($1, $2, $3, $4)",
-//         username,
-//         "comment",
-//         comment_id,
-//         now().0,
-//       )
-//       .execute(pool)
-//       .await?;
-//       Ok(())
-//     },
-//   }
-// }
