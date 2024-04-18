@@ -34,7 +34,7 @@ pub async fn send_get<T: DeserializeOwned>(
   status: u16,
   tag: &str,
 ) -> T {
-  send(client, payload, method, path, status, tag).await.json().await.unwrap()
+  send(client, payload, method, path, status, tag).await.json().await.expect(tag)
 }
 
 /// Run the shuttle server

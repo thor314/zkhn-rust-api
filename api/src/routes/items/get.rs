@@ -82,7 +82,6 @@ pub async fn get_item(
   responses( (status = 422, description = "Invalid id"),
              (status = 401, description = "Unauthorized"),
              (status = 403, description = "Forbidden"),
-             (status = 404, description = "User not found"),
              (status = 200, description = "Success", body = GetEditItemResponse) ),
   )]
 /// Get item content for for editing. User must be authenticated.
@@ -97,18 +96,19 @@ pub async fn get_edit_item_page_data(
   auth_session: AuthSession,
 ) -> ApiResult<Json<GetEditItemResponse>> {
   debug!("get_edit_item called with id: {id}");
-  let item = db::queries::items::get_assert_item(&state.pool, id).await?;
+  let item = queries::items::get_assert_item(&state.pool, id).await?;
   item.assert_is_editable(&state.pool).await?;
-  let _user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
+  let session_user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
+  // todo(sanitize): item.text -> text_for_editing
 
-  Ok(Json(item.into()))
+  Ok(Json(GetEditItemResponse::new(item, Some(session_user))))
 }
 
 #[utoipa::path(
   get,
-  path = "/items/get-items-by-page/{item_kind}?page={page}",
+  path = "/items/get-items-by-page/{item_kind}",
   params( ("item_kind" = ItemKind, Query, example = ItemKind::default), 
-          ("page" = i32, Query, example = Page::default) ),
+          Page ),
   responses( (status = 401, description = "Unauthorized"),
              (status = 403, description = "Forbidden"),
              (status = 404, description = "User not found"),

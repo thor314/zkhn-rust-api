@@ -85,21 +85,13 @@ pub(crate) async fn item_comment_count(pool: &DbPool, id: Uuid) -> usize {
 }
 
 /// Delete an item from the database. Adjust user karma accordingly.
-pub async fn delete_item(pool: &DbPool, item_id: Uuid, username: &Username) -> DbResult<()> {
-  let points = sqlx::query!("SELECT points FROM items WHERE id = $1", item_id)
-    .fetch_one(pool)
-    .await?
-    .points
-    .max(0);
-
+pub async fn delete_item(pool: &DbPool, item: &Item, username: &Username) -> DbResult<()> {
   let mut tx = pool.begin().await?;
-  if points > 0 {
-    sqlx::query!("UPDATE users SET karma = karma - $1 WHERE username = $2", points, username.0)
-      .execute(&mut *tx)
-      .await?;
-  }
+  sqlx::query!("UPDATE users SET karma = karma - $1 WHERE username = $2", item.points, username.0)
+    .execute(&mut *tx)
+    .await?;
 
-  sqlx::query!("DELETE FROM items WHERE id = $1", item_id).execute(&mut *tx).await?;
+  sqlx::query!("DELETE FROM items WHERE id = $1", item.id).execute(&mut *tx).await?;
 
   Ok(tx.commit().await?)
 }
@@ -139,6 +131,28 @@ pub async fn get_items_created_after(
     (items, items_len)
   })
   .map_err(DbError::from)
+}
+
+pub async fn edit_item(
+  pool: &DbPool,
+  item_id: Uuid,
+  title: &Title,
+  category: ItemCategory,
+  text: &Text,
+) -> DbResult<()> {
+  sqlx::query!(
+    "UPDATE items
+    SET title = $1, item_category = $2, text = $3
+    WHERE id = $4",
+    title.0,
+    category as ItemCategory,
+    text.0,
+    item_id
+  )
+  .execute(pool)
+  .await?;
+
+  Ok(())
 }
 
 // pub async fn update_item_category(

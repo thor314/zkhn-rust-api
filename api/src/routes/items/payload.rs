@@ -67,23 +67,32 @@ impl FavoritePayload {
 #[serde(rename_all = "camelCase")]
 pub struct EditItemPayload {
   #[garde(skip)]
-  pub id:       Uuid,
+  pub id:        Uuid,
   #[garde(dive)]
-  pub title:    Title,
+  pub title:     Title,
   #[garde(dive)]
-  pub text:     Text,
+  pub text:      Text,
   #[garde(skip)]
-  pub category: ItemCategory,
+  pub category:  ItemCategory,
+  #[garde(skip)]
+  pub item_type: ItemType,
 }
 
 impl EditItemPayload {
-  pub fn new(id: Uuid, title: &str, text: &str, category: ItemCategory) -> Self {
-    Self { id, title: title.into(), text: text.into(), category }
+  pub fn new(
+    id: Uuid,
+    title: &str,
+    text: &str,
+    category: ItemCategory,
+    item_type: ItemType,
+  ) -> Self {
+    Self { id, title: title.into(), text: text.into(), category, item_type }
   }
 }
 
 /// A payload for getting items by different sorting methods
 #[derive(Default, Debug, Clone, PartialEq, Eq, Deserialize, Serialize, ToSchema)]
+#[schema(default = ItemKind::default, example=ItemKind::default)]
 #[serde(rename_all = "camelCase")]
 pub enum ItemKind {
   #[default]

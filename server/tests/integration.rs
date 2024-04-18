@@ -4,7 +4,7 @@
 
 use api::*;
 use db::models::{
-  item::Item,
+  item::{Item, ItemCategory, ItemType},
   user_favorite::{FavoriteStateEnum, UserFavorite},
   user_vote::VoteState,
 };
@@ -58,6 +58,13 @@ async fn item_crud() {
   send(&c, CreateUserPayload::default(), "POST", "users", 200, "00").await;
   send(&c, CreateUserPayload::bob(), "POST", "users", 200, "01").await;
 
+  // create an item by a dummy user
+  let bob_creds = CredentialsPayload::new("bob", "password", None);
+  send(&c, bob_creds.clone(), "POST", "users/login", 200, "01li").await;
+  let bob_item_id =
+    send_get::<Uuid>(&c, CreateItemPayload::default(), "POST", "items", 200, "01a").await;
+  send(&c, bob_creds.clone(), "POST", "users/logout", 200, "01lo").await;
+
   // post item for alice as unauth: 401
   send(&c, CreateItemPayload::default(), "POST", "items", 401, "10").await;
   // post item for alice as alice: 200
@@ -88,15 +95,12 @@ async fn item_crud() {
   send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "5").await;
   let r_: GetItemResponse = send_get(&c, "", "GET", &format!("items/{id}?page=1"), 200, "25").await;
   assert!(r.comments.is_empty());
-  // todo: compare logged in and logged out responses
+  // todo(testing): compare logged in and logged out responses
 
   // get initial item score and user karma
   let (_points, _karma) = get_points_karma(&c, id).await;
-
-  // unauthorized user 401
   send(&c, VotePayload::default(), "POST", "items/vote", 401, "30").await;
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "30a").await;
-  // bad payload 422
   send(&c, GetItemResponse::default(), "POST", "items/vote", 422, "31").await;
 
   let upvote = VotePayload::new(id, VoteState::Upvote);
@@ -109,13 +113,49 @@ async fn item_crud() {
   vote(&c, &upvote, id, _points, _karma, 1, "34c").await;
   vote(&c, &nonevote, id, _points, _karma, 0, "34d").await;
 
-  // bad payload: 422
+  // favorite
   send(&c, VotePayload::default(), "POST", "items/favorite", 422, "36").await;
   let fpayload = FavoritePayload::new(id, FavoriteStateEnum::Favorite);
   favorite(&c, &fpayload, id, "37a", FavoriteStateEnum::Favorite).await;
   // favorite(&c, &fpayload, id, "37b", FavoriteStateEnum::None).await;
 
-  // send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "37").await;
+  // get_edit_item_page_data
+  send(&c, "", "GET", &format!("items/get-edit-item-page-data/{id}"), 200, "38").await;
+  send(&c, "", "GET", &format!("items/get-edit-item-page-data/{bob_item_id}"), 403, "38a").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "38lo").await;
+  send(&c, "", "GET", &format!("items/get-edit-item-page-data/{id}"), 401, "38a").await;
+  send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "38li").await;
+
+  // edit item
+  let edit = EditItemPayload::new(id, "new title", "new text", ItemCategory::Paper, ItemType::News);
+  send(&c, edit, "PUT", "items/edit-item", 422, "39").await;
+  let edit = EditItemPayload::new(
+    id,
+    "new title",
+    "new text text text",
+    ItemCategory::Paper,
+    ItemType::News,
+  );
+  send(&c, edit, "PUT", "items/edit-item", 200, "39a").await;
+  let item =
+    send_get::<GetItemResponse>(&c, "", "GET", &format!("items/{id}?page=1"), 200, "40").await.item;
+  assert_eq!(item.title, "new title".into());
+  assert_eq!(item.text.unwrap(), "new text text text".into());
+  assert_eq!(item.item_category, ItemCategory::Paper);
+  assert_eq!(item.item_type, ItemType::News);
+  let edit = EditItemPayload::new(
+    bob_item_id,
+    "new title",
+    "new text text text",
+    ItemCategory::Paper,
+    ItemType::News,
+  );
+  send(&c, edit.clone(), "PUT", "items/edit-item", 403, "41").await;
+
+  // delete
+  send(&c, "", "DELETE", &format!("items/delete-item/{id}"), 200, "100").await;
+  send(&c, "", "DELETE", &format!("items/delete-item/{id}"), 404, "100a").await;
+  send(&c, "", "GET", &format!("items/{id}?page=1"), 404, "100b").await;
 }
 
 async fn favorite(

@@ -40,7 +40,7 @@ impl UserVote {
 
 #[derive(sqlx::Type, Default, PartialEq, Serialize, Deserialize, Debug, Clone, ToSchema, Copy)]
 #[sqlx(type_name = "vote_state_enum")]
-#[sqlx(rename_all = "lowercase")]
+#[sqlx(rename_all = "camelCase")]
 pub enum VoteState {
   #[default]
   Upvote,
@@ -59,7 +59,7 @@ impl From<VoteState> for i32 {
 
 #[derive(sqlx::Type, PartialEq, Serialize, Deserialize, Debug, Clone, ToSchema)]
 #[sqlx(type_name = "item_or_comment_enum")]
-#[sqlx(rename_all = "lowercase")]
+#[sqlx(rename_all = "camelCase")]
 pub enum ItemOrComment {
   Item,
   Comment,
