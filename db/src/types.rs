@@ -207,7 +207,7 @@ impl Default for TextOrUrl {
   fn default() -> Self { Self::Url(Url::default()) }
 }
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize, Type, PartialEq, ToSchema)]
+#[derive(Default, Debug, Clone, Copy, Serialize, Deserialize, Type, PartialEq, ToSchema)]
 #[repr(transparent)]
 #[schema(default = UlidWrapper::default, example=UlidWrapper::default)]
 pub struct UlidWrapper(pub ulid::Ulid);
@@ -224,4 +224,10 @@ impl From<String> for UlidWrapper {
       },
     }
   }
+}
+impl UlidWrapper {
+  pub fn new() -> Self { Self(ulid::Ulid::new()) }
+}
+impl fmt::Display for UlidWrapper {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", self.0) }
 }

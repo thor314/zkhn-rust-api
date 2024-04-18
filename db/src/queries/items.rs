@@ -18,7 +18,7 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
     text,
     item_category 
   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-    id,
+    id.to_string(),
     username.0,
     title.0,
     item_type as ItemType,
@@ -37,12 +37,12 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   Ok(tx.commit().await?)
 }
 
-pub async fn get_assert_item(pool: &DbPool, item_id: Uuid) -> DbResult<Item> {
+pub async fn get_assert_item(pool: &DbPool, item_id: UlidWrapper) -> DbResult<Item> {
   debug!("get_assert_item with: {item_id:?}");
   get_item(pool, item_id).await?.ok_or(DbError::NotFound("item".into()))
 }
 
-pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
+pub async fn get_item(pool: &DbPool, item_id: UlidWrapper) -> DbResult<Option<Item>> {
   debug!("get_item with: {item_id:?}");
   sqlx::query_as!(
     Item,
@@ -61,7 +61,7 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
       created,
       dead
     FROM items WHERE id = $1",
-    item_id
+    item_id.to_string()
   )
   .fetch_optional(pool)
   .await
@@ -69,11 +69,11 @@ pub async fn get_item(pool: &DbPool, item_id: Uuid) -> DbResult<Option<Item>> {
 }
 
 /// Return whether the item has any comments.
-pub(crate) async fn item_has_comments(pool: &DbPool, id: Uuid) -> bool {
+pub(crate) async fn item_has_comments(pool: &DbPool, id: UlidWrapper) -> bool {
   item_comment_count(pool, id).await > 0
 }
 
-pub(crate) async fn item_comment_count(pool: &DbPool, id: Uuid) -> usize {
+pub(crate) async fn item_comment_count(pool: &DbPool, id: UlidWrapper) -> usize {
   let mut count = 1;
   count -= 1;
   // let count = sqlx::query!("SELECT COUNT(*) FROM comments WHERE parent_item_id = $1", id)
@@ -91,7 +91,7 @@ pub async fn delete_item(pool: &DbPool, item: &Item, username: &Username) -> DbR
     .execute(&mut *tx)
     .await?;
 
-  sqlx::query!("DELETE FROM items WHERE id = $1", item.id).execute(&mut *tx).await?;
+  sqlx::query!("DELETE FROM items WHERE id = $1", item.id.to_string()).execute(&mut *tx).await?;
 
   Ok(tx.commit().await?)
 }
@@ -135,7 +135,7 @@ pub async fn get_items_created_after(
 
 pub async fn edit_item(
   pool: &DbPool,
-  item_id: Uuid,
+  item_id: UlidWrapper,
   title: &Title,
   category: ItemCategory,
   text: &Text,
@@ -147,7 +147,7 @@ pub async fn edit_item(
     title.0,
     category as ItemCategory,
     text.0,
-    item_id
+    item_id.to_string()
   )
   .execute(pool)
   .await?;
@@ -157,7 +157,7 @@ pub async fn edit_item(
 
 // pub async fn update_item_category(
 //   pool: &DbPool,
-//   item_id: Uuid,
+//   item_id: UlidWrapper,
 //   item_category: &str,
 // ) -> DbResult<()> {
 //   sqlx::query!(

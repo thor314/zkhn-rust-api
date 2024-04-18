@@ -127,7 +127,7 @@ pub async fn vote_item(
     "UPDATE items SET points = points + $1 WHERE id = $2 
         RETURNING username as \"username: Username\"",
     increment_value,
-    item_id
+    item_id.to_string()
   )
   .fetch_one(&mut *tx)
   .await?

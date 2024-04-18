@@ -7,7 +7,7 @@ use super::*;
 #[schema(example = Item::default, default = Item::default)]
 #[serde(rename_all = "camelCase")]
 pub struct Item {
-  pub id:            Uuid,
+  pub id:            UlidWrapper,
   pub username:      Username,
   pub title:         Title,
   pub item_type:     ItemType,
@@ -27,7 +27,7 @@ pub struct Item {
 impl Default for Item {
   fn default() -> Self {
     Item {
-      id:            Uuid::new_v4(),
+      id:            UlidWrapper::new(),
       username:      Username::default(),
       title:         Title::default(),
       item_type:     ItemType::default(),
