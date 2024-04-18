@@ -24,7 +24,6 @@ use serde::{Deserialize, Serialize};
 use tokio::try_join;
 use tracing::{debug, info, trace, warn};
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 pub use self::{payload::*, response::*};
 use super::SharedState;
@@ -52,6 +51,8 @@ pub(super) fn items_router(state: SharedState) -> Router {
 // todo(search): tell algolia things
 
 pub(super) mod delete {
+  use db::Ulid;
+
   use super::*;
 
   /// Delete an item
@@ -61,7 +62,7 @@ pub(super) mod delete {
   #[utoipa::path(
   delete,
   path = "/items/delete-item/{id}",
-  params( ("id" = String, Path, example = Uuid::new_v4) ),
+  params( ("id" = String, Path, example = Ulid::new) ),
   responses(
     (status = 422, description = "Invalid Payload"),
     (status = 401, description = "Unauthorized"),
@@ -74,10 +75,10 @@ pub(super) mod delete {
   pub async fn delete_item(
     State(state): State<SharedState>,
     auth_session: AuthSession,
-    Path(id): Path<Uuid>,
+    Path(id): Path<Ulid>,
   ) -> ApiResult<StatusCode> {
     debug!("delete_item called with id: {id:?}");
-    let item = db::queries::items::get_assert_item(&state.pool, id).await?;
+    let item = db::queries::items::get_assert_item(&state.pool, &id).await?;
     let user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
     item.assert_is_editable(&state.pool).await?;
     db::queries::items::delete_item(&state.pool, &item, &user.username).await?;

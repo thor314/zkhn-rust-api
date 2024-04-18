@@ -42,7 +42,7 @@ pub async fn get_item(
   let show_dead = session_user.as_ref().map(|u| u.show_dead).unwrap_or(false);
 
   let (item, (comments_page, total_comments)) = tokio::try_join!(
-    db::queries::items::get_assert_item(&state.pool, id),
+    db::queries::items::get_assert_item(&state.pool, &id),
     // todo: concerned about how this fetches a flat, non-recursive comments structure
     db::queries::comments::get_comments_page(&state.pool, &id, page, show_dead),
   )?;
@@ -99,7 +99,7 @@ pub async fn get_edit_item_page_data(
   auth_session: AuthSession,
 ) -> ApiResult<Json<GetEditItemResponse>> {
   debug!("get_edit_item called with id: {id}");
-  let item = queries::items::get_assert_item(&state.pool, id).await?;
+  let item = queries::items::get_assert_item(&state.pool, &id).await?;
   item.assert_is_editable(&state.pool).await?;
   let session_user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
   // todo(sanitize): item.text -> text_for_editing

@@ -37,12 +37,12 @@ pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   Ok(tx.commit().await?)
 }
 
-pub async fn get_assert_item(pool: &DbPool, item_id: Ulid) -> DbResult<Item> {
+pub async fn get_assert_item(pool: &DbPool, item_id: &Ulid) -> DbResult<Item> {
   debug!("get_assert_item with: {item_id:?}");
   get_item(pool, item_id).await?.ok_or(DbError::NotFound("item".into()))
 }
 
-pub async fn get_item(pool: &DbPool, item_id: Ulid) -> DbResult<Option<Item>> {
+pub async fn get_item(pool: &DbPool, item_id: &Ulid) -> DbResult<Option<Item>> {
   debug!("get_item with: {item_id:?}");
   sqlx::query_as!(
     Item,
@@ -135,7 +135,7 @@ pub async fn get_items_created_after(
 
 pub async fn edit_item(
   pool: &DbPool,
-  item_id: Ulid,
+  item_id: &Ulid,
   title: &Title,
   category: ItemCategory,
   text: &Text,
