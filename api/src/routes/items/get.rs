@@ -107,17 +107,40 @@ pub async fn get_edit_item_page_data(
   Ok(Json(GetEditItemResponse::new(item, Some(session_user))))
 }
 
+/// Step 1 - If the user is not signed-in, retrieve:
+///          - The items that have been submitted within the past config.maxAgeOfRankedItemsInDays
+///            days
+///          sorted by their points and creation date values.
+///          - Total number of items submitted in the config.maxAgeOfRankedItemsInDays days
+///          will be used for pagination purposes.
+/// Step 2 - If the user is signed-in, retrieve this data:
+///          - All the user's hidden item documents from the past config.maxAgeOfRankedItemsInDays.
+///          - The items that have been submitted within the past config.maxAgeOfRankedItemsInDays
+///          sorted by their points and creation date values.
+///          - any item that is hidden by the user will not be included.
+///          - All the user's item upvotes from the past three days.
+///          any item the user has upvoted will contain a votedOnByUser value.
+///          this will tell the website if it should display the upvote arrow for each item.
+///          - Total number of items submitted in the past config.maxAgeOfRankedItemsInDays
+///          will be used for pagination purposes.
+/// Step 3 - Regardless of whether or not the user is signed-in, the data sent back to the website
+/// should include the following:
+///          - Array of items retrieved from the database.
+///          - An isMore value that indicates whether or not there is an additional page of results
+///            to retrieve
 #[utoipa::path(
   get,
   path = "/items/get-items-by-page/{item_kind}",
-  params( ("item_kind" = ItemKind, Query, example = ItemKind::default), 
+  params( ("item_kind" = ItemKind, Path, example = ItemKind::default), 
           Page ),
-  responses( (status = 401, description = "Unauthorized"),
+  responses(
+             (status = 400, description = "Invalid page"),
+             (status = 401, description = "Unauthorized"),
              (status = 403, description = "Forbidden"),
              (status = 404, description = "User not found"),
              (status = 200, description = "Success") ), // response body todo
   )]
-/// Get items by page, sorted by SortKind
+/// Get items by page, sorted by SortKind.
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L611
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L282
@@ -128,11 +151,12 @@ pub async fn get_items_by_page(
   auth_session: AuthSession,
 ) -> ApiResult<Json<GetItemsPageResponse>> {
   debug!("get_items_by_page with page: {page:?} and kind: {item_kind:?}");
-  let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::try_hours(24).unwrap());
+  let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::try_hours(48).unwrap());
   let session_user = auth_session.get_user_from_session();
 
   Ok(Json(match session_user {
     None => {
+      // not logged in: just return the page of items and the total number of items
       let (items, count) =
         queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
       GetItemsPageResponse::new(items, count, page)

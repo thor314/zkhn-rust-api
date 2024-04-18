@@ -155,6 +155,29 @@ async fn item_crud() {
   );
   send(&c, edit.clone(), "PUT", "items/edit-item", 403, "41").await;
 
+  // create a few more items
+  let items = send_get::<GetItemsPageResponse>(
+    &c,
+    "",
+    "GET",
+    "items/get-items-by-page/ranked?page=1",
+    200,
+    "42",
+  )
+  .await;
+  send(&c, CreateItemPayload::default(), "POST", "items", 200, "42a").await;
+  send(&c, CreateItemPayload::default(), "POST", "items", 200, "42b").await;
+  send(&c, CreateItemPayload::default(), "POST", "items", 200, "42c").await;
+  let items = send_get::<GetItemsPageResponse>(
+    &c,
+    "",
+    "GET",
+    "items/get-items-by-page/ranked?page=1",
+    200,
+    "42d",
+  )
+  .await;
+
   // delete
   send(&c, "", "DELETE", &format!("items/delete-item/{id}"), 200, "100").await;
   send(&c, "", "DELETE", &format!("items/delete-item/{id}"), 404, "100a").await;

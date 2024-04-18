@@ -1,5 +1,6 @@
 use db::{
   models::{user_favorite::UserFavorite, user_vote::UserVote},
+  queries::ITEM_PAGE_SIZE,
   DbPool,
 };
 
@@ -118,21 +119,28 @@ impl GetEditItemResponse {
 pub struct GetItemsPageResponse {
   /// The items for this page
   // todo: should these items be transformed?
-  items: Vec<Item>,
+  items: Vec<RankedItemResponse>,
   /// whether there are more items after the page returned
   is_more: bool,
   /// total number of items matching query
   count:   usize,
 }
 impl GetItemsPageResponse {
-  //   // isMore:
-  //   totalItemCount >
-  //   (page - 1) * config.itemsPerPage + config.itemsPerPage
-  //     ? true
-  //     : false,
-  // };
   pub fn new(items: Vec<Item>, count: usize, page: Page) -> Self {
-    let is_more = count > page.page as usize * COMMENTS_PER_PAGE;
+    let is_more = count > page.page as usize * ITEM_PAGE_SIZE as usize;
+    let items =
+      items.into_iter().enumerate().map(|(n, item)| RankedItemResponse::new(n, item)).collect();
     Self { items, is_more, count }
   }
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[schema(default = RankedItemResponse::default, example=RankedItemResponse::default)]
+#[serde(rename_all = "camelCase")]
+pub struct RankedItemResponse {
+  pub page_rank: usize,
+  pub item:      Item,
+}
+impl RankedItemResponse {
+  pub fn new(page_rank: usize, item: Item) -> Self { Self { page_rank, item } }
 }
