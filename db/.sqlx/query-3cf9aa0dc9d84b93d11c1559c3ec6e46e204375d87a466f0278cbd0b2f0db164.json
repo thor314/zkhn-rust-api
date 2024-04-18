@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n      id,\n      username,\n      title,\n      item_type as \"item_type: ItemType\",\n      url as \"url: Url\",\n      domain as \"domain: Domain\",\n      text as \"text: Text\",\n      points,\n      score,\n      item_category as \"item_category: ItemCategory\",\n      created,\n      dead\n      FROM items WHERE created > $1 \n      ORDER BY score DESC",
+  "query": "SELECT\n      id,\n      username,\n      title,\n      item_type as \"item_type: ItemType\",\n      url as \"url: Url\",\n      domain as \"domain: Domain\",\n      text as \"text: Text\",\n      comment_count,\n      points,\n      score,\n      item_category as \"item_category: ItemCategory\",\n      created,\n      dead\n    FROM items WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -51,16 +51,21 @@
       },
       {
         "ordinal": 7,
-        "name": "points",
+        "name": "comment_count",
         "type_info": "Int4"
       },
       {
         "ordinal": 8,
-        "name": "score",
+        "name": "points",
         "type_info": "Int4"
       },
       {
         "ordinal": 9,
+        "name": "score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
         "name": "item_category: ItemCategory",
         "type_info": {
           "Custom": {
@@ -77,19 +82,19 @@
         }
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "created",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "dead",
         "type_info": "Bool"
       }
     ],
     "parameters": {
       "Left": [
-        "Timestamptz"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -104,8 +109,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "37ea15a554cf3a3bb4bc4c26db638e3f725ed975feaebf4848a44d79102790b2"
+  "hash": "3cf9aa0dc9d84b93d11c1559c3ec6e46e204375d87a466f0278cbd0b2f0db164"
 }

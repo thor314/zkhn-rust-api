@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE items\n    SET title = $1, item_category = $2, text = $3\n    WHERE id = $4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        {
+          "Custom": {
+            "name": "item_category_enum",
+            "kind": {
+              "Enum": [
+                "tweet",
+                "blog",
+                "paper",
+                "other"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4b4d0a9cb5cfde1ee75881a48c88c1ede76c6528e2ad6e86e9ed52742d46bdb8"
+}

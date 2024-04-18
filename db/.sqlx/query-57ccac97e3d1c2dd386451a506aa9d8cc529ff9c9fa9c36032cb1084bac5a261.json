@@ -1,10 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO user_votes (\n    username, \n    vote_type, \n    content_id, \n    vote_state, \n    created \n  ) VALUES ($1, $2, $3, $4, $5)",
+  "query": "INSERT INTO user_votes (\n      id,\n      username, \n      vote_type, \n      content_id, \n      vote_state, \n      created \n      ) VALUES ($1, $2, $3, $4, $5, $6)",
   "describe": {
     "columns": [],
     "parameters": {
       "Left": [
+        "Uuid",
         "Varchar",
         {
           "Custom": {
@@ -35,5 +36,5 @@
     },
     "nullable": []
   },
-  "hash": "2f336f062ddd5a5cc11ff1621182aaf1a4011c2758e240ebf4f4a26f8f58b175"
+  "hash": "57ccac97e3d1c2dd386451a506aa9d8cc529ff9c9fa9c36032cb1084bac5a261"
 }

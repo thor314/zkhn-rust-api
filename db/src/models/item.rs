@@ -82,7 +82,7 @@ impl Item {
 }
 
 #[derive(
-  Default, Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize, Copy, ToSchema
+  Default, Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize, Copy, ToSchema,
 )]
 #[schema(default = ItemCategory::default, example=ItemCategory::default)]
 #[sqlx(type_name = "item_category_enum", rename_all = "lowercase")]
