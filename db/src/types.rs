@@ -144,13 +144,13 @@ impl From<&str> for CommentText {
 /// A page of comments or items
 pub struct Page {
   #[garde(range(min = 1, max = 1000))]
-  pub page: i32,
+  pub page: i64,
 }
 impl Default for Page {
   fn default() -> Self { Self { page: 1 } }
 }
-impl From<i32> for Page {
-  fn from(n: i32) -> Self { Self { page: n } }
+impl From<i64> for Page {
+  fn from(n: i64) -> Self { Self { page: n } }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, Type)]
@@ -209,7 +209,9 @@ impl Default for TextOrUrl {
 /// `ulid::Ulid` does not implement encode, so define a newtype wrapping a String instead
 ///
 /// a bit janky
-#[derive(Default, Debug, Clone, Serialize, Deserialize, Type, PartialEq, ToSchema, Validate)]
+#[derive(
+  Default, Hash, Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq, ToSchema, Validate,
+)]
 #[repr(transparent)]
 #[schema(default = Ulid::default, example=Ulid::default)]
 pub struct Ulid(#[garde(ascii, length(min = 26, max = 26))] pub String);

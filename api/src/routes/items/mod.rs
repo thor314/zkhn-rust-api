@@ -38,7 +38,7 @@ pub(super) fn items_router(state: SharedState) -> Router {
   Router::new()
     .route("/:id", routing::get(get::get_item))
     .route("/get-edit-item-page-data/:id", routing::get(get::get_edit_item_page_data))
-    .route("/get-items-by-page", routing::get(get::get_items_by_page))
+    .route("/get-items-by-page/:item_kind", routing::get(get::get_items_by_page))
     .route("/", routing::post(post::create_item))
     .route("/vote", routing::post(post::vote_item))
     .route("/favorite", routing::post(post::favorite_item))

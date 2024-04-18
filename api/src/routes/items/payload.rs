@@ -1,3 +1,5 @@
+use core::fmt;
+
 use db::{models::user_favorite::FavoriteStateEnum, Ulid};
 
 use super::*;
@@ -99,12 +101,26 @@ impl EditItemPayload {
 pub enum ItemKind {
   #[default]
   Ranked,
-  Newest,
-  RankedShow,
-  Ask,
-  BySiteDomain,
-  ByUser,
-  ByDay,
+  // Newest,
+  // RankedShow,
+  // Ask,
+  // BySiteDomain,
+  // ByUser,
+  // ByDay,
+}
+impl fmt::Display for ItemKind {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    let s = match self {
+      ItemKind::Ranked => "ranked",
+      // ItemKind::Newest => "newest",
+      // ItemKind::RankedShow => "rankedshow",
+      // ItemKind::Ask => "ask",
+      // ItemKind::BySiteDomain => "sitedomain",
+      // ItemKind::ByUser => "submittedbyuser",
+      // ItemKind::ByDay => "rankedbyday",
+    };
+    write!(f, "{}", s)
+  }
 }
 
 // ranked, newest, rankedshow, newestshow, rankedask, sitedomain, submittedbyuser, rankedbyday,

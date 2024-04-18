@@ -61,8 +61,7 @@ impl Item {
 
   // todo(refactor) - should not be async, store a `number comments` or `has comments` field on the
   // struct
-  pub fn is_editable(&self, pool: &DbPool) -> bool {
-    // !(crate::queries::items::item_has_comments(pool, self.id).
+  pub fn is_editable(&self) -> bool {
     self.comment_count > 0 || now() > self.modification_expiration()
   }
 

@@ -1,5 +1,8 @@
 use super::*;
 
+// backlog: move this to a config file
+pub const ITEM_PAGE_SIZE: i64 = 30;
+
 /// Create a new item in the database.
 pub async fn create_item(pool: &DbPool, item: &Item) -> DbResult<()> {
   debug!("create_item with: {item:?}");
@@ -96,14 +99,18 @@ pub async fn delete_item(pool: &DbPool, item: &Item, username: &Username) -> DbR
   Ok(tx.commit().await?)
 }
 
-/// Get all items created after `start_date`
+/// Get the `page` of items created after `start_date`
 pub async fn get_items_created_after(
   pool: &DbPool,
   start_date: &Timestamp,
   page: &Page,
 ) -> DbResult<(Vec<Item>, usize)> {
-  // .skip((page - 1) * config.itemsPerPage)
-  sqlx::query_as!(
+  let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM items WHERE created > $1")
+    .bind(start_date.0)
+    .fetch_one(pool)
+    .await?;
+
+  let items = sqlx::query_as!(
     Item,
     "SELECT
       id,
@@ -120,17 +127,17 @@ pub async fn get_items_created_after(
       created,
       dead
       FROM items WHERE created > $1 
-      ORDER BY score DESC",
-    start_date.0 // WHERE created > $1 AND id <> ALL($2)
+      ORDER BY score DESC
+      LIMIT $2 OFFSET $3",
+    start_date.0,
+    ITEM_PAGE_SIZE,
+    page.page
   )
   .fetch_all(pool)
   .await
-  .map(|items| {
-    let items_len = items.len();
-    // let items = todo(pagination)
-    (items, items_len)
-  })
-  .map_err(DbError::from)
+  .map_err(DbError::from)?;
+
+  Ok((items, count.0 as usize))
 }
 
 pub async fn edit_item(
@@ -154,22 +161,3 @@ pub async fn edit_item(
 
   Ok(())
 }
-
-// pub async fn update_item_category(
-//   pool: &DbPool,
-//   item_id: UlidWrapper,
-//   item_category: &str,
-// ) -> DbResult<()> {
-//   sqlx::query!(
-//     "UPDATE items
-//     SET item_category = $1
-//     WHERE id = $2",
-//     item_category,
-//     item_id
-//   )
-//   .execute(pool)
-//   .await
-//   .map_err(DbError::from)?;
-
-//   Ok(())
-// }

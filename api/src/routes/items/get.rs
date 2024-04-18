@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 use db::{
   models::{user_favorite::UserFavorite, user_vote::UserVote},
   Ulid,
@@ -110,14 +112,17 @@ pub async fn get_edit_item_page_data(
 #[utoipa::path(
   get,
   path = "/items/get-items-by-page/{item_kind}",
-  params( ("item_kind" = ItemKind, Query, example = ItemKind::default), 
+  params( ("item_kind" = ItemKind, Path, example = ItemKind::default), 
           Page ),
-  responses( (status = 401, description = "Unauthorized"),
+  responses(
+             (status = 400, description = "Invalid page"),
+             (status = 401, description = "Unauthorized"),
              (status = 403, description = "Forbidden"),
              (status = 404, description = "User not found"),
-             (status = 200, description = "Success") ), // response body todo
+             (status = 200, description = "Success", body = GetItemsPageResponse) ),
   )]
-/// Get items by page, sorted by SortKind
+/// Get items by page. 
+/// todo: only `ranked` is currently implemented for ItemKind.
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L611
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L282
@@ -128,31 +133,26 @@ pub async fn get_items_by_page(
   auth_session: AuthSession,
 ) -> ApiResult<Json<GetItemsPageResponse>> {
   debug!("get_items_by_page with page: {page:?} and kind: {item_kind:?}");
-  let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::try_hours(24).unwrap());
+  let start_date = Timestamp(chrono::Utc::now() - chrono::Duration::try_hours(48).unwrap());
   let session_user = auth_session.get_user_from_session();
+  let (items, count) =
+    queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
 
   Ok(Json(match session_user {
     None => {
-      let (items, count) =
-        queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
-      GetItemsPageResponse::new(items, count, page)
+      // not logged in: just return the page of items and the total number of items
+      GetItemsPageResponse::new(items, count, page, HashMap::new(), None)
     },
     Some(user) => {
       // backlog(show_dead)
-      let (items, count) =
-        queries::items::get_items_created_after(&state.pool, &start_date, &page).await?;
-      let user_votes: Vec<UserVote> = queries::user_votes::get_user_votes_on_items_after(
-        &state.pool,
-        &user.username,
-        start_date,
-        page,
-      )
-      .await?;
-
-      // todo: is item allowed to be edited or deleted?
-
-      // todo!()
-      GetItemsPageResponse::new(items, count, page)
+      // user is logged in:
+      // - retreive the user's votes (if any) on the items in the retreived page
+      // - for each item, annotate, whether the item may be edit/deleted, and whether the user has
+      //   voted on the item
+      let item_ids = items.iter().map(|item| item.id.to_string()).collect::<Vec<_>>();
+      let item_votes =
+        queries::user_votes::get_votes_matching_ids(&state.pool, &user.username, &item_ids).await?;
+      GetItemsPageResponse::new(items, count, page, item_votes, Some(&user.username))
     },
   }))
 }
