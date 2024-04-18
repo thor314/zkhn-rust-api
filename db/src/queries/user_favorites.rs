@@ -4,9 +4,9 @@ use crate::models::user_favorite::FavoriteStateEnum;
 pub async fn get_assert_favorite(
   pool: &DbPool,
   username: &Username,
-  id: Uuid,
+  content_id: Uuid,
 ) -> DbResult<UserFavorite> {
-  get_favorite(pool, username, id).await?.ok_or(DbError::NotFound("favorite".into()))
+  get_favorite(pool, username, content_id).await?.ok_or(DbError::NotFound("favorite".into()))
 }
 
 pub async fn get_favorite(
