@@ -1,6 +1,6 @@
 -- Add up migration script here
 
-drop table if exists ulid;
+drop domain if exists ulid;
 drop table if exists user_votes;
 drop type if exists item_or_comment_enum;
 drop type if exists vote_state_enum;
@@ -12,7 +12,7 @@ CREATE TYPE item_or_comment_enum AS ENUM ('item', 'comment');
 CREATE DOMAIN ulid AS VARCHAR(26);
 
 CREATE TABLE user_votes (
-    id UUID PRIMARY KEY,
+    id ULID PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     vote_type ITEM_OR_COMMENT_ENUM NOT NULL,
     content_id ULID NOT NULL,

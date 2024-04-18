@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use sqlx::{prelude::Type, Decode, Encode};
 use tracing::warn;
 use utoipa::{IntoParams, ToSchema};
-use uuid::Uuid;
 
 use crate::{utils::now, DbResult};
 

@@ -10,7 +10,6 @@ use futures::{future::join_all, TryFutureExt};
 use rayon::prelude::*;
 use sqlx::{postgres::PgQueryResult, Pool, Postgres, QueryBuilder, Transaction};
 use tracing::{debug, error, info, instrument, trace, warn};
-use uuid::Uuid;
 
 pub use self::{comments::*, items::*, user_favorites::*, user_votes::*, users::*};
 use crate::{

@@ -81,7 +81,7 @@ pub async fn vote_item(
     None => (vote_state, i32::from(vote_state)),
     Some(preexisting) => {
       // remove the previous vote from the db
-      sqlx::query!("DELETE FROM user_votes WHERE id = $1", preexisting.id)
+      sqlx::query!("DELETE FROM user_votes WHERE id = $1", preexisting.id.to_string())
         .execute(&mut *tx)
         .await?;
 
@@ -96,6 +96,7 @@ pub async fn vote_item(
 
   // insert the vote into the votes table
   if vote_state != VoteState::None {
+    let id = Ulid::new();
     sqlx::query!(
       "INSERT INTO user_votes (
       id,
@@ -105,8 +106,8 @@ pub async fn vote_item(
       vote_state, 
       created 
       ) VALUES ($1, $2, $3, $4, $5, $6)",
-      uuid::Uuid::new_v4(),
       // Ulid::new().to_string(),
+      id.to_string(),
       username.0,
       ItemOrComment::Item as ItemOrComment,
       item_id.0,
