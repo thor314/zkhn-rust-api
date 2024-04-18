@@ -109,19 +109,6 @@ pub async fn get_edit_item_page_data(
   Ok(Json(GetEditItemResponse::new(item, Some(session_user))))
 }
 
-///          - The items that have been submitted within the past config.maxAgeOfRankedItemsInDays
-///          sorted by their points and creation date values.
-///          - any item that is hidden by the user will not be included.
-///          - All the user's item upvotes from the past three days.
-///          any item the user has upvoted will contain a votedOnByUser value.
-///          this will tell the website if it should display the upvote arrow for each item.
-///          - Total number of items submitted in the past config.maxAgeOfRankedItemsInDays
-///          will be used for pagination purposes.
-/// Step 3 - Regardless of whether or not the user is signed-in, the data sent back to the website
-/// should include the following:
-///          - Array of items retrieved from the database.
-///          - An isMore value that indicates whether or not there is an additional page of results
-///            to retrieve
 #[utoipa::path(
   get,
   path = "/items/get-items-by-page/{item_kind}",
