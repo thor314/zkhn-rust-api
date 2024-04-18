@@ -12,7 +12,8 @@ pub struct UserVote {
   /// The ID of the item or comment voted on.
   pub content_id:     Ulid,
   /// The ID of the parent item for votes on comments.
-  pub parent_item_id: Option<Ulid>,
+  // backlog: From<Option<String>> is not implemented for Option<Ulid> and can't implement it
+  pub parent_item_id: Option<String>,
   pub vote_state:     VoteState,
   /// When the vote was cast.
   pub created:        Timestamp,
@@ -23,7 +24,7 @@ impl UserVote {
     username: Username,
     vote_type: ItemOrComment,
     content_id: Ulid,
-    parent_item_id: Option<Ulid>,
+    parent_item_id: Option<String>,
     vote_state: VoteState,
   ) -> Self {
     Self {

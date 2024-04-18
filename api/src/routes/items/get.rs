@@ -44,7 +44,7 @@ pub async fn get_item(
   let (item, (comments_page, total_comments)) = tokio::try_join!(
     db::queries::items::get_assert_item(&state.pool, id),
     // todo: concerned about how this fetches a flat, non-recursive comments structure
-    db::queries::comments::get_comments_page(&state.pool, id, page, show_dead),
+    db::queries::comments::get_comments_page(&state.pool, &id, page, show_dead),
   )?;
 
   Ok(Json(match session_user {

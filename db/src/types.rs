@@ -207,6 +207,9 @@ impl Default for TextOrUrl {
   fn default() -> Self { Self::Url(Url::default()) }
 }
 
+/// `ulid::Ulid` does not implement encode, so define a newtype wrapping a String instead
+///
+/// a bit janky
 #[derive(Default, Debug, Clone, Serialize, Deserialize, Type, PartialEq, ToSchema)]
 #[repr(transparent)]
 #[schema(default = Ulid::default, example=Ulid::default)]
@@ -231,6 +234,6 @@ impl Ulid {
 impl fmt::Display for Ulid {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", self.0) }
 }
-impl From<Option<String>> for Option<Ulid> {
-  fn from(value: Option<String>) -> Self { todo!() }
-}
+// impl From<Option<String>> for Option<Ulid> {
+//   fn from(value: Option<String>) -> Self { todo!() }
+// }
