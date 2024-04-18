@@ -3,16 +3,17 @@ use super::*;
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, ToSchema)]
 /// Represents a vote cast by a user on an item or comment.
 pub struct UserVote {
-  pub id:             Uuid,
+  pub id:             Ulid,
   /// The username of the user who cast the vote.
   pub username:       Username,
   /// The type of content voted on.
   /// Item, Comment
   pub vote_type:      ItemOrComment,
   /// The ID of the item or comment voted on.
-  pub content_id:     Uuid,
+  pub content_id:     Ulid,
   /// The ID of the parent item for votes on comments.
-  pub parent_item_id: Option<Uuid>,
+  // backlog: From<Option<String>> is not implemented for Option<Ulid> and can't implement it
+  pub parent_item_id: Option<String>,
   pub vote_state:     VoteState,
   /// When the vote was cast.
   pub created:        Timestamp,
@@ -22,12 +23,12 @@ impl UserVote {
   pub fn new(
     username: Username,
     vote_type: ItemOrComment,
-    content_id: Uuid,
-    parent_item_id: Option<Uuid>,
+    content_id: Ulid,
+    parent_item_id: Option<String>,
     vote_state: VoteState,
   ) -> Self {
     Self {
-      id: Uuid::new_v4(),
+      id: Ulid::new(),
       username,
       vote_type,
       content_id,

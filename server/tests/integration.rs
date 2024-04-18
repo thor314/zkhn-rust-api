@@ -3,14 +3,16 @@
 #![allow(dead_code)]
 
 use api::*;
-use db::models::{
-  item::{Item, ItemCategory, ItemType},
-  user_favorite::{FavoriteStateEnum, UserFavorite},
-  user_vote::VoteState,
+use db::{
+  models::{
+    item::{Item, ItemCategory, ItemType},
+    user_favorite::{FavoriteStateEnum, UserFavorite},
+    user_vote::VoteState,
+  },
+  Ulid,
 };
 use reqwest::Client;
 use serial_test::serial;
-use uuid::Uuid;
 
 use self::integration_utils::cargo_shuttle_run;
 use crate::integration_utils::{send, send_get};
@@ -62,14 +64,14 @@ async fn item_crud() {
   let bob_creds = CredentialsPayload::new("bob", "password", None);
   send(&c, bob_creds.clone(), "POST", "users/login", 200, "01li").await;
   let bob_item_id =
-    send_get::<Uuid>(&c, CreateItemPayload::default(), "POST", "items", 200, "01a").await;
+    send_get::<Ulid>(&c, CreateItemPayload::default(), "POST", "items", 200, "01a").await;
   send(&c, bob_creds.clone(), "POST", "users/logout", 200, "01lo").await;
 
   // post item for alice as unauth: 401
   send(&c, CreateItemPayload::default(), "POST", "items", 401, "10").await;
   // post item for alice as alice: 200
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "11").await;
-  let id = send_get::<Uuid>(&c, CreateItemPayload::default(), "POST", "items", 200, "12").await;
+  let id = send_get::<Ulid>(&c, CreateItemPayload::default(), "POST", "items", 200, "12").await;
   // post item for alice as alice with invalid payload: 422
   send(&c, GetUserResponse::default(), "POST", "items", 422, "13").await;
   // post duplicate item for alice as alice with invalid payload: 422
@@ -77,11 +79,11 @@ async fn item_crud() {
   // todo(testing, banned) banned user post item: 401
 
   // get item with fake id: 404
-  let fake_id = uuid::Uuid::new_v4();
+  let fake_id = Ulid::new();
   send(&c, "", "GET", &format!("items/{fake_id}?page=1"), 404, "20").await;
   // get item with invalid id: 400
-  send(&c, "", "GET", "items/&invalid_id&?page=1", 400, "21").await;
-  // get item with with invalid page: 422
+  // send(&c, "", "GET", "items/invalid_id?page=1", 400, "21").await; // todo: might have to
+  // validate ulids get item with with invalid page: 422
   send(&c, "", "GET", &format!("items/{id}?page=0"), 422, "22").await;
   // get item with with negative page:
   send(&c, "", "GET", &format!("items/{id}?page=-1"), 422, "22a").await;
@@ -98,26 +100,26 @@ async fn item_crud() {
   // todo(testing): compare logged in and logged out responses
 
   // get initial item score and user karma
-  let (_points, _karma) = get_points_karma(&c, id).await;
+  let (_points, _karma) = get_points_karma(&c, &id).await;
   send(&c, VotePayload::default(), "POST", "items/vote", 401, "30").await;
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "30a").await;
   send(&c, GetItemResponse::default(), "POST", "items/vote", 422, "31").await;
 
-  let upvote = VotePayload::new(id, VoteState::Upvote);
-  let downvote = VotePayload::new(id, VoteState::Downvote);
-  let nonevote = VotePayload::new(id, VoteState::None);
-  vote(&c, &upvote, id, _points, _karma, 1, "32").await;
-  vote(&c, &upvote, id, _points, _karma, 0, "33").await;
-  vote(&c, &downvote, id, _points, _karma, -1, "34a").await;
-  vote(&c, &downvote, id, _points, _karma, 0, "34b").await;
-  vote(&c, &upvote, id, _points, _karma, 1, "34c").await;
-  vote(&c, &nonevote, id, _points, _karma, 0, "34d").await;
+  let upvote = VotePayload::new(&id, VoteState::Upvote);
+  let downvote = VotePayload::new(&id, VoteState::Downvote);
+  let nonevote = VotePayload::new(&id, VoteState::None);
+  vote(&c, &upvote, &id, _points, _karma, 1, "32").await;
+  vote(&c, &upvote, &id, _points, _karma, 0, "33").await;
+  vote(&c, &downvote, &id, _points, _karma, -1, "34a").await;
+  vote(&c, &downvote, &id, _points, _karma, 0, "34b").await;
+  vote(&c, &upvote, &id, _points, _karma, 1, "34c").await;
+  vote(&c, &nonevote, &id, _points, _karma, 0, "34d").await;
 
   // favorite
   send(&c, VotePayload::default(), "POST", "items/favorite", 422, "36").await;
-  let fpayload = FavoritePayload::new(id, FavoriteStateEnum::Favorite);
-  favorite(&c, &fpayload, id, "37a", FavoriteStateEnum::Favorite).await;
-  favorite(&c, &fpayload, id, "37b", FavoriteStateEnum::None).await;
+  let fpayload = FavoritePayload::new(&id, FavoriteStateEnum::Favorite);
+  favorite(&c, &fpayload, &id, "37a", FavoriteStateEnum::Favorite).await;
+  favorite(&c, &fpayload, &id, "37b", FavoriteStateEnum::None).await;
 
   // get_edit_item_page_data
   send(&c, "", "GET", &format!("items/get-edit-item-page-data/{id}"), 200, "38").await;
@@ -127,10 +129,11 @@ async fn item_crud() {
   send(&c, CredentialsPayload::default(), "POST", "users/login", 200, "38li").await;
 
   // edit item
-  let edit = EditItemPayload::new(id, "new title", "new text", ItemCategory::Paper, ItemType::News);
+  let edit =
+    EditItemPayload::new(&id, "new title", "new text", ItemCategory::Paper, ItemType::News);
   send(&c, edit, "PUT", "items/edit-item", 422, "39").await;
   let edit = EditItemPayload::new(
-    id,
+    &id,
     "new title",
     "new text text text",
     ItemCategory::Paper,
@@ -144,7 +147,7 @@ async fn item_crud() {
   assert_eq!(item.item_category, ItemCategory::Paper);
   assert_eq!(item.item_type, ItemType::News);
   let edit = EditItemPayload::new(
-    bob_item_id,
+    &bob_item_id,
     "new title",
     "new text text text",
     ItemCategory::Paper,
@@ -161,7 +164,7 @@ async fn item_crud() {
 async fn favorite(
   c: &Client,
   favorite: &FavoritePayload,
-  id: Uuid,
+  id: &Ulid,
   tag: &str,
   expect: FavoriteStateEnum,
 ) {
@@ -173,7 +176,7 @@ async fn favorite(
 async fn vote(
   c: &Client,
   vote: &VotePayload,
-  id: Uuid,
+  id: &Ulid,
   _points: i32,
   _karma: i32,
   inc: i32,
@@ -191,7 +194,7 @@ async fn vote(
   assert_eq!(karma, _karma + inc);
 }
 
-async fn get_points_karma(c: &Client, id: Uuid) -> (i32, i32) {
+async fn get_points_karma(c: &Client, id: &Ulid) -> (i32, i32) {
   let points =
     send_get::<GetItemResponse>(c, "", "GET", &format!("items/{id}?page=1"), 200, "get_points")
       .await

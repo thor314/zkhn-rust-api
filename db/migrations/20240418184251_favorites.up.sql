@@ -1,10 +1,10 @@
 drop table if exists user_favorites;
 
 CREATE TABLE user_favorites (
-    id UUID PRIMARY KEY,
+    id VARCHAR(26) PRIMARY KEY, 
     username VARCHAR(255) NOT NULL,
     item_type VARCHAR(50) NOT NULL,
-    item_id UUID NOT NULL,
+    item_id VARCHAR(26) NOT NULL,
     date TIMESTAMP WITH TIME ZONE NOT NULL
 
     -- CONSTRAINT pk_user_favorites PRIMARY KEY (username, item_type, item_id),

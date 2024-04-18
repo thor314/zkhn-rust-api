@@ -1,5 +1,5 @@
 //! Newtype wrappers for input validation and type-safety
-use std::fmt;
+use std::{fmt, str::FromStr};
 
 use chrono::{DateTime, TimeDelta, Utc};
 use garde::Validate;
@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use sqlx::{prelude::Type, Decode, Encode};
 use tracing::warn;
 use utoipa::{IntoParams, ToSchema};
-use uuid::Uuid;
 
 use crate::{utils::now, DbResult};
 
@@ -205,4 +204,24 @@ impl TextOrUrl {
 }
 impl Default for TextOrUrl {
   fn default() -> Self { Self::Url(Url::default()) }
+}
+
+/// `ulid::Ulid` does not implement encode, so define a newtype wrapping a String instead
+///
+/// a bit janky
+#[derive(Default, Debug, Clone, Serialize, Deserialize, Type, PartialEq, ToSchema, Validate)]
+#[repr(transparent)]
+#[schema(default = Ulid::default, example=Ulid::default)]
+pub struct Ulid(#[garde(ascii, length(min = 26, max = 26))] pub String);
+impl From<ulid::Ulid> for Ulid {
+  fn from(u: ulid::Ulid) -> Self { Self(u.to_string()) }
+}
+impl From<String> for Ulid {
+  fn from(s: String) -> Self { Self(s) }
+}
+impl fmt::Display for Ulid {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", self.0) }
+}
+impl Ulid {
+  pub fn new() -> Self { Self(ulid::Ulid::new().to_string()) }
 }

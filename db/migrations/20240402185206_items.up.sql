@@ -7,7 +7,7 @@ CREATE TYPE item_type_enum as ENUM ('news', 'show', 'ask');
 
 DROP TABLE IF EXISTS items;
 CREATE TABLE items (
-    id UUID PRIMARY KEY,
+    id VARCHAR(26) PRIMARY KEY, 
     username TEXT NOT NULL,
     title TEXT NOT NULL,
     item_type ITEM_TYPE_ENUM NOT NULL DEFAULT 'news',

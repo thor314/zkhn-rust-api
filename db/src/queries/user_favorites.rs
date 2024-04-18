@@ -4,21 +4,21 @@ use crate::models::user_favorite::FavoriteStateEnum;
 pub async fn get_assert_favorite(
   pool: &DbPool,
   username: &Username,
-  id: Uuid,
+  content_id: &Ulid,
 ) -> DbResult<UserFavorite> {
-  get_favorite(pool, username, id).await?.ok_or(DbError::NotFound("favorite".into()))
+  get_favorite(pool, username, content_id).await?.ok_or(DbError::NotFound("favorite".into()))
 }
 
 pub async fn get_favorite(
   pool: &DbPool,
   username: &Username,
-  content_id: Uuid,
+  content_id: &Ulid,
 ) -> DbResult<Option<UserFavorite>> {
   sqlx::query_as!(
     UserFavorite,
-    "SELECT id, username, item_type, item_id, date
+    "SELECT id as \"id: Ulid\",  username, item_type, item_id as \"item_id: Ulid\", date
        FROM user_favorites WHERE item_id = $1 and username = $2",
-    content_id,
+    content_id.0,
     username.0
   )
   .fetch_optional(pool)
@@ -32,14 +32,14 @@ pub async fn get_favorite(
 pub async fn favorite_item(
   pool: &DbPool,
   username: &Username,
-  content_id: Uuid,
+  content_id: &Ulid,
 ) -> DbResult<FavoriteStateEnum> {
   match get_favorite(pool, username, content_id).await? {
     Some(favorite) => {
       sqlx::query!(
         "DELETE FROM user_favorites
       WHERE item_id = $1",
-        favorite.item_id,
+        favorite.item_id.0,
       )
       .execute(pool)
       .await?;
@@ -49,10 +49,10 @@ pub async fn favorite_item(
       sqlx::query!(
         "INSERT INTO user_favorites (id, username, item_type, item_id, date)
          VALUES ($1, $2, $3, $4, $5)",
-        Uuid::new_v4(),
+        Ulid::new().to_string(),
         username.0,
         "item",
-        content_id,
+        content_id.0,
         now().0,
       )
       .execute(pool)

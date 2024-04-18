@@ -7,7 +7,7 @@ use super::*;
 #[schema(example = Item::default, default = Item::default)]
 #[serde(rename_all = "camelCase")]
 pub struct Item {
-  pub id:            Uuid,
+  pub id:            Ulid,
   pub username:      Username,
   pub title:         Title,
   pub item_type:     ItemType,
@@ -27,7 +27,7 @@ pub struct Item {
 impl Default for Item {
   fn default() -> Self {
     Item {
-      id:            Uuid::new_v4(),
+      id:            Ulid::new(),
       username:      Username::default(),
       title:         Title::default(),
       item_type:     ItemType::default(),
@@ -68,7 +68,7 @@ impl Item {
 
   /// An item is editable if it was created less than 1 hour ago, and has no comments.
   pub async fn assert_is_editable(&self, pool: &DbPool) -> DbResult<()> {
-    if crate::queries::items::item_has_comments(pool, self.id).await {
+    if crate::queries::items::item_has_comments(pool, &self.id).await {
       return Err(DbError::NotEditable("has comments".into()));
     } else if now() > self.modification_expiration() {
       return Err(DbError::NotEditable("expired".into()));

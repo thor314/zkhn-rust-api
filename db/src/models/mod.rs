@@ -13,7 +13,6 @@ use garde::Validate;
 use serde::{Deserialize, Serialize};
 use sqlx::{Decode, Encode};
 use utoipa::{ToResponse, ToSchema};
-use uuid::Uuid;
 
 use crate::{
   error::DbError, types::*, utils::now, About, AuthToken, CommentText, DbPool, DbResult, Email,

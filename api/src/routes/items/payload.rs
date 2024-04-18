@@ -1,4 +1,4 @@
-use db::models::user_favorite::FavoriteStateEnum;
+use db::{models::user_favorite::FavoriteStateEnum, Ulid};
 
 use super::*;
 
@@ -42,11 +42,13 @@ impl CreateItemPayload {
 #[schema(default = VotePayload::default, example=VotePayload::default)]
 #[serde(rename_all = "camelCase")]
 pub struct VotePayload {
-  pub content_id: Uuid,
+  pub content_id: Ulid,
   pub vote_state: VoteState,
 }
 impl VotePayload {
-  pub fn new(content_id: Uuid, vote: VoteState) -> Self { Self { content_id, vote_state: vote } }
+  pub fn new(content_id: &Ulid, vote: VoteState) -> Self {
+    Self { content_id: content_id.clone(), vote_state: vote }
+  }
 }
 
 /// A payload for favoriting on an item or comment
@@ -54,11 +56,11 @@ impl VotePayload {
 #[schema(default = FavoritePayload::default, example=FavoritePayload::default)]
 #[serde(rename_all = "camelCase")]
 pub struct FavoritePayload {
-  pub id:       Uuid,
+  pub id:       Ulid,
   pub favorite: FavoriteStateEnum,
 }
 impl FavoritePayload {
-  pub fn new(id: Uuid, favorite: FavoriteStateEnum) -> Self { Self { id, favorite } }
+  pub fn new(id: &Ulid, favorite: FavoriteStateEnum) -> Self { Self { id: id.clone(), favorite } }
 }
 
 /// A payload for editing an item
@@ -66,8 +68,8 @@ impl FavoritePayload {
 #[schema(default = EditItemPayload::default, example=EditItemPayload::default)]
 #[serde(rename_all = "camelCase")]
 pub struct EditItemPayload {
-  #[garde(skip)]
-  pub id:        Uuid,
+  #[garde(dive)]
+  pub id:        Ulid,
   #[garde(dive)]
   pub title:     Title,
   #[garde(dive)]
@@ -80,13 +82,13 @@ pub struct EditItemPayload {
 
 impl EditItemPayload {
   pub fn new(
-    id: Uuid,
+    id: &Ulid,
     title: &str,
     text: &str,
     category: ItemCategory,
     item_type: ItemType,
   ) -> Self {
-    Self { id, title: title.into(), text: text.into(), category, item_type }
+    Self { id: id.clone(), title: title.into(), text: text.into(), category, item_type }
   }
 }
 

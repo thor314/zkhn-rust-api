@@ -1,4 +1,4 @@
-use db::models::user_favorite::FavoriteStateEnum;
+use db::{models::user_favorite::FavoriteStateEnum, Ulid};
 
 use super::*;
 
@@ -11,8 +11,8 @@ use super::*;
     (status = 401, description = "Unauthorized"),
     (status = 403, description = "ForbiddenBanned"),
     (status = 422, description = "Invalid Payload"),
-    // (status = 409, description = "Duplication Conflict"), - cannot occur, uuid generated on server
-    (status = 200, body = Uuid),
+    // (status = 409, description = "Duplication Conflict"), - cannot occur, ulid generated on server
+    (status = 200, body = Ulid),
   ),
   )]
 /// Create a new item. The user must be logged in to call this method.
@@ -26,7 +26,7 @@ pub async fn create_item(
   State(state): State<SharedState>,
   auth_session: AuthSession,
   Json(payload): Json<CreateItemPayload>,
-) -> ApiResult<Json<Uuid>> {
+) -> ApiResult<Json<Ulid>> {
   debug!("create_item called with payload: {payload:?}");
   payload.validate(&())?;
   let user = auth_session.get_assert_user_from_session()?;
@@ -43,7 +43,7 @@ pub async fn create_item(
   responses(
     (status = 400, description = "Payload Parsing failed"),
     (status = 401, description = "Unauthorized"),
-    (status = 200, body = Uuid),
+    (status = 200, body = Ulid),
   ),
   )]
 /// Submit an {up,down,un}vote on an item:
@@ -72,9 +72,9 @@ pub async fn vote_item(
 ) -> ApiResult<Json<VoteState>> {
   debug!("vote_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
-  let item = queries::items::get_assert_item(&state.pool, payload.content_id).await?;
+  let item = queries::items::get_assert_item(&state.pool, &payload.content_id).await?;
   let vote_state =
-    queries::user_votes::vote_item(&state.pool, item.id, &user.username, payload.vote_state)
+    queries::user_votes::vote_item(&state.pool, &item.id, &user.username, payload.vote_state)
       .await?;
 
   Ok(Json(vote_state))
@@ -104,11 +104,11 @@ pub async fn favorite_item(
 ) -> ApiResult<Json<FavoriteStateEnum>> {
   trace!("favorite_item called with payload: {payload:?}");
   let user = auth_session.get_assert_user_from_session()?;
-  let item = queries::items::get_assert_item(&state.pool, payload.id).await?;
+  let item = queries::items::get_assert_item(&state.pool, &payload.id).await?;
 
   // post the favorite
   let favorite_state =
-    queries::user_favorites::favorite_item(&state.pool, &user.username, item.id).await?;
+    queries::user_favorites::favorite_item(&state.pool, &user.username, &item.id).await?;
 
   Ok(Json(favorite_state))
 }
