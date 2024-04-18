@@ -1,7 +1,7 @@
 drop table if exists user_favorites;
 
 CREATE TABLE user_favorites (
-    id UUID PRIMARY KEY,
+    id VARCHAR(26) PRIMARY KEY, 
     username VARCHAR(255) NOT NULL,
     item_type VARCHAR(50) NOT NULL,
     item_id UUID NOT NULL,

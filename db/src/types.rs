@@ -206,3 +206,8 @@ impl TextOrUrl {
 impl Default for TextOrUrl {
   fn default() -> Self { Self::Url(Url::default()) }
 }
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize, Type, PartialEq, ToSchema)]
+#[repr(transparent)]
+#[schema(default = UlidWrapper::default, example=UlidWrapper::default)]
+pub struct UlidWrapper(pub ulid::Ulid);
