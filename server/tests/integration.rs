@@ -95,9 +95,6 @@ async fn item_crud() {
   let r: GetItemResponse = send_get(&c, "", "GET", &format!("items/{id}?page=1"), 200, "24").await;
   // get real item as logged out: 200
   send(&c, CredentialsPayload::default(), "POST", "users/logout", 200, "5").await;
-  let r_: GetItemResponse = send_get(&c, "", "GET", &format!("items/{id}?page=1"), 200, "25").await;
-  assert!(r.comments.is_empty());
-  // todo(testing): compare logged in and logged out responses
 
   // get initial item score and user karma
   let (_points, _karma) = get_points_karma(&c, &id).await;

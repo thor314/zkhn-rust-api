@@ -13,11 +13,9 @@ use crate::AuthUserResponseInternal;
 #[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
 #[serde(rename_all = "camelCase")]
 pub struct GetItemResponse {
-  pub item:                    Item,
-  pub comments:                Vec<GetItemCommentResponse>, // todo: transform reduce comment
-  pub is_more_comments:        bool,
-  pub authenticated_item_data: Option<GetItemResponseAuthenticated>,
-  pub auth_user:               AuthUserResponseInternal,
+  pub item:          Item,
+  pub with_comments: Option<WithCommentsResponse>,
+  pub auth_user:     AuthUserResponseInternal,
 }
 
 impl GetItemResponse {
@@ -32,16 +30,14 @@ impl GetItemResponse {
     session_user: Option<User>,
     mut user_comment_votes: Option<Vec<UserVote>>,
   ) -> ApiResult<Self> {
-    let is_more_comments = comments.len() > page * COMMENTS_PER_PAGE;
-    let comments = comments
-      .into_iter()
-      .map(|comment| {
-        GetItemCommentResponse::new(comment, user_comment_votes.take().unwrap_or_default())
-      })
-      .collect::<ApiResult<Vec<_>>>()?;
     let auth_user = AuthUserResponseInternal::new(session_user);
+    let with_comments = match user_comment_votes {
+      Some(votes) =>
+        Some(WithCommentsResponse::new(comments, page, authenticated_item_data, votes.clone())?),
+      None => None,
+    };
 
-    Ok(Self { item, comments, is_more_comments, authenticated_item_data, auth_user })
+    Ok(Self { item, with_comments, auth_user })
   }
 }
 
@@ -74,6 +70,30 @@ impl GetItemResponseAuthenticated {
   }
 }
 
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[schema(default = WithCommentsResponse::default, example=WithCommentsResponse::default)]
+#[serde(rename_all = "camelCase")]
+pub struct WithCommentsResponse {
+  pub comments:                Vec<GetItemCommentResponse>, // todo: transform reduce comment
+  pub is_more_comments:        bool,
+  pub authenticated_item_data: Option<GetItemResponseAuthenticated>,
+}
+impl WithCommentsResponse {
+  pub fn new(
+    comments: Vec<Comment>,
+    page: usize,
+    authenticated_item_data: Option<GetItemResponseAuthenticated>,
+    user_comment_votes: Vec<UserVote>,
+  ) -> ApiResult<Self> {
+    let is_more_comments = comments.len() > page * COMMENTS_PER_PAGE;
+    let comments = comments
+      .into_iter()
+      .map(|comment| GetItemCommentResponse::new(comment, user_comment_votes.clone()))
+      .collect::<ApiResult<Vec<_>>>()?;
+    Ok(Self { comments, is_more_comments, authenticated_item_data })
+  }
+}
+
 // todo(getitemresponsecomment)
 #[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 #[schema(default = GetItemCommentResponse::default, example=GetItemCommentResponse::default)]
@@ -97,19 +117,6 @@ impl GetItemCommentResponse {
       .vote_state;
 
     Ok(Self { comment, edit_and_delete_expired, vote_state })
-  }
-}
-
-#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
-#[schema(default = GetEditItemResponse::default, example=GetEditItemResponse::default)]
-#[serde(rename_all = "camelCase")]
-pub struct GetEditItemResponse {
-  pub item:  Item,
-  auth_user: AuthUserResponseInternal,
-}
-impl GetEditItemResponse {
-  pub fn new(item: Item, session_user: Option<User>) -> Self {
-    Self { item, auth_user: AuthUserResponseInternal::new(session_user) }
   }
 }
 
