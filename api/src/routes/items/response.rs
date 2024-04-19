@@ -50,7 +50,7 @@ pub struct GetItemResponseAuthenticated {
   /// note: hidden removed
   // unvote_expired:          bool, // unvote expired removed
   favorited_by_user: bool,
-  edit_and_delete_expired: bool,
+  edit_and_delete_allowed: bool,
 }
 
 impl GetItemResponseAuthenticated {
@@ -61,11 +61,11 @@ impl GetItemResponseAuthenticated {
     favorite: &Option<UserFavorite>,
     user: &User,
   ) -> Self {
-    let edit_and_delete_expired = item.username != user.username || !item.is_editable();
+    let edit_and_delete_allowed = item.username == user.username && item.is_editable();
     Self {
       voted_on_by_user: vote.is_some(),
       favorited_by_user: favorite.is_some(),
-      edit_and_delete_expired,
+      edit_and_delete_allowed,
     }
   }
 }
@@ -100,7 +100,7 @@ impl WithCommentsResponse {
 #[serde(rename_all = "camelCase")]
 pub struct GetItemCommentResponse {
   comment:                 Comment,
-  edit_and_delete_expired: bool,
+  edit_and_delete_allowed: bool,
   vote_state:              VoteState,
 }
 
@@ -109,14 +109,14 @@ impl GetItemCommentResponse {
   /// - get the user's vote for this comment
   /// - return the comment, the vote, and whether the comment is editable
   pub fn new(comment: Comment, user_comment_votes: Vec<UserVote>) -> ApiResult<Self> {
-    let edit_and_delete_expired = !comment.is_editable();
+    let edit_and_delete_allowed = comment.is_editable();
     let vote_state = user_comment_votes
       .iter()
       .find(|v| v.content_id == comment.id)
       .ok_or(ApiError::OtherISE("Comment vote not found".to_string()))?
       .vote_state;
 
-    Ok(Self { comment, edit_and_delete_expired, vote_state })
+    Ok(Self { comment, edit_and_delete_allowed, vote_state })
   }
 }
 
@@ -160,7 +160,7 @@ pub struct RankedItemResponse {
   pub page_rank:               usize,
   pub item:                    Item,
   pub vote:                    Option<UserVote>,
-  pub edit_and_delete_expired: bool,
+  pub edit_and_delete_allowed: bool,
 }
 impl RankedItemResponse {
   pub fn new(
@@ -169,8 +169,8 @@ impl RankedItemResponse {
     vote: Option<UserVote>,
     username: Option<&Username>,
   ) -> Self {
-    let edit_and_delete_expired =
-      item.username != username.cloned().unwrap_or_default() || !item.is_editable();
-    Self { page_rank, item, vote, edit_and_delete_expired }
+    let edit_and_delete_allowed =
+      item.username == username.cloned().unwrap_or_default() && item.is_editable();
+    Self { page_rank, item, vote, edit_and_delete_allowed }
   }
 }
