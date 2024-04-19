@@ -82,35 +82,6 @@ pub async fn get_item(
 
 #[utoipa::path(
   get,
-  path = "/items/get-edit-item-page-data",
-  params( ("id" = String, Path, example = Ulid::new) ),
-  responses( (status = 422, description = "Invalid id"),
-             (status = 401, description = "Unauthorized"),
-             (status = 403, description = "Forbidden"),
-             (status = 200, description = "Success", body = GetEditItemResponse) ),
-  )]
-/// Get item content for for editing. User must be authenticated.
-///
-/// Note that get-delete-item-page-data also maps to this route.
-///
-/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L462
-/// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/index.js#L191
-pub async fn get_edit_item_page_data(
-  State(state): State<SharedState>,
-  Path(id): Path<Ulid>,
-  auth_session: AuthSession,
-) -> ApiResult<Json<GetEditItemResponse>> {
-  debug!("get_edit_item called with id: {id}");
-  let item = queries::items::get_assert_item(&state.pool, &id).await?;
-  item.assert_is_editable(&state.pool).await?;
-  let session_user = auth_session.get_assert_user_from_session_assert_match(&item.username)?;
-  // todo(sanitize): item.text -> text_for_editing
-
-  Ok(Json(GetEditItemResponse::new(item, Some(session_user))))
-}
-
-#[utoipa::path(
-  get,
   path = "/items/get-items-by-page/{item_kind}",
   params( ("item_kind" = ItemKind, Path, example = ItemKind::default), 
           Page ),
@@ -121,7 +92,7 @@ pub async fn get_edit_item_page_data(
              (status = 404, description = "User not found"),
              (status = 200, description = "Success", body = GetItemsPageResponse) ),
   )]
-/// Get items by page. 
+/// Get items by page.
 /// todo: only `ranked` is currently implemented for ItemKind.
 ///
 /// ref: https://github.com/thor314/zkhn/blob/main/rest-api/routes/items/api.js#L611

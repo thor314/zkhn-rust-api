@@ -13,11 +13,9 @@ use crate::AuthUserResponseInternal;
 #[schema(default = GetItemResponse::default, example=GetItemResponse::default)]
 #[serde(rename_all = "camelCase")]
 pub struct GetItemResponse {
-  pub item:                    Item,
-  pub comments:                Vec<GetItemCommentResponse>, // todo: transform reduce comment
-  pub is_more_comments:        bool,
-  pub authenticated_item_data: Option<GetItemResponseAuthenticated>,
-  pub auth_user:               AuthUserResponseInternal,
+  pub item:          Item,
+  pub with_comments: Option<WithCommentsResponse>,
+  pub auth_user:     AuthUserResponseInternal,
 }
 
 impl GetItemResponse {
@@ -32,16 +30,14 @@ impl GetItemResponse {
     session_user: Option<User>,
     mut user_comment_votes: Option<Vec<UserVote>>,
   ) -> ApiResult<Self> {
-    let is_more_comments = comments.len() > page * COMMENTS_PER_PAGE;
-    let comments = comments
-      .into_iter()
-      .map(|comment| {
-        GetItemCommentResponse::new(comment, user_comment_votes.take().unwrap_or_default())
-      })
-      .collect::<ApiResult<Vec<_>>>()?;
     let auth_user = AuthUserResponseInternal::new(session_user);
+    let with_comments = match user_comment_votes {
+      Some(votes) =>
+        Some(WithCommentsResponse::new(comments, page, authenticated_item_data, votes.clone())?),
+      None => None,
+    };
 
-    Ok(Self { item, comments, is_more_comments, authenticated_item_data, auth_user })
+    Ok(Self { item, with_comments, auth_user })
   }
 }
 
@@ -54,7 +50,7 @@ pub struct GetItemResponseAuthenticated {
   /// note: hidden removed
   // unvote_expired:          bool, // unvote expired removed
   favorited_by_user: bool,
-  edit_and_delete_expired: bool,
+  edit_and_delete_allowed: bool,
 }
 
 impl GetItemResponseAuthenticated {
@@ -65,12 +61,36 @@ impl GetItemResponseAuthenticated {
     favorite: &Option<UserFavorite>,
     user: &User,
   ) -> Self {
-    let edit_and_delete_expired = item.username != user.username || !item.is_editable();
+    let edit_and_delete_allowed = item.username == user.username && item.is_editable();
     Self {
       voted_on_by_user: vote.is_some(),
       favorited_by_user: favorite.is_some(),
-      edit_and_delete_expired,
+      edit_and_delete_allowed,
     }
+  }
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[schema(default = WithCommentsResponse::default, example=WithCommentsResponse::default)]
+#[serde(rename_all = "camelCase")]
+pub struct WithCommentsResponse {
+  pub comments:                Vec<GetItemCommentResponse>, // todo: transform reduce comment
+  pub is_more_comments:        bool,
+  pub authenticated_item_data: Option<GetItemResponseAuthenticated>,
+}
+impl WithCommentsResponse {
+  pub fn new(
+    comments: Vec<Comment>,
+    page: usize,
+    authenticated_item_data: Option<GetItemResponseAuthenticated>,
+    user_comment_votes: Vec<UserVote>,
+  ) -> ApiResult<Self> {
+    let is_more_comments = comments.len() > page * COMMENTS_PER_PAGE;
+    let comments = comments
+      .into_iter()
+      .map(|comment| GetItemCommentResponse::new(comment, user_comment_votes.clone()))
+      .collect::<ApiResult<Vec<_>>>()?;
+    Ok(Self { comments, is_more_comments, authenticated_item_data })
   }
 }
 
@@ -80,7 +100,7 @@ impl GetItemResponseAuthenticated {
 #[serde(rename_all = "camelCase")]
 pub struct GetItemCommentResponse {
   comment:                 Comment,
-  edit_and_delete_expired: bool,
+  edit_and_delete_allowed: bool,
   vote_state:              VoteState,
 }
 
@@ -89,27 +109,14 @@ impl GetItemCommentResponse {
   /// - get the user's vote for this comment
   /// - return the comment, the vote, and whether the comment is editable
   pub fn new(comment: Comment, user_comment_votes: Vec<UserVote>) -> ApiResult<Self> {
-    let edit_and_delete_expired = !comment.is_editable();
+    let edit_and_delete_allowed = comment.is_editable();
     let vote_state = user_comment_votes
       .iter()
       .find(|v| v.content_id == comment.id)
       .ok_or(ApiError::OtherISE("Comment vote not found".to_string()))?
       .vote_state;
 
-    Ok(Self { comment, edit_and_delete_expired, vote_state })
-  }
-}
-
-#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
-#[schema(default = GetEditItemResponse::default, example=GetEditItemResponse::default)]
-#[serde(rename_all = "camelCase")]
-pub struct GetEditItemResponse {
-  pub item:  Item,
-  auth_user: AuthUserResponseInternal,
-}
-impl GetEditItemResponse {
-  pub fn new(item: Item, session_user: Option<User>) -> Self {
-    Self { item, auth_user: AuthUserResponseInternal::new(session_user) }
+    Ok(Self { comment, edit_and_delete_allowed, vote_state })
   }
 }
 
@@ -153,7 +160,7 @@ pub struct RankedItemResponse {
   pub page_rank:               usize,
   pub item:                    Item,
   pub vote:                    Option<UserVote>,
-  pub edit_and_delete_expired: bool,
+  pub edit_and_delete_allowed: bool,
 }
 impl RankedItemResponse {
   pub fn new(
@@ -162,8 +169,8 @@ impl RankedItemResponse {
     vote: Option<UserVote>,
     username: Option<&Username>,
   ) -> Self {
-    let edit_and_delete_expired =
-      item.username != username.cloned().unwrap_or_default() || !item.is_editable();
-    Self { page_rank, item, vote, edit_and_delete_expired }
+    let edit_and_delete_allowed =
+      item.username == username.cloned().unwrap_or_default() && item.is_editable();
+    Self { page_rank, item, vote, edit_and_delete_allowed }
   }
 }
