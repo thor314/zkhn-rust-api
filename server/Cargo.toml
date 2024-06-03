@@ -27,7 +27,7 @@ reqwest = { version = "0.12.2", features = ["cookies"] }
 tower-http = { version = "0.5.2", features = ["cors"] }
 
 [dev-dependencies]
-rstest           ="0.19"                                 # testing convenience proc-macros
+rstest           ="0.21"                                 # testing convenience proc-macros
 arbitrary        ={ version="1.1", features=["derive"] } # see quickcheck
 quickcheck       ="1.0"                                  # lowkey proptest suite
 quickcheck_macros="1"                                    # derive 
