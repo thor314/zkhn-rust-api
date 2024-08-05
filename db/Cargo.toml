@@ -24,7 +24,7 @@ thiserror="1.0"
 url="2.5.0"
 rayon = "1.9.0"
 futures = "0.3.30"
-garde = { version = "0.18.0", features = ["email", "derive", "serde", "url"] }
+garde = { version = "0.20.0", features = ["email", "derive", "serde", "url"] }
 utoipa = "4.2.0"
 argon2 = "0.5.3"
 ulid = { version = "1.1.2", features = ["postgres", "serde"] }

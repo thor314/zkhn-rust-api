@@ -33,7 +33,7 @@ axum-analytics = "1.1.3"
 axum-derive-error = "0.1.0"
 
 futures = "0.3.30"
-garde = { version = "0.18.0", features = ["derive", "email", "serde"] }
+garde = { version = "0.20.0", features = ["derive", "email", "serde"] }
 oauth2 = "4.4.2"
 reqwest = { version = "0.12.0", features = ["json"] }
 rand = "0.8.5"
