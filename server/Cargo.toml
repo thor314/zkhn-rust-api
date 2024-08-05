@@ -18,7 +18,7 @@ tracing="0.1"
 tracing-subscriber={ version="0.3", features=["env-filter", "fmt"] }
 tokio={ version="1", features=["full"] }
 thiserror="1.0"
-sqlx = { version = "0.7.3", features = ["postgres", "tls-rustls"] }
+sqlx = { version = "0.8.0", features = ["postgres", "tls-rustls"] }
 serde = { version = "1.0.197", features = ["derive"] }
 tower-sessions = "0.12.0"
 tower-sessions-sqlx-store = { version = "0.12.0", features = ["postgres"] }
