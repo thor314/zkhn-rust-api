@@ -21,7 +21,7 @@ thiserror="1.0"
 sqlx = { version = "0.7.3", features = ["postgres", "tls-rustls"] }
 serde = { version = "1.0.197", features = ["derive"] }
 tower-sessions = "0.12.0"
-tower-sessions-sqlx-store = { version = "0.12.0", features = ["postgres"] }
+tower-sessions-sqlx-store = { version = "0.13.0", features = ["postgres"] }
 time = "0.3.34"
 reqwest = { version = "0.12.2", features = ["cookies"] }
 tower-http = { version = "0.5.2", features = ["cors"] }
